@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (c) 2026 Sachit. All rights reserved.
+Project: NevTune+
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@array/android_wear_capabilities">
+    <!-- How the phone app knows a watch is there. Must match WearProtocol.CAPABILITY_WATCH. -->
+    <string-array name="android_wear_capabilities" translatable="false">
+        <item>NevTune+_watch</item>
+    </string-array>
+</resources>

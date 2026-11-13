@@ -1,0 +1,191 @@
+// Copyright (c) 2026 Sachit. All rights reserved.
+// Project: NevTune+
+package com.nevanstudio.nevtuneplus.ui.screens
+
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Cloud
+import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.Lan
+import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.nevanstudio.nevtuneplus.R
+import com.nevanstudio.nevtuneplus.sharedui.resources.Res
+import com.nevanstudio.nevtuneplus.sharedui.resources.spotify_logo
+import com.nevanstudio.nevtuneplus.data.model.ShelfItem
+import com.nevanstudio.nevtuneplus.data.settings.AppSettings
+import com.nevanstudio.nevtuneplus.download.Downloads
+import com.nevanstudio.nevtuneplus.download.SavedCollection
+import com.nevanstudio.nevtuneplus.ui.components.PAGE_GUTTER
+import com.nevanstudio.nevtuneplus.ui.components.ReplayCardRowSkeleton
+import com.nevanstudio.nevtuneplus.ui.replay.ReplayCardRow
+import com.nevanstudio.nevtuneplus.ui.replay.ReplayHeroCard
+import com.nevanstudio.nevtuneplus.ui.replay.ReplayStoryPage
+
+// The phone's halves of the shared Library page: its list of folders, what
+// sits on its "On device" shelf, and the way in to Replay at its head.
+
+/**
+ * The phone's folders, drawn as a list under the Replay cards: Downloads and
+ * Local Music, the song cache when Settings has it shown, and the two remote
+ * libraries it can reach.
+ */
+@Composable
+fun libraryLinks(): List<LibraryLink> {
+    val webdavConfigured by AppSettings.webdavUrl.collectAsStateWithLifecycle()
+    val smbHost by AppSettings.smbHost.collectAsStateWithLifecycle()
+    val smbShare by AppSettings.smbShare.collectAsStateWithLifecycle()
+    val showCacheFolder by AppSettings.showCacheFolder.collectAsStateWithLifecycle()
+    val spotifyConnected by AppSettings.spotifySpdcToken.collectAsStateWithLifecycle()
+    fun link(title: String, subtitle: String, browseId: String, icon: ImageVector = deviceFolderIcon(browseId) ?: Icons.Rounded.Cloud) = LibraryLink(
+        item = ShelfItem(
+            title = title,
+            subtitle = subtitle,
+            thumbnailUrl = null,
+            videoId = null,
+            browseId = browseId,
+        ),
+        icon = icon,
+    )
+    return listOfNotNull(
+        link(
+            stringResource(R.string.downloads),
+            stringResource(R.string.downloaded_songs),
+            "local:downloads",
+        ),
+        link(
+            stringResource(R.string.local_music),
+            stringResource(R.string.audio_files_on_device),
+            "local:all",
+        ),
+        // Opt-in from Settings → Storage: what the song cache is holding from
+        // YouTube and JioSaavn. See [com.nevanstudio.nevtuneplus.playback.AudioCache.cachedSongs].
+        link(
+            stringResource(R.string.cached_songs),
+            stringResource(R.string.cached_songs_subtitle),
+            CACHE_FOLDER_BROWSE_ID,
+        ).takeIf { showCacheFolder },
+        // Only once set up in Sources; unconfigured, they'd just be dead ends.
+        link(
+            stringResource(R.string.webdav),
+            stringResource(R.string.webdav_subtitle),
+            com.nevanstudio.nevtuneplus.data.webdav.WebDavConfig.BROWSE_ID,
+        ).takeIf { webdavConfigured.isNotBlank() },
+        link(
+            stringResource(R.string.smb),
+            stringResource(R.string.smb_subtitle),
+            com.nevanstudio.nevtuneplus.data.smb.SmbConfig.BROWSE_ID,
+        ).takeIf { smbHost.isNotBlank() && smbShare.isNotBlank() },
+        // Always visible: the destination provides sign-in/token setup when no
+        // Spotify account is connected, and playlists when one is.
+        link(
+            stringResource(R.string.spotify),
+            stringResource(
+                if (spotifyConnected.isNotBlank()) {
+                    R.string.spotify_library_subtitle
+                } else {
+                    R.string.spotify_connect_subtitle
+                },
+            ),
+            SPOTIFY_BROWSE_ID,
+        ).copy(logo = Res.drawable.spotify_logo),
+    )
+}
+
+/**
+ * The phone's "On device" shelf: the playlists and albums downloaded whole —
+ * the same promise the folders above it make, here, now, without a network.
+ * Nothing is truncated: the shelf is a row that scrolls, so "all of them"
+ * costs nothing.
+ */
+@Composable
+fun libraryDeviceItems(downloadedReleases: List<SavedCollection>): List<ShelfItem> {
+    val downloadedPlaylist = stringResource(R.string.downloaded_playlist)
+    return downloadedReleases.map { release ->
+        ShelfItem(
+            title = release.title,
+            // The credit the release was downloaded with, because this is also
+            // what the page it opens bills itself by — see `headerLines`, which
+            // reads the kind and the owner back out of it. Saying "Downloaded
+            // playlist" here instead would make that header read "Downloaded
+            // playlist" over "PLAYLIST • 12 SONGS", and the shelf this card is on
+            // already says where it lives.
+            subtitle = release.subtitle.ifBlank { if (release.playlist) downloadedPlaylist else "" },
+            thumbnailUrl = release.thumbnailUrl,
+            videoId = null,
+            browseId = Downloads.pageIdFor(release.id),
+        )
+    }
+}
+
+/**
+ * The glyph a device folder is drawn with — its row on the Library page, and
+ * the placeholder cover its own page opens on. Null for anything that isn't
+ * one of the folders.
+ */
+fun deviceFolderIcon(browseId: String): ImageVector? = when (browseId) {
+    "local:downloads" -> Icons.Rounded.Download
+    "local:all" -> Icons.Rounded.Folder
+    CACHE_FOLDER_BROWSE_ID -> Icons.Rounded.Storage
+    com.nevanstudio.nevtuneplus.data.webdav.WebDavConfig.BROWSE_ID -> Icons.Rounded.Cloud
+    com.nevanstudio.nevtuneplus.data.smb.SmbConfig.BROWSE_ID -> Icons.Rounded.Lan
+    else -> null
+}
+
+/** The Library row that opens the connected Spotify account; handled by the app, not a browse page. */
+const val SPOTIFY_BROWSE_ID = "app:spotify"
+
+/** The Cached songs folder's page id — one of the `local:` device folders. */
+const val CACHE_FOLDER_BROWSE_ID = "local:cache"
+
+/**
+ * The phone's way in to Replay: its row of headline cards, placeholders for
+ * them while the history is read, and nothing at all while there is not yet
+ * enough listening to deal them — Settings still opens Replay either way.
+ */
+@Composable
+fun LibraryReplayEntry(
+    cards: List<ReplayHeroCard>,
+    loading: Boolean,
+    onOpenReplay: (ReplayStoryPage) -> Unit,
+) {
+    if (loading || cards.isNotEmpty()) {
+        Column(Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+            Text(
+                text = stringResource(R.string.replay_section_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(horizontal = PAGE_GUTTER, vertical = 2.dp),
+            )
+            Text(
+                text = stringResource(R.string.replay_section_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = PAGE_GUTTER).padding(bottom = 10.dp),
+            )
+            if (loading) {
+                ReplayCardRowSkeleton()
+            } else {
+                ReplayCardRow(
+                    cards = cards,
+                    onCardClick = onOpenReplay,
+                    contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+                )
+            }
+        }
+    }
+}

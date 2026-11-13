@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (c) 2026 NevTune+. All rights reserved.
+-->
+<resources>
+    <style name="Theme.NevTunePlus.Tv" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+    <style name="Theme.Audify.Tv" parent="Theme.NevTunePlus.Tv" />
+</resources>

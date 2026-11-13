@@ -1,0 +1,319 @@
+# Copyright (c) 2026 Sachit. All rights reserved.
+# Project: NevTune+
+name: NevTune+ Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Version tag to build (for example v1.8.9)
+        required: true
+        type: string
+      dry_run:
+        description: Build and verify only; do not create or publish a release
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nevtuneplus-release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and verify production APKs
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - name: Check out the release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.dry_run && github.sha || inputs.tag || github.ref }}
+
+      - name: Validate release tag and project version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION_NAME="$(sed -n 's/.*extra\["audifyVersionName"\] = "\([^"]*\)".*/\1/p' build.gradle.kts)"
+          VERSION_CODE="$(sed -n 's/.*extra\["audifyVersionCode"\] = \([0-9][0-9]*\).*/\1/p' build.gradle.kts)"
+          test -n "$VERSION_NAME" && test -n "$VERSION_CODE"
+          test "$TAG" = "v$VERSION_NAME" || {
+            echo "::error::Tag $TAG does not match project version $VERSION_NAME"
+            exit 1
+          }
+          echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_ENV"
+          echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+          echo "Building NevTune+ $VERSION_NAME (versionCode $VERSION_CODE)"
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: "21"
+          distribution: temurin
+          cache: gradle
+
+      - name: Configure private build credentials
+        shell: bash
+        env:
+          LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+          LASTFM_SECRET: ${{ secrets.LASTFM_SECRET }}
+          LISTEN_TOGETHER_SERVER: ${{ secrets.LISTEN_TOGETHER_SERVER }}
+          KEYSTORE: ${{ secrets.KEYSTORE }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for name in KEYSTORE KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Required signing secret $name is missing."
+              exit 1
+            fi
+          done
+          printf 'LASTFM_API_KEY=%s\n' "$LASTFM_API_KEY" > local.properties
+          printf 'LASTFM_SECRET=%s\n' "$LASTFM_SECRET" >> local.properties
+          printf 'LISTEN_TOGETHER_SERVER=%s\n' "$LISTEN_TOGETHER_SERVER" >> local.properties
+          printf '%s' "$KEYSTORE" | base64 --decode > audify-release.jks
+          test -s audify-release.jks
+          {
+            printf 'storeFile=audify-release.jks\n'
+            printf 'storePassword=%s\n' "$KEYSTORE_PASSWORD"
+            printf 'keyAlias=%s\n' "$KEY_ALIAS"
+            printf 'keyPassword=%s\n' "$KEY_PASSWORD"
+          } > keystore.properties
+          chmod 600 audify-release.jks keystore.properties
+
+      - name: Validate signing credentials before the Gradle build
+        shell: bash
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          EXPECTED_CERT: 4bde8155328a9a8659ce6b75d1a0df2e4811c0ccdc555a52ccb3df2a4be94e21
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/VerifyAudifySigning.java" <<'JAVA'
+          import java.nio.file.Files;
+          import java.nio.file.Path;
+          import java.security.Key;
+          import java.security.KeyStore;
+          import java.security.MessageDigest;
+          import java.security.PrivateKey;
+          import java.util.HexFormat;
+
+          public class VerifyAudifySigning {
+              public static void main(String[] args) {
+                  try {
+                      KeyStore store = KeyStore.getInstance("JKS");
+                      try (var input = Files.newInputStream(Path.of("audify-release.jks"))) {
+                          store.load(input, System.getenv("KEYSTORE_PASSWORD").toCharArray());
+                      }
+                      String alias = System.getenv("KEY_ALIAS");
+                      if (!store.containsAlias(alias)) {
+                          throw new IllegalStateException("The configured key alias does not exist in the keystore.");
+                      }
+                      Key key = store.getKey(alias, System.getenv("KEY_PASSWORD").toCharArray());
+                      if (!(key instanceof PrivateKey)) {
+                          throw new IllegalStateException("The configured alias does not contain an accessible private key.");
+                      }
+                      byte[] encoded = store.getCertificate(alias).getEncoded();
+                      String fingerprint = HexFormat.of().formatHex(
+                          MessageDigest.getInstance("SHA-256").digest(encoded)
+                      );
+                      if (!fingerprint.equalsIgnoreCase(System.getenv("EXPECTED_CERT"))) {
+                          throw new IllegalStateException("The signing certificate does not match the approved NevTune+ release identity.");
+                      }
+                      System.out.println("Signing keystore, alias, passwords and approved certificate verified.");
+                  } catch (Exception error) {
+                      System.err.println("Signing preflight failed: " + error.getMessage());
+                      System.exit(1);
+                  }
+              }
+          }
+          JAVA
+          javac -d "$RUNNER_TEMP" "$RUNNER_TEMP/VerifyAudifySigning.java"
+          java -cp "$RUNNER_TEMP" VerifyAudifySigning
+
+      - name: Enable Gradle wrapper
+        run: chmod +x gradlew
+
+      - name: Run unit-test gates
+        run: ./gradlew --no-daemon --max-workers=2 :app:testDevDebugUnitTest :app:testProdDebugUnitTest :tv:testProdDebugUnitTest :shared:jvmTest :sharedUi:jvmTest
+
+      - name: Run production release lint
+        run: ./gradlew --no-daemon --max-workers=2 :app:lintProdRelease :tv:lintProdRelease :wearos:lintProdRelease
+
+      - name: Build all production APK variants
+        run: ./gradlew --no-daemon --max-workers=1 :app:assembleProdRelease :tv:assembleProdRelease :wearos:assembleProdRelease
+
+      - name: Stage exactly four release APKs in the required order
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+
+          copy_one() {
+            local source_dir="$1"
+            local pattern="$2"
+            local destination="$3"
+            local -a matches=()
+            mapfile -d '' -t matches < <(find "$source_dir" -maxdepth 1 -type f -name "$pattern" -print0 | sort -z)
+            if [ "${#matches[@]}" -ne 1 ]; then
+              echo "::error::Expected exactly one $pattern in $source_dir; found ${#matches[@]}"
+              printf '%s\n' "${matches[@]}"
+              exit 1
+            fi
+            cp "${matches[0]}" "dist/$destination"
+          }
+
+          copy_one app/build/outputs/apk/prod/release '*-universal-release.apk' "Audify-$VERSION_NAME.apk"
+          copy_one app/build/outputs/apk/prod/release '*arm64-v8a*.apk' "Audify-$VERSION_NAME""_arm64-v8a.apk"
+          copy_one tv/build/outputs/apk/prod/release '*-universal-release.apk' "NevTunePlusTV-$VERSION_NAME.apk"
+          copy_one wearos/build/outputs/apk/prod/release '*-universal-release.apk' "NevTunePlusWear-$VERSION_NAME.apk"
+
+          test "$(find dist -maxdepth 1 -type f -name '*.apk' | wc -l)" -eq 4
+          printf '%s\n' \
+            "1. Audify Phone — Universal" \
+            "2. Audify Phone — ARM64" \
+            "3. Audify Android TV — Universal" \
+            "4. NevTune+ Wear OS — Universal"
+
+      - name: Verify package IDs, versions and production signatures
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)"
+          AAPT="$BUILD_TOOLS/aapt"
+          APKSIGNER="$BUILD_TOOLS/apksigner"
+          EXPECTED_CERT="4bde8155328a9a8659ce6b75d1a0df2e4811c0ccdc555a52ccb3df2a4be94e21"
+          for apk in \
+            "dist/Audify-$VERSION_NAME.apk" \
+            "dist/Audify-$VERSION_NAME""_arm64-v8a.apk" \
+            "dist/NevTunePlusTV-$VERSION_NAME.apk" \
+            "dist/NevTunePlusWear-$VERSION_NAME.apk"; do
+            test -s "$apk"
+            case "$apk" in
+              *NevTunePlusTV-*) expected_package="com.nevanstudio.nevtuneplus.tv" ;;
+              *) expected_package="com.nevanstudio.nevtuneplus" ;;
+            esac
+            badging="$("$AAPT" dump badging "$apk" | head -n 1)"
+            grep -F "package: name='$expected_package' versionCode='$VERSION_CODE' versionName='$VERSION_NAME'" <<< "$badging" >/dev/null || {
+              echo "::error::Package/version mismatch in $apk: $badging"
+              exit 1
+            }
+            "$APKSIGNER" verify --verbose "$apk"
+            CERT_OUTPUT="$("$APKSIGNER" verify --print-certs "$apk" 2>&1)"
+            cert="$(printf '%s\n' "$CERT_OUTPUT" | grep -Eio '[0-9a-f]{64}' | head -n 1 | tr '[:upper:]' '[:lower:]' || true)"
+            test -n "$cert"
+            echo "APK signing certificate SHA-256 ($apk): $cert"
+            if [ "$cert" != "$EXPECTED_CERT" ]; then
+              echo "::error::Signing certificate mismatch in $apk; it does not match the approved release identity."
+              exit 1
+            fi
+            echo "Verified: $apk ($expected_package, $VERSION_NAME/$VERSION_CODE)"
+          done
+
+          require_native_payload() {
+            local apk="$1"
+            local abi="$2"
+            local entry
+            for entry in \
+              "lib/$abi/libffmpegJNI.so" \
+              "lib/$abi/libaudify_analysis.so" \
+              "lib/$abi/libaudify_dsd.so" \
+              "lib/$abi/libaudify_dst.so"; do
+              if ! unzip -Z1 "$apk" | grep -Fx "$entry" >/dev/null; then
+                echo "::error::Universal APK $apk is missing required native library $entry"
+                exit 1
+              fi
+            done
+          }
+          for apk in "dist/Audify-$VERSION_NAME.apk" "dist/NevTunePlusTV-$VERSION_NAME.apk"; do
+            for abi in armeabi-v7a arm64-v8a x86_64; do
+              require_native_payload "$apk" "$abi"
+            done
+            echo "Verified universal native payload: $apk (armeabi-v7a, arm64-v8a, x86_64)"
+          done
+          echo "All four APKs match the approved Audify signing certificate."
+
+      - name: Report dry-run completion
+        if: ${{ inputs.dry_run == true }}
+        run: echo "Dry run complete. All four APKs passed validation; no GitHub Release was created."
+
+      - name: Upload verified APKs for the approval-gated publish job
+        if: ${{ inputs.dry_run != true }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: nevtuneplus-release-apks
+          path: dist/*.apk
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    if: ${{ inputs.dry_run != true }}
+    name: Publish approved GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: release
+      url: https://github.com/${{ github.repository }}/releases/tag/${{ inputs.tag || github.ref_name }}
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Check out release notes
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Download verified APKs
+        uses: actions/download-artifact@v4
+        with:
+          name: nevtuneplus-release-apks
+          path: dist
+
+      - name: Create or safely reuse the draft release and upload assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION_NAME="${TAG#v}"
+          NOTES_FILE="docs/releases/RELEASE_NOTES_${VERSION_NAME}.md"
+          if [ ! -s "$NOTES_FILE" ]; then
+            echo "::error::Missing versioned release notes: $NOTES_FILE"
+            exit 1
+          fi
+
+          if existing="$(gh release view "$TAG" --json isDraft,assets 2>/dev/null)"; then
+            is_draft="$(jq -r '.isDraft' <<< "$existing")"
+            asset_count="$(jq '.assets | length' <<< "$existing")"
+            if [ "$is_draft" != "true" ] || [ "$asset_count" -ne 0 ]; then
+              echo "::error::Release $TAG already exists and is published or contains assets. Refusing to overwrite it."
+              exit 1
+            fi
+            echo "Reusing the existing empty draft release for $TAG."
+            gh release edit "$TAG" --title "Audify $VERSION_NAME" --notes-file "$NOTES_FILE"
+          else
+            echo "Creating a new draft release for $TAG."
+            gh release create "$TAG" --draft --title "Audify $VERSION_NAME" --notes-file "$NOTES_FILE"
+          fi
+
+          gh release upload "$TAG" "dist/Audify-$VERSION_NAME.apk"
+          gh release upload "$TAG" "dist/Audify-$VERSION_NAME""_arm64-v8a.apk"
+          gh release upload "$TAG" "dist/NevTunePlusTV-$VERSION_NAME.apk"
+          gh release upload "$TAG" "dist/NevTunePlusWear-$VERSION_NAME.apk"
+
+          (cd dist && sha256sum *.apk > SHA256SUMS.txt)
+          gh release upload "$TAG" dist/SHA256SUMS.txt
+          gh release edit "$TAG" --draft=false
+          gh release view "$TAG" --json name,tagName,isDraft,url,assets

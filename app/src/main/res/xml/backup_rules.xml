@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (c) 2026 Sachit. All rights reserved.
+Project: NevTune+
+-->
+<!--
+   Auto-backup rules for Android 11 and older; data_extraction_rules.xml
+   replaces these from Android 12.
+
+   The encrypted stores are excluded because their keysets are wrapped by an
+   Android Keystore key that never leaves the device: restored anywhere, they
+   can't be decrypted (see EncryptedPrefs). Their plain fallbacks are excluded
+   because they hold the same credentials in cleartext.
+-->
+<full-backup-content>
+    <exclude domain="sharedpref" path="audify_auth.xml" />
+    <exclude domain="sharedpref" path="audify_auth_plain.xml" />
+    <exclude domain="sharedpref" path="audify_sources.xml" />
+    <exclude domain="sharedpref" path="audify_sources_plain.xml" />
+    <!-- Playback queues are local session state; do not resurrect them after reinstall. -->
+    <exclude domain="sharedpref" path="audify_last_played.xml" />
+    <exclude domain="sharedpref" path="audify_bounded_context.xml" />
+    <exclude domain="sharedpref" path="audify_party_queue_stash.xml" />
+</full-backup-content>

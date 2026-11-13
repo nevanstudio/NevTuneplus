@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright (c) 2026 NevTune+. All rights reserved.
+-->
+<resources>
+    <!-- Compose owns all theming; this just gives an edge-to-edge, action-bar-free window. -->
+    <style name="Theme.NevTunePlus" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+    <style name="Theme.Audify" parent="Theme.NevTunePlus" />
+</resources>

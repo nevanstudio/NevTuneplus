@@ -1,0 +1,82 @@
+{
+  "version": 3,
+  "artifactType": {
+    "type": "APK",
+    "kind": "Directory"
+  },
+  "applicationId": "com.dev.nevtuneplus.tv",
+  "variantName": "devRelease",
+  "elements": [
+    {
+      "type": "UNIVERSAL",
+      "filters": [],
+      "attributes": [],
+      "versionCode": 40,
+      "versionName": "1.9.1",
+      "outputFile": "tv-dev-universal-release.apk"
+    },
+    {
+      "type": "ONE_OF_MANY",
+      "filters": [
+        {
+          "filterType": "ABI",
+          "value": "armeabi-v7a"
+        }
+      ],
+      "attributes": [],
+      "versionCode": 40,
+      "versionName": "1.9.1",
+      "outputFile": "tv-dev-armeabi-v7a-release.apk"
+    },
+    {
+      "type": "ONE_OF_MANY",
+      "filters": [
+        {
+          "filterType": "ABI",
+          "value": "x86_64"
+        }
+      ],
+      "attributes": [],
+      "versionCode": 40,
+      "versionName": "1.9.1",
+      "outputFile": "tv-dev-x86_64-release.apk"
+    },
+    {
+      "type": "ONE_OF_MANY",
+      "filters": [
+        {
+          "filterType": "ABI",
+          "value": "arm64-v8a"
+        }
+      ],
+      "attributes": [],
+      "versionCode": 40,
+      "versionName": "1.9.1",
+      "outputFile": "tv-dev-arm64-v8a-release.apk"
+    }
+  ],
+  "elementType": "File",
+  "baselineProfiles": [
+    {
+      "minApi": 28,
+      "maxApi": 30,
+      "baselineProfiles": [
+        "baselineProfiles/1/tv-dev-universal-release.dm",
+        "baselineProfiles/1/tv-dev-armeabi-v7a-release.dm",
+        "baselineProfiles/1/tv-dev-x86_64-release.dm",
+        "baselineProfiles/1/tv-dev-arm64-v8a-release.dm"
+      ]
+    },
+    {
+      "minApi": 31,
+      "maxApi": 2147483647,
+      "baselineProfiles": [
+        "baselineProfiles/0/tv-dev-universal-release.dm",
+        "baselineProfiles/0/tv-dev-armeabi-v7a-release.dm",
+        "baselineProfiles/0/tv-dev-x86_64-release.dm",
+        "baselineProfiles/0/tv-dev-arm64-v8a-release.dm"
+      ]
+    }
+  ],
+  "minSdkVersionForDexing": 26
+}
