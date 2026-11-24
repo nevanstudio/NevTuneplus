@@ -25,6 +25,21 @@ on:
         required: false
         default: false
         type: boolean
+      build_mobile:
+        description: "Include Mobile (Phone) APK"
+        required: false
+        default: true
+        type: boolean
+      build_tv:
+        description: "Include Android TV APK"
+        required: false
+        default: true
+        type: boolean
+      build_wear:
+        description: "Include Wear OS (Watch) APK"
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -163,16 +178,55 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run unit-test gates
-        run: ./gradlew --no-daemon --max-workers=2 :app:testDevDebugUnitTest :app:testProdDebugUnitTest :tv:testProdDebugUnitTest :shared:jvmTest :sharedUi:jvmTest
+        shell: bash
+        env:
+          BUILD_MOBILE: ${{ inputs.build_mobile != false }}
+          BUILD_TV: ${{ inputs.build_tv != false }}
+        run: |
+          set -euo pipefail
+          TASKS=":shared:jvmTest :sharedUi:jvmTest"
+          [ "$BUILD_MOBILE" = "true" ] && TASKS=":app:testDevDebugUnitTest :app:testProdDebugUnitTest $TASKS"
+          [ "$BUILD_TV" = "true" ] && TASKS=":tv:testProdDebugUnitTest $TASKS"
+          ./gradlew --no-daemon --max-workers=2 $TASKS
 
       - name: Run production release lint
-        run: ./gradlew --no-daemon --max-workers=2 -Pnevtune.release=true -PnevtuneVersionName="$VERSION_NAME" -PnevtuneVersionCode="$VERSION_CODE" :app:lintProdRelease :tv:lintProdRelease :wearos:lintProdRelease
+        shell: bash
+        env:
+          BUILD_MOBILE: ${{ inputs.build_mobile != false }}
+          BUILD_TV: ${{ inputs.build_tv != false }}
+          BUILD_WEAR: ${{ inputs.build_wear != false }}
+        run: |
+          set -euo pipefail
+          TASKS=""
+          [ "$BUILD_MOBILE" = "true" ] && TASKS="$TASKS :app:lintProdRelease"
+          [ "$BUILD_TV" = "true" ] && TASKS="$TASKS :tv:lintProdRelease"
+          [ "$BUILD_WEAR" = "true" ] && TASKS="$TASKS :wearos:lintProdRelease"
+          if [ -z "$TASKS" ]; then
+            echo "::error::Select at least one platform (Mobile, TV, or Wear OS)."
+            exit 1
+          fi
+          ./gradlew --no-daemon --max-workers=2 -Pnevtune.release=true -PnevtuneVersionName="$VERSION_NAME" -PnevtuneVersionCode="$VERSION_CODE" $TASKS
 
-      - name: Build all production APK variants
-        run: ./gradlew --no-daemon --max-workers=1 -Pnevtune.release=true -PnevtuneVersionName="$VERSION_NAME" -PnevtuneVersionCode="$VERSION_CODE" :app:assembleProdRelease :tv:assembleProdRelease :wearos:assembleProdRelease
+      - name: Build selected production APK variants
+        shell: bash
+        env:
+          BUILD_MOBILE: ${{ inputs.build_mobile != false }}
+          BUILD_TV: ${{ inputs.build_tv != false }}
+          BUILD_WEAR: ${{ inputs.build_wear != false }}
+        run: |
+          set -euo pipefail
+          TASKS=""
+          [ "$BUILD_MOBILE" = "true" ] && TASKS="$TASKS :app:assembleProdRelease"
+          [ "$BUILD_TV" = "true" ] && TASKS="$TASKS :tv:assembleProdRelease"
+          [ "$BUILD_WEAR" = "true" ] && TASKS="$TASKS :wearos:assembleProdRelease"
+          ./gradlew --no-daemon --max-workers=1 -Pnevtune.release=true -PnevtuneVersionName="$VERSION_NAME" -PnevtuneVersionCode="$VERSION_CODE" $TASKS
 
       - name: Stage release APKs
         shell: bash
+        env:
+          BUILD_MOBILE: ${{ inputs.build_mobile != false }}
+          BUILD_TV: ${{ inputs.build_tv != false }}
+          BUILD_WEAR: ${{ inputs.build_wear != false }}
         run: |
           set -euo pipefail
           mkdir -p dist
@@ -191,15 +245,24 @@ jobs:
             cp "${matches[0]}" "dist/$destination"
           }
 
-          copy_one app/build/outputs/apk/prod/release '*-universal-release.apk' "NevTunePlus-$VERSION_NAME.apk"
-          copy_one tv/build/outputs/apk/prod/release '*-universal-release.apk' "NevTunePlusTV-$VERSION_NAME.apk"
-          copy_one wearos/build/outputs/apk/prod/release '*-universal-release.apk' "NevTunePlusWear-$VERSION_NAME.apk"
+          EXPECTED_COUNT=0
+          if [ "$BUILD_MOBILE" = "true" ]; then
+            copy_one app/build/outputs/apk/prod/release '*-universal-release.apk' "NevTunePlus-$VERSION_NAME.apk"
+            echo "1. NevTune+ Mobile — $VERSION_NAME"
+            EXPECTED_COUNT=$((EXPECTED_COUNT + 1))
+          fi
+          if [ "$BUILD_TV" = "true" ]; then
+            copy_one tv/build/outputs/apk/prod/release '*-universal-release.apk' "NevTunePlusTV-$VERSION_NAME.apk"
+            echo "2. NevTune+ TV — $VERSION_NAME"
+            EXPECTED_COUNT=$((EXPECTED_COUNT + 1))
+          fi
+          if [ "$BUILD_WEAR" = "true" ]; then
+            copy_one wearos/build/outputs/apk/prod/release '*-universal-release.apk' "NevTunePlusWear-$VERSION_NAME.apk"
+            echo "3. NevTune+ Watch OS — $VERSION_NAME"
+            EXPECTED_COUNT=$((EXPECTED_COUNT + 1))
+          fi
 
-          test "$(find dist -maxdepth 1 -type f -name '*.apk' | wc -l)" -eq 3
-          printf '%s\n' \
-            "1. NevTune+ Mobile — $VERSION_NAME" \
-            "2. NevTune+ TV — $VERSION_NAME" \
-            "3. NevTune+ Watch OS — $VERSION_NAME"
+          test "$(find dist -maxdepth 1 -type f -name '*.apk' | wc -l)" -eq "$EXPECTED_COUNT"
 
       - name: Verify package IDs, versions and production signatures
         shell: bash
@@ -208,11 +271,8 @@ jobs:
           BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -n 1)"
           AAPT="$BUILD_TOOLS/aapt"
           APKSIGNER="$BUILD_TOOLS/apksigner"
-          EXPECTED_CERT="4bde8155328a9a8659ce6b75d1a0df2e4811c0ccdc555a52ccb3df2a4be94e21"
-          for apk in \
-            "dist/NevTunePlus-$VERSION_NAME.apk" \
-            "dist/NevTunePlusTV-$VERSION_NAME.apk" \
-            "dist/NevTunePlusWear-$VERSION_NAME.apk"; do
+          EXPECTED_CERT="831f7b35eecfb342adf9698a1619024518300733d9a1d586d29bb5ec7a1b2781"
+          for apk in dist/*.apk; do
             test -s "$apk"
             case "$apk" in
               *NevTunePlusTV-*) expected_package="com.nevanstudio.nevtuneplus.tv" ;;
@@ -251,12 +311,13 @@ jobs:
             done
           }
           for apk in "dist/NevTunePlus-$VERSION_NAME.apk" "dist/NevTunePlusTV-$VERSION_NAME.apk"; do
+            [ -f "$apk" ] || continue
             for abi in armeabi-v7a arm64-v8a x86_64; do
               require_native_payload "$apk" "$abi"
             done
             echo "Verified native payload: $apk (armeabi-v7a, arm64-v8a, x86_64)"
           done
-          echo "All three APKs match the approved NevTune+ signing certificate."
+          echo "All selected APKs match the approved NevTune+ signing certificate."
 
       - name: Report dry-run completion
         if: ${{ inputs.dry_run == true }}
@@ -326,11 +387,6 @@ jobs:
           if [ -n "${CUSTOM_NOTES:-}" ]; then
             # Use the notes typed in the workflow dispatch form
             {
-              # Prepend banner image if provided
-              if [ -n "${BANNER_URL:-}" ]; then
-                echo "![Release banner](${BANNER_URL})"
-                echo ""
-              fi
               echo "# NevTune+ ${VERSION_NAME}"
               echo ""
               echo "${CUSTOM_NOTES}"
@@ -344,15 +400,22 @@ jobs:
               LOG_RANGE="-n 20"
             fi
             {
-              if [ -n "${BANNER_URL:-}" ]; then
-                echo "![Release banner](${BANNER_URL})"
-                echo ""
-              fi
               echo "# NevTune+ ${VERSION_NAME}"
               echo ""
               echo "## What's New"
               git log $LOG_RANGE --no-merges --pretty=format:"- %s" || echo "- Release ${VERSION_NAME}"
             } > "$NOTES_FILE"
+          fi
+
+          FINAL_NOTES="$RUNNER_TEMP/release_notes.md"
+          if [ -n "${BANNER_URL:-}" ]; then
+            {
+              echo "![Release banner](${BANNER_URL})"
+              echo ""
+              cat "$NOTES_FILE"
+            } > "$FINAL_NOTES"
+          else
+            cp "$NOTES_FILE" "$FINAL_NOTES"
           fi
 
           if existing="$(gh release view "$TAG" --json isDraft,assets 2>/dev/null)"; then
@@ -363,15 +426,15 @@ jobs:
               exit 1
             fi
             echo "Reusing the existing empty draft release for $TAG."
-            gh release edit "$TAG" --title "NevTune+ ${VERSION_NAME}" --notes-file "$NOTES_FILE"
+            gh release edit "$TAG" --title "NevTune+ ${VERSION_NAME}" --notes-file "$FINAL_NOTES"
           else
             echo "Creating a new draft release for $TAG."
-            gh release create "$TAG" --draft --title "NevTune+ ${VERSION_NAME}" --notes-file "$NOTES_FILE"
+            gh release create "$TAG" --draft --title "NevTune+ ${VERSION_NAME}" --notes-file "$FINAL_NOTES"
           fi
 
-          gh release upload "$TAG" "dist/NevTunePlus-${VERSION_NAME}.apk"
-          gh release upload "$TAG" "dist/NevTunePlusTV-${VERSION_NAME}.apk"
-          gh release upload "$TAG" "dist/NevTunePlusWear-${VERSION_NAME}.apk"
+          for apk in dist/*.apk; do
+            gh release upload "$TAG" "$apk"
+          done
 
           (cd dist && sha256sum *.apk > SHA256SUMS.txt)
           gh release upload "$TAG" dist/SHA256SUMS.txt
