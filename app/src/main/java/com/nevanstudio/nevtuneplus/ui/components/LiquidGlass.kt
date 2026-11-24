@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 /*
  * The glass rendering itself is Kyant0/backdrop (Apache-2.0), vendored at

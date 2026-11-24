@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.sources
 
@@ -331,7 +331,7 @@ class AddonSource(
         if (answer.isEncrypted) {
             TrackLog.w(
                 TAG,
-                "${config.displayName}: $trackId came back encrypted, which Audify never asked for — passing",
+                "${config.displayName}: $trackId came back encrypted, which NevTune+ never asked for — passing",
             )
             return null
         }

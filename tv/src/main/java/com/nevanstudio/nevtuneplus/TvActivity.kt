@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus
 
@@ -9,7 +9,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
+import kotlinx.coroutines.launch
 import com.nevanstudio.nevtuneplus.data.listentogether.JamInviteLink
 import com.nevanstudio.nevtuneplus.playback.MusicLink
 import com.nevanstudio.nevtuneplus.playback.PlayerDeepLink
@@ -33,8 +35,17 @@ class TvActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Attach TV Refresh Rate and Display Controller
-        TvRefreshRateController.attach(this)
+        // Attach TV Refresh Rate and Display Controller safely
+        runCatching { TvRefreshRateController.attach(this) }
+
+        // Observe audio session ID to attach Spatial Audio Virtualizer when enabled
+        lifecycleScope.launch {
+            com.nevanstudio.nevtuneplus.data.settings.AppSettings.audioSessionId.collect { sessionId ->
+                if (sessionId > 0 && com.nevanstudio.nevtuneplus.data.settings.TvSettings.spatialAudioEnabled.value) {
+                    com.nevanstudio.nevtuneplus.ui.tv.audio.TvSpatialAudioEngine.attach(sessionId)
+                }
+            }
+        }
 
         // Make window full edge-to-edge for 1080p/4K television screens
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -91,6 +102,7 @@ class TvActivity : ComponentActivity() {
             }
         }
         super.onDestroy()
-        TvRefreshRateController.detach()
+        runCatching { TvRefreshRateController.detach() }
+        runCatching { com.nevanstudio.nevtuneplus.ui.tv.audio.TvSpatialAudioEngine.release() }
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package main
 
@@ -20,13 +20,13 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/sachit1751-art/Audify/backend/clock"
-	"github.com/sachit1751-art/Audify/backend/codes"
-	"github.com/sachit1751-art/Audify/backend/config"
-	"github.com/sachit1751-art/Audify/backend/hub"
-	"github.com/sachit1751-art/Audify/backend/party"
-	"github.com/sachit1751-art/Audify/backend/presence"
-	"github.com/sachit1751-art/Audify/backend/protocol"
+	"github.com/nevanstudio/NevTuneplus/backend/clock"
+	"github.com/nevanstudio/NevTuneplus/backend/codes"
+	"github.com/nevanstudio/NevTuneplus/backend/config"
+	"github.com/nevanstudio/NevTuneplus/backend/hub"
+	"github.com/nevanstudio/NevTuneplus/backend/party"
+	"github.com/nevanstudio/NevTuneplus/backend/presence"
+	"github.com/nevanstudio/NevTuneplus/backend/protocol"
 )
 
 var (
@@ -752,7 +752,7 @@ var inviteTemplate = template.Must(template.New("invite").Parse(`<!DOCTYPE html>
             <a id="joinBtn" href="{{.IntentURI}}" class="btn">Join Party in NevTune+</a>
             <p class="footer-note">
                 Didn’t open automatically? Tap the button above.<br>
-                Don't have NevTune+ yet? <a href="https://github.com/sachit1751-art/NevTune+/releases" target="_blank" rel="noopener">Download it here</a>.
+                Don't have NevTune+ yet? <a href="https://github.com/nevanstudio/NevTuneplus/releases" target="_blank" rel="noopener">Download it here</a>.
             </p>
             <script>
                 var intentUri = {{.IntentURI}};

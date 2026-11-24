@@ -64,3 +64,5 @@ desktop/build/
 desktop/.gradle/
 desktop/target/
 desktop/dist/
+
+/nevtuneplusweb/

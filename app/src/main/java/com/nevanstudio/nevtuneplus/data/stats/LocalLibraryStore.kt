@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.stats
 
@@ -29,7 +29,7 @@ object LocalLibraryStore {
     fun init(context: Context) {
         prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val storedVersion = prefs.getInt(SCHEMA_VERSION_KEY, 0)
-        require(storedVersion <= SCHEMA_VERSION) { "Local library data was created by a newer Audify build" }
+        require(storedVersion <= SCHEMA_VERSION) { "Local library data was created by a newer NevTune+ build" }
         if (storedVersion < SCHEMA_VERSION) {
             check(prefs.edit().putInt(SCHEMA_VERSION_KEY, SCHEMA_VERSION).commit()) {
                 "Could not finalize local library storage migration"

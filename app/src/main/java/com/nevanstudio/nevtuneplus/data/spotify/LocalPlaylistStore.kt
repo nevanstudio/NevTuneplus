@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.spotify
 
@@ -56,7 +56,7 @@ object LocalPlaylistStore {
     /** Stable SharedPreferences name plus an explicit schema marker for future format migrations. */
     private fun migrateStorageIfNeeded() {
         val version = prefs.getInt(KEY_SCHEMA_VERSION, 0)
-        require(version <= SCHEMA_VERSION) { "Local playlist data was created by a newer Audify build" }
+        require(version <= SCHEMA_VERSION) { "Local playlist data was created by a newer NevTune+ build" }
         if (version < SCHEMA_VERSION) {
             check(prefs.edit().putInt(KEY_SCHEMA_VERSION, SCHEMA_VERSION).commit()) {
                 "Could not finalize local playlist storage migration"

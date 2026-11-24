@@ -36,7 +36,7 @@ fun WearOnboarding(onFinish: () -> Unit) {
                 Text("NevTune+ on your wrist", style = WearType.title, color = Color.White,
                     textAlign = TextAlign.Center)
                 Spacer(Modifier.size(8.dp))
-                Text("Control nevanstudio playing on your phone, browse Up Next, and switch audio output.\n\nOpen Audify on your phone and keep Bluetooth and connectivity enabled to link your devices.",
+                Text("Control NevTune+ playing on your phone, browse Up Next, and switch audio output.\n\nOpen NevTune+ on your phone and keep Bluetooth and connectivity enabled to link your devices.",
                     style = WearType.rowSub, color = Secondary, textAlign = TextAlign.Center)
                 Spacer(Modifier.size(16.dp))
                 Pill(text = "Get started", onClick = onFinish)

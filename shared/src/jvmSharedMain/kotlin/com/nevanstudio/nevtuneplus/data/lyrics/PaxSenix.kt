@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.lyrics
 
@@ -44,7 +44,7 @@ object PaxSenix {
     ): List<LyricLine>? = withContext(Dispatchers.IO) {
         val id = searchPublicAppleTrackId(title, artist, durationMs)
             ?: return@withContext null
-        val url = publicUrl("apple-nevanstudio/lyrics")
+        val url = publicUrl("apple-music/lyrics")
             .addQueryParameter("id", id)
             .addQueryParameter("ttml", "true")
             .build()

@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [switch]$AcceptLicenses,
     [switch]$Release
@@ -14,7 +14,7 @@ function Invoke-Gradle([string[]]$Tasks) {
     if ($LASTEXITCODE -ne 0) { throw "Gradle failed (exit $LASTEXITCODE): $($Tasks -join ' ')" }
 }
 
-Write-Host 'AUDIFY — fresh clone setup and verification' -ForegroundColor Cyan
+Write-Host 'NEVTUNE+ — fresh clone setup and verification' -ForegroundColor Cyan
 & (Join-Path $PSScriptRoot 'setup.ps1') -AcceptLicenses:$AcceptLicenses
 if ($LASTEXITCODE -ne 0) { throw 'Android environment setup failed.' }
 

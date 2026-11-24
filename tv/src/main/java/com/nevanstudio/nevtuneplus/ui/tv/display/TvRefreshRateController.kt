@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.tv.display
 
@@ -28,39 +28,48 @@ object TvRefreshRateController {
     private var displayListener: DisplayManager.DisplayListener? = null
 
     fun attach(activity: Activity) {
-        val dm = activity.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager
-        displayManager = dm
+        runCatching {
+            val dm = activity.getSystemService(Context.DISPLAY_SERVICE) as? DisplayManager
+            displayManager = dm
 
-        val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            activity.display
-        } else {
-            @Suppress("DEPRECATION")
-            activity.windowManager.defaultDisplay
-        }
+            val display = runCatching {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    activity.display
+                } else {
+                    @Suppress("DEPRECATION")
+                    activity.windowManager.defaultDisplay
+                }
+            }.getOrElse {
+                @Suppress("DEPRECATION")
+                activity.windowManager?.defaultDisplay
+            }
 
-        updateCapabilities(display)
+            updateCapabilities(display)
 
-        // Read stored preference
-        val stored = TvSettings.tvRefreshRate.value
-        val requested = TvRefreshRatePreference.fromString(stored)
-        val pref = if (requested == TvRefreshRatePreference.ULTRA_120 && !_capabilities.value.is120HzSupported) {
-            TvRefreshRatePreference.SYSTEM_AUTO.also { TvSettings.setTvRefreshRate(it.name) }
-        } else requested
-        _preference.value = pref
-        applyToWindow(activity, pref)
+            // Read stored preference
+            val stored = TvSettings.tvRefreshRate.value
+            val requested = TvRefreshRatePreference.fromString(stored)
+            val pref = if (requested == TvRefreshRatePreference.ULTRA_120 && !_capabilities.value.is120HzSupported) {
+                TvRefreshRatePreference.SYSTEM_AUTO.also { TvSettings.setTvRefreshRate(it.name) }
+            } else requested
+            _preference.value = pref
+            applyToWindow(activity, pref)
 
-        val listener = object : DisplayManager.DisplayListener {
-            override fun onDisplayAdded(displayId: Int) {}
-            override fun onDisplayRemoved(displayId: Int) {}
-            override fun onDisplayChanged(displayId: Int) {
-                if (displayId == display?.displayId) {
-                    updateCapabilities(display)
-                    applyToWindow(activity, _preference.value)
+            val listener = object : DisplayManager.DisplayListener {
+                override fun onDisplayAdded(displayId: Int) {}
+                override fun onDisplayRemoved(displayId: Int) {}
+                override fun onDisplayChanged(displayId: Int) {
+                    if (displayId == display?.displayId) {
+                        updateCapabilities(display)
+                        applyToWindow(activity, _preference.value)
+                    }
                 }
             }
+            displayListener = listener
+            dm?.registerDisplayListener(listener, null)
+        }.onFailure { e ->
+            Log.w(TAG, "TvRefreshRateController attach failed non-fatally: ${e.message}")
         }
-        displayListener = listener
-        dm?.registerDisplayListener(listener, null)
     }
 
     fun detach() {

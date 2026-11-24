@@ -2,5 +2,5 @@
 rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 
 [alias]
-prof = "run --release --package audify --features profiler"
+prof = "run --release --package nevtuneplus --features profiler"
 prober = "run --package music --example lyrics-prober --"

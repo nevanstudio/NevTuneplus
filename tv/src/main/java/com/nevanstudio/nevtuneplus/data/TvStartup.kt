@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data
 
@@ -17,8 +17,17 @@ class TvStartup : Initializer<Unit> {
     override fun create(context: Context) {
         TvSettings.init(context)
         TvUsbMusic.install()
-        // A looping canvas clip at 24 fps is plenty behind the player and spares the TV GPU.
-        if (DeviceType.isTv(context)) CanvasPlaybackLimits.maxFrameRate = 24
+
+        if (DeviceType.isTv(context)) {
+            // On low-RAM (2GB or less) or TV Lite mode, video canvas playback is completely disabled
+            // to eliminate hardware decoder contention, OOM, and frame drops.
+            // On higher-end TV hardware, capped at 24fps to spare the GPU.
+            if (DeviceType.isTvLite(context)) {
+                CanvasPlaybackLimits.maxFrameRate = 0
+            } else {
+                CanvasPlaybackLimits.maxFrameRate = 24
+            }
+        }
     }
 
     override fun dependencies(): List<Class<out Initializer<*>>> = emptyList()

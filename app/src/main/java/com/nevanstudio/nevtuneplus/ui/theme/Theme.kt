@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.theme
 
@@ -61,6 +61,20 @@ private val LightColors = lightColorScheme(
  * type scale actually asks for are bundled; Compose synthesises nothing, so a
  * missing weight would silently fall back to the nearest one shipped.
  */
+/**
+ * Geom font family — the default primary typeface across the whole app for NevTune+.
+ * Includes all weights from light to black.
+ */
+val GeomFont = FontFamily(
+    Font(R.font.geom_light, FontWeight.W300),
+    Font(R.font.geom_regular, FontWeight.W400),
+    Font(R.font.geom_medium, FontWeight.W500),
+    Font(R.font.geom_semibold, FontWeight.W600),
+    Font(R.font.geom_bold, FontWeight.W700),
+    Font(R.font.geom_extrabold, FontWeight.W800),
+    Font(R.font.geom_black, FontWeight.W900),
+)
+
 val SFProDisplay = FontFamily(
     Font(R.font.sf_pro_display_regular, FontWeight.W400),
     Font(R.font.sf_pro_display_medium, FontWeight.W500),
@@ -110,7 +124,8 @@ fun NevTunePlusTheme(
     val baseDensity = LocalDensity.current
     val fontChoice by AppSettings.fontChoice.collectAsStateWithLifecycle()
     val selectedFont = when (fontChoice) {
-        AppFontChoice.AUDIFY -> SFProDisplay
+        AppFontChoice.AUDIFY -> GeomFont
+        AppFontChoice.SF_PRO -> SFProDisplay
         AppFontChoice.SYSTEM -> FontFamily.Default
         AppFontChoice.SERIF -> FontFamily.Serif
     }

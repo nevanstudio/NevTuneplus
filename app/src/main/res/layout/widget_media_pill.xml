@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-Copyright (c) 2026 Sachit. All rights reserved.
+Copyright (c) 2026 NevanStudio. All rights reserved.
 Project: NevTune+
 -->
 <!--
@@ -96,7 +96,7 @@ Project: NevTune+
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ellipsize="end"
-                    android:fontFamily="@font/sf_pro_display_semibold"
+                    android:fontFamily="@font/geom_semibold"
                     android:includeFontPadding="false"
                     android:maxLines="1"
                     android:paddingStart="10dp"

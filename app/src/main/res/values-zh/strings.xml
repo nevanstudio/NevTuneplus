@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2026 Sachit. All rights reserved.
+Copyright (c) 2026 NevanStudio. All rights reserved.
 Project: NevTune+
 -->
 <resources>
@@ -1141,18 +1141,18 @@ Project: NevTune+
     <string name="download_file_check_unchecked">已儲存 · 尚未執行檔案檢查</string>
     <string name="download_file_check_available">檔案檢查通過 · 檔案可讀取</string>
     <string name="download_file_check_unavailable">檔案檢查失敗 · 無法讀取檔案</string>
-    <string name="sachit_listening_summary_save">儲存聆聽摘要（CSV）</string>
-    <string name="sachit_listening_summary_share">分享聆聽摘要（CSV）</string>
-    <string name="sachit_listening_summary_note">每首歌曲保留的所有每月總計。不會儲存個別播放時間。</string>
-    <string name="sachit_listening_summary_chooser">分享聆聽摘要</string>
-    <string name="sachit_listening_summary_saved">聆聽摘要已儲存。</string>
-    <string name="sachit_listening_summary_save_failed">無法儲存聆聽摘要。</string>
-    <string name="sachit_spotify_import_file_button">選擇 Spotify CSV/TSV 檔案</string>
-    <string name="sachit_spotify_import_file_note">也可以匯入包含 Track Name 和 Artist 欄位的 Spotify CSV 或 TSV 匯出檔。</string>
-    <string name="sachit_spotify_import_file_read_failed">無法讀取所選檔案。</string>
-    <string name="sachit_spotify_import_json_unsupported">目前尚不支援 Spotify JSON 匯出檔。</string>
-    <string name="sachit_spotify_import_file_unsupported">不支援此檔案。請選擇 Spotify CSV 或 TSV 匯出檔。</string>
-    <string name="sachit_spotify_import_file_default_title">已匯入的 Spotify 播放清單</string>
+    <string name="nevtune_listening_summary_save">儲存聆聽摘要（CSV）</string>
+    <string name="nevtune_listening_summary_share">分享聆聽摘要（CSV）</string>
+    <string name="nevtune_listening_summary_note">每首歌曲保留的所有每月總計。不會儲存個別播放時間。</string>
+    <string name="nevtune_listening_summary_chooser">分享聆聽摘要</string>
+    <string name="nevtune_listening_summary_saved">聆聽摘要已儲存。</string>
+    <string name="nevtune_listening_summary_save_failed">無法儲存聆聽摘要。</string>
+    <string name="nevtune_spotify_import_file_button">選擇 Spotify CSV/TSV 檔案</string>
+    <string name="nevtune_spotify_import_file_note">也可以匯入包含 Track Name 和 Artist 欄位的 Spotify CSV 或 TSV 匯出檔。</string>
+    <string name="nevtune_spotify_import_file_read_failed">無法讀取所選檔案。</string>
+    <string name="nevtune_spotify_import_json_unsupported">目前尚不支援 Spotify JSON 匯出檔。</string>
+    <string name="nevtune_spotify_import_file_unsupported">不支援此檔案。請選擇 Spotify CSV 或 TSV 匯出檔。</string>
+    <string name="nevtune_spotify_import_file_default_title">已匯入的 Spotify 播放清單</string>
 <string name="download_storage_budget">下載儲存空間上限</string>
     <string name="download_storage_unknown_title">下載已封鎖 · 大小未知</string>
     <string name="download_storage_budget_title">已達下載儲存空間上限</string>

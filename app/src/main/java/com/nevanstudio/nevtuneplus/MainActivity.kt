@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus
 
@@ -999,9 +999,9 @@ private fun NevTunePlusApp(
         }
     }
     LaunchedEffect(localMusicFolderUri, filterNonMusicAudio) {
-        val open = topDetail?.browseId
+        val open = topDetail?.browseId ?: return@LaunchedEffect
         if (open == "local:all" || LocalGroups.folderOf(open) == "local:all") {
-            viewModel.reloadLocalDetail(open!!)
+            viewModel.reloadLocalDetail(open)
         }
     }
     LaunchedEffect(webdavUrl) {
@@ -1245,17 +1245,16 @@ private fun NevTunePlusApp(
     val exploreLabel = stringResource(R.string.explore)
     val libraryLabel = stringResource(R.string.library)
     val searchLabel = stringResource(R.string.search)
-    val settingsLabel = stringResource(R.string.settings)
     val historyLabel = stringResource(R.string.history)
     val replayLabel = stringResource(R.string.replay)
     val queueLabel = stringResource(R.string.queue)
     val sharedLinkLabel = stringResource(R.string.shared_link)
-    val tabs = remember(homeLabel, exploreLabel, libraryLabel, settingsLabel) {
+    val tabs = remember(homeLabel, exploreLabel, libraryLabel, searchLabel) {
         listOf(
             BottomTab(homeLabel, NevTunePlusIcons.Home),
             BottomTab(exploreLabel, NevTunePlusIcons.TabExplore),
             BottomTab(libraryLabel, NevTunePlusIcons.TabLibrary),
-            BottomTab(settingsLabel, Icons.Rounded.Settings),
+            BottomTab(searchLabel, NevTunePlusIcons.TabSearch),
         )
     }
 
@@ -2823,11 +2822,10 @@ private fun NevTunePlusApp(
         val onTabSelected: (Int) -> Unit = { index ->
             navigator.clear()
             viewModel.closeMoodGenre()
-            if (index == 3) {
-                navigator.push(AppRoute.Settings)
-            } else {
-                selectedTab = index
+            if (index == TAB_SEARCH) {
+                searchFocusRequested = true
             }
+            selectedTab = index
         }
 
         // On a tablet the page and the player stand side by side rather than
@@ -2844,7 +2842,7 @@ private fun NevTunePlusApp(
                 ) {
                     tabs.forEachIndexed { index, tab ->
                         NavigationRailItem(
-                            selected = (if (route == AppRoute.Settings) 3 else selectedTab.coerceAtMost(2)) == index,
+                            selected = (if (route == null && detail == null) selectedTab == index else false),
                             onClick = { onTabSelected(index) },
                             icon = { Icon(tab.icon, contentDescription = null) },
                             label = { Text(tab.label, maxLines = 1) },
@@ -4260,7 +4258,7 @@ LibraryScreen(
                     // and the pair folds together on scroll. See [GlassNavBar].
                     GlassNavBar(
                         tabs = tabs,
-                        selectedIndex = if (route == AppRoute.Settings) 3 else selectedTab.coerceAtMost(2),
+                        selectedIndex = selectedTab,
                         onTabSelected = onTabSelected,
                         scrollConnection = navBarScroll,
                         song = playerSong,
@@ -4330,7 +4328,7 @@ LibraryScreen(
                     }
                     FloatingBottomBar(
                         tabs = tabs,
-                        selectedIndex = if (route == AppRoute.Settings) 3 else selectedTab.coerceAtMost(2),
+                        selectedIndex = selectedTab,
                         hazeState = hazeState,
                         onTabSelected = onTabSelected,
                     )
@@ -4604,11 +4602,8 @@ LibraryScreen(
             fun versionAlignmentPending(targetId: String): Boolean =
                 AppSettings.smartVersionAlignment.value &&
                     VersionAudioAligner.getCachedOffsetMs(song.videoId, targetId) == null
-            val menuIsAudioVersion = if (optimisticVersionSong != null) {
-                !optimisticVersionSong!!.isVideo
-            } else {
-                !song.isVideo && convertedVideoId != song.videoId
-            }
+            val menuIsAudioVersion = optimisticVersionSong?.let { !it.isVideo }
+                ?: (!song.isVideo && convertedVideoId != song.videoId)
             val onToggleVersion: (() -> Unit)? = if (fromPlayer &&
                 hasAlternateVersion &&
                 !switchingAudioVersion &&
@@ -5429,7 +5424,7 @@ LibraryScreen(
                     context.startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
-                            "https://github.com/sachit1751-art/NevTune+/releases/tag/v1.8.9".toUri(),
+                            "https://github.com/nevanstudio/NevTuneplus/releases/tag/v1.8.9".toUri(),
                         ),
                     )
                 },
@@ -5440,7 +5435,7 @@ LibraryScreen(
                     context.startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
-                            "https://github.com/sachit1751-art/NevTune+/releases/tag/v1.8.9".toUri(),
+                            "https://github.com/nevanstudio/NevTuneplus/releases/tag/v1.8.9".toUri(),
                         ),
                     )
                 },

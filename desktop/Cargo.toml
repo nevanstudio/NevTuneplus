@@ -3,10 +3,10 @@ resolver = "3"
 members = ["crates/*"]
 
 [workspace.package]
-version = "1.9.1"
+version = "26.11.24"
 edition = "2024"
 license = "GPL-3.0-or-later"
-repository = "https://github.com/sachit1751-art/NevTune+"
+repository = "https://github.com/nevanstudio/NevTuneplus"
 
 [workspace.dependencies]
 embed = { path = "crates/embed" }

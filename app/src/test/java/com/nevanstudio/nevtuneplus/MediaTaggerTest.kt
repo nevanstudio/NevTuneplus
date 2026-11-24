@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus
 
@@ -349,7 +349,7 @@ class MediaTaggerTest {
         // bit isn't, and both are silent when written the other way.
         val comment = blocks[2].second
         val vendorLength = readU32Le(comment, 0)
-        assertEquals("Audify", String(comment, 4, vendorLength, Charsets.UTF_8))
+        assertEquals("NevTune+", String(comment, 4, vendorLength, Charsets.UTF_8))
         var at = 4 + vendorLength
         val count = readU32Le(comment, at)
         at += 4

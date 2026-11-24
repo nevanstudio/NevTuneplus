@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.canvas
 
@@ -40,17 +40,34 @@ object CanvasCache {
      * this only needs to outlive one player screen's worth of looping, not
      * a library. [SimpleCache]'s own evictor reclaims the rest.
      */
-    private const val CACHE_LIMIT_BYTES = 150L * 1024 * 1024
+    private const val CACHE_LIMIT_BYTES = 100L * 1024 * 1024
 
-    private lateinit var cache: SimpleCache
+    @Volatile
+    private var cache: SimpleCache? = null
 
     /** Opened once per process, alongside [com.nevanstudio.nevtuneplus.playback.AudioCache.init]. */
     fun init(context: Context) {
-        cache = SimpleCache(
-            File(context.cacheDir, "canvas"),
-            LeastRecentlyUsedCacheEvictor(CACHE_LIMIT_BYTES),
-            StandaloneDatabaseProvider(context),
-        )
+        val dir = File(context.cacheDir, "canvas")
+        val databaseProvider = StandaloneDatabaseProvider(context)
+        cache = try {
+            SimpleCache(
+                dir,
+                LeastRecentlyUsedCacheEvictor(CACHE_LIMIT_BYTES),
+                databaseProvider,
+            )
+        } catch (e: Throwable) {
+            runCatching { SimpleCache.delete(dir, databaseProvider) }
+            runCatching { dir.deleteRecursively(); dir.mkdirs() }
+            try {
+                SimpleCache(
+                    dir,
+                    LeastRecentlyUsedCacheEvictor(CACHE_LIMIT_BYTES),
+                    databaseProvider,
+                )
+            } catch (retryException: Throwable) {
+                null
+            }
+        }
     }
 
     /**
@@ -60,9 +77,11 @@ object CanvasCache {
      * plain streaming rather than surfacing as a playback error, the same
      * choice [com.nevanstudio.nevtuneplus.playback.AudioCache] makes for audio.
      */
-    fun dataSourceFactory(upstream: DataSource.Factory): DataSource.Factory =
-        CacheDataSource.Factory()
-            .setCache(cache)
+    fun dataSourceFactory(upstream: DataSource.Factory): DataSource.Factory {
+        val currentCache = cache ?: return upstream
+        return CacheDataSource.Factory()
+            .setCache(currentCache)
             .setUpstreamDataSourceFactory(upstream)
             .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+    }
 }

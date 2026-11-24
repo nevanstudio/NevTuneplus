@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright (c) 2026 Sachit. All rights reserved.
+# Copyright (c) 2026 NevanStudio. All rights reserved.
 # Project: NevTune+
 # Pulls main and rebuilds. The GitHub deploy key is pinned to this script
 # (forced command), so a leaked key can do nothing but redeploy main.

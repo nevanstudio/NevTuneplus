@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 import java.util.Properties
 
@@ -89,8 +89,8 @@ android {
         // Haze falls back to a translucent scrim below that.
         minSdk = 26
         targetSdk = 36
-        versionCode = rootProject.extra["audifyVersionCode"] as Int
-        versionName = rootProject.extra["audifyVersionName"] as String
+        versionCode = rootProject.extra["nevtuneVersionCode"] as Int
+        versionName = rootProject.extra["nevtuneVersionName"] as String
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -112,16 +112,12 @@ android {
                 arguments += mapOf("room.schemaLocation" to "${rootProject.projectDir}/app/schemas")
             }
         }
-    }
 
-    splits {
-        abi {
-            isEnable = true
-            reset()
-            include("armeabi-v7a", "arm64-v8a", "x86_64")
-            isUniversalApk = true
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
         }
     }
+
 
     /*
      * The TV app is the phone app plus a Compose-for-TV interface, so it builds
@@ -307,7 +303,7 @@ val newPipeExtractorStripped = tasks.register<org.gradle.api.tasks.bundling.Jar>
 ) {
     archiveFileName.set("NewPipeExtractor-v0.26.3-noutils.jar")
     destinationDirectory.set(layout.buildDirectory.dir("stripped-libs"))
-    from(newPipeExtractorRaw.elements.map { files -> files.map { zipTree(it.asFile) } }) {
+    from(newPipeExtractorRaw.files.map { zipTree(it) }) {
         // The class itself, plus any nested or synthetic siblings the upstream
         // compiler emitted alongside it, so nothing from the jar's Utils survives.
         exclude("org/schabi/newpipe/extractor/utils/Utils.class")
@@ -512,14 +508,21 @@ tasks.matching { it.name == "installDevDebug" }.configureEach { finalizedBy(veri
  * Drop the phone-app Kotlin file wherever tv/src/main/java carries one at the
  * same path, so the two never both reach the compiler as the same class.
  */
-val phoneJava = file("../app/src/main/java")
-val tvJava = file("src/main/java")
-val replacedByTv: Set<String> = fileTree(tvJava) { include("**/*.kt") }.files
-    .map { it.relativeTo(tvJava).invariantSeparatorsPath }
-    .filter { File(phoneJava, it).isFile }
-    .toSet()
+val phoneJavaPath = file("../app/src/main/java").absolutePath
+val tvJavaDir = file("src/main/java")
+val tvReplacedPaths: Set<String> = if (tvJavaDir.exists()) {
+    val phoneJavaDir = file(phoneJavaPath)
+    fileTree(tvJavaDir) { include("**/*.kt") }.files
+        .map { it.relativeTo(tvJavaDir).invariantSeparatorsPath }
+        .filter { File(phoneJavaDir, it).isFile }
+        .toSet()
+} else {
+    emptySet()
+}
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    val capturedPhoneJavaPath = phoneJavaPath
+    val capturedReplacedPaths = tvReplacedPaths
     exclude { el ->
-        el.file.startsWith(phoneJava) && el.relativePath.pathString in replacedByTv
+        el.file.absolutePath.startsWith(capturedPhoneJavaPath) && el.relativePath.pathString in capturedReplacedPaths
     }
 }

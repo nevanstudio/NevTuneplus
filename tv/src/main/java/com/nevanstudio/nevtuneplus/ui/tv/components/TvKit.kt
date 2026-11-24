@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.tv.components
 
@@ -120,22 +120,26 @@ fun Modifier.tvLift(
     val focused by interactionSource.collectIsFocusedAsState()
     val pressed by interactionSource.collectIsPressedAsState()
     val reduceMotion = LocalTvReduceMotion.current
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val isLite = com.nevanstudio.nevtuneplus.ui.tv.DeviceType.isTvLite(context)
+    val noMotion = reduceMotion || isLite
+
     val chrome = LocalTvChrome.current
     val requester = remember { FocusRequester() }
     LaunchedEffect(focused) { if (focused) chrome.lastFocused = requester }
     val scale = animateFloatAsState(
         targetValue = when {
-            reduceMotion -> 1f
+            noMotion -> if (focused) 1.03f else 1f
             pressed -> 1f + (focusedScale - 1f) * 0.35f
             focused -> focusedScale
             else -> 1f
         },
-        animationSpec = tween(if (reduceMotion) 0 else 220),
+        animationSpec = tween(if (noMotion) 0 else 220),
         label = "tvLiftScale",
     )
     val shadow = animateDpAsState(
-        targetValue = if (!reduceMotion && focused && !pressed) elevation else 0.dp,
-        animationSpec = tween(if (reduceMotion) 0 else 220),
+        targetValue = if (!noMotion && focused && !pressed) elevation else 0.dp,
+        animationSpec = tween(if (noMotion) 0 else 220),
         label = "tvLiftShadow",
     )
     return this
@@ -180,9 +184,11 @@ fun Modifier.tvPlatter(
 ): Modifier {
     val isFocused by interactionSource.collectIsFocusedAsState()
     val reduceMotion = LocalTvReduceMotion.current
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val isLite = com.nevanstudio.nevtuneplus.ui.tv.DeviceType.isTvLite(context)
     val color = animateColorAsState(
         targetValue = if (isFocused) focused else resting,
-        animationSpec = tween(if (reduceMotion) 0 else 140),
+        animationSpec = tween(if (reduceMotion || isLite) 0 else 140),
         label = "tvPlatter",
     )
     return drawBehind { drawRect(color.value) }
@@ -408,10 +414,13 @@ fun TvArtwork(
     url: String?,
     modifier: Modifier = Modifier,
     shape: Shape = RoundedCornerShape(10.dp),
-    px: Int = 544,
+    px: Int = 256,
     glyph: ImageVector = Icons.Rounded.MusicNote,
 ) {
-    val model = remember(url, px) { url.artworkAt(px) ?: url }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val isLite = com.nevanstudio.nevtuneplus.ui.tv.DeviceType.isTvLite(context)
+    val targetPx = if (isLite) minOf(px, 200) else px
+    val model = remember(url, targetPx) { url.artworkAt(targetPx) ?: url }
     Box(
         modifier = modifier
             .clip(shape)

@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.innertube
 
@@ -1450,7 +1450,7 @@ object InnertubeParser {
             }
         }
 
-    private val GENERIC_BYLINE_PARTS = setOf("youtube nevanstudio", "youtube", "unknown artist", "unknown")
+    private val GENERIC_BYLINE_PARTS = setOf("youtube music", "youtube nevanstudio", "youtube", "unknown artist", "unknown")
     private val DURATION = Regex("""\d+:\d{2}""")
     private val YEAR = Regex("""\d{4}""")
     /**

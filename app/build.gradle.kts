@@ -61,7 +61,7 @@ val listenTogetherServer: String = (
     ).trim().trimEnd('/')
 
 // See the root build.gradle.kts: one version for the phone and its watch app.
-val betaSuffix = rootProject.extra["audifyBetaSuffix"] as String
+val betaSuffix = rootProject.extra["nevtuneBetaSuffix"] as String
 
 android {
     namespace = "com.nevanstudio.nevtuneplus"
@@ -80,8 +80,8 @@ android {
         // ACCESS_LOCAL_NETWORK runtime gating; defer that target bump until the
         // SMB, WebDAV, wireless-ADB and Cast entry points request it deliberately.
         targetSdk = 36
-        versionCode = rootProject.extra["audifyVersionCode"] as Int
-        versionName = rootProject.extra["audifyVersionName"] as String
+        versionCode = rootProject.extra["nevtuneVersionCode"] as Int
+        versionName = rootProject.extra["nevtuneVersionName"] as String
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -102,16 +102,12 @@ android {
         // the same GitHub release, told apart by file name. See
         // AppUpdateChecker.apkAssetUrl.
         buildConfigField("String", "UPDATE_APK_PREFIX", "\"NevTune+-\"")
-    }
 
-    splits {
-        abi {
-            isEnable = true
-            reset()
-            include("armeabi-v7a", "arm64-v8a", "x86_64")
-            isUniversalApk = true
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
         }
     }
+
 
     // The phone <-> watch protocol, one file shared with the watch app so the
     // two cannot drift. See wearos/protocol/.../WearProtocol.kt.
@@ -281,7 +277,7 @@ val newPipeExtractorStripped = tasks.register<org.gradle.api.tasks.bundling.Jar>
 ) {
     archiveFileName.set("NewPipeExtractor-v0.26.3-noutils.jar")
     destinationDirectory.set(layout.buildDirectory.dir("stripped-libs"))
-    from(newPipeExtractorRaw.elements.map { files -> files.map { zipTree(it.asFile) } }) {
+    from(newPipeExtractorRaw.files.map { zipTree(it) }) {
         // The class itself, plus any nested or synthetic siblings the upstream
         // compiler emitted alongside it, so nothing from the jar's Utils survives.
         exclude("org/schabi/newpipe/extractor/utils/Utils.class")

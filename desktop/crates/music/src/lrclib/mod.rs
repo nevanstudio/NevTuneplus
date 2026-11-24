@@ -12,7 +12,7 @@ const ENDPOINT: &str = "https://lrclib.net/api/search";
 const AGENT: &str = concat!(
     "nevtuneplus/",
     env!("CARGO_PKG_VERSION"),
-    " (https://github.com/sachit1751-art/Audify)"
+    " (https://github.com/nevanstudio/NevTuneplus)"
 );
 
 pub struct LrcLib {

@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.tv.display
 
@@ -15,12 +15,13 @@ object TvDisplayCapabilitiesReader {
             return TvDisplayCapabilities()
         }
 
-        val currentMode = display.mode
-        val currentWidth = currentMode.physicalWidth
-        val currentHeight = currentMode.physicalHeight
-        val currentRefreshRate = currentMode.refreshRate
+        return try {
+            val currentMode = display.mode ?: return TvDisplayCapabilities(displayId = display.displayId)
+            val currentWidth = currentMode.physicalWidth
+            val currentHeight = currentMode.physicalHeight
+            val currentRefreshRate = currentMode.refreshRate
 
-        val rawModes = display.supportedModes ?: emptyArray()
+            val rawModes = display.supportedModes ?: emptyArray()
         val supportedModes = rawModes.map { mode ->
             val altRates = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 mode.alternativeRefreshRates
@@ -77,17 +78,20 @@ object TvDisplayCapabilitiesReader {
             null
         }
 
-        return TvDisplayCapabilities(
-            displayId = display.displayId,
-            currentModeId = currentMode.modeId,
-            currentPhysicalWidth = currentWidth,
-            currentPhysicalHeight = currentHeight,
-            actualRefreshRateHz = currentRefreshRate,
-            supportedModes = supportedModes,
-            compatible60ModeId = mode60?.id,
-            compatible120ModeId = mode120?.id,
-            canSwitchTo120Seamlessly = canSwitchSeamlessly,
-            hasAdaptiveRefreshRateSupport = hasAdaptiveSupport,
-        )
+            TvDisplayCapabilities(
+                displayId = display.displayId,
+                currentModeId = currentMode.modeId,
+                currentPhysicalWidth = currentWidth,
+                currentPhysicalHeight = currentHeight,
+                actualRefreshRateHz = currentRefreshRate,
+                supportedModes = supportedModes,
+                compatible60ModeId = mode60?.id,
+                compatible120ModeId = mode120?.id,
+                canSwitchTo120Seamlessly = canSwitchSeamlessly,
+                hasAdaptiveRefreshRateSupport = hasAdaptiveSupport,
+            )
+        } catch (_: Throwable) {
+            TvDisplayCapabilities(displayId = display.displayId)
+        }
     }
 }

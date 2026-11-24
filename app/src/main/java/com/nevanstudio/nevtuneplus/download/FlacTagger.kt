@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.download
 
@@ -250,5 +250,5 @@ object FlacTagger {
     /** The `PICTURE` type for a front cover, which is the only one written here. */
     private const val PICTURE_FRONT_COVER = 3
 
-    private const val VENDOR = "Audify"
+    private const val VENDOR = "NevTune+"
 }

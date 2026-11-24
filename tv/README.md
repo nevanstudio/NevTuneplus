@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2026 Sachit. All rights reserved.
+Copyright (c) 2026 NevanStudio. All rights reserved.
 Project: NevTune+
 -->
 # NevTune+ TV
@@ -21,7 +21,7 @@ data and playback layers, resources, native code — is built straight from
 
 ## Download and install
 
-Download the **NevTune+ TV 1.9.0 universal APK** from the [GitHub release](https://github.com/sachit1751-art/NevTune+/releases/download/v1.9.0/NevTunePlusTV-1.9.0.apk). This is the Android TV / Google TV package; do not install the phone APK on a TV device. The [release page](https://github.com/sachit1751-art/NevTune+/releases/tag/v1.9.0) contains the complete release inventory.
+Download the **NevTune+ TV 1.0.0 APK** from the [GitHub release](https://github.com/nevanstudio/NevTuneplus/releases/download/v1.0.0/NevTunePlusTV-1.0.0.apk). This is the Android TV / Google TV package; do not install the phone APK on a TV device. The [release page](https://github.com/nevanstudio/NevTuneplus/releases/tag/v1.0.0) contains the complete release inventory.
 
 Install the APK using your preferred Android TV sideloading method. The device must allow installation from the source you use.
 ## Build
@@ -33,4 +33,4 @@ Install the APK using your preferred Android TV sideloading method. The device m
 The module is only included when an Android SDK is available, like `:app`.
 ---
 
-> **NevTune+** — made by [Sachit](https://github.com/sachit1751-art).
+> **NevTune+** — made by [NevanStudio](https://github.com/nevanstudio).

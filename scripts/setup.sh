@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Audify cross-platform environment bootstrap (macOS/Linux).
+# NevTune+ cross-platform environment bootstrap (macOS/Linux).
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
@@ -7,7 +7,7 @@ cd "$ROOT"
 fail() { printf 'ERROR: %s\n' "$1" >&2; exit 1; }
 command -v java >/dev/null 2>&1 || fail 'JDK 21 is required. Install Eclipse Temurin 21 from https://adoptium.net/temurin/releases/?version=21.'
 JAVA_VERSION="$(java -version 2>&1 | head -n 1)"
-[[ "$JAVA_VERSION" == *'21.'* ]] || fail "Audify requires JDK 21; detected: $JAVA_VERSION"
+[[ "$JAVA_VERSION" == *'21.'* ]] || fail "NevTune+ requires JDK 21; detected: $JAVA_VERSION"
 printf 'JDK 21: OK\n'
 
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
@@ -56,4 +56,4 @@ if [[ ! -f keystore.properties ]]; then
 else
   printf 'Local signing config exists; left untouched.\n'
 fi
-printf 'Audify setup complete. Run: ./gradlew :app:tasks --quiet\n'
+printf 'NevTune+ setup complete. Run: ./gradlew :app:tasks --quiet\n'

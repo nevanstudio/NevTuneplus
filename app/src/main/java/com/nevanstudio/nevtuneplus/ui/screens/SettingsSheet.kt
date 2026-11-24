@@ -1,6 +1,18 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.screens
+
+import com.nevanstudio.nevtuneplus.ui.theme.AccentRed
+
+import com.nevanstudio.nevtuneplus.data.CrashReporter
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material.icons.rounded.Shield
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.sp
 
 import com.nevanstudio.nevtuneplus.wear.WatchInstaller
 import com.nevanstudio.nevtuneplus.ui.motion.MotionTokens
@@ -635,32 +647,162 @@ fun SettingsScreen(
         }
 
         if (categoryIndex) {
-            val categories = listOf(
-                stringResource(R.string.downloads) to Icons.Rounded.Download,
-                stringResource(R.string.playback) to Icons.Rounded.SmartDisplay,
-                stringResource(R.string.appearance) to Icons.Rounded.Brightness4,
-                stringResource(R.string.performance) to Icons.Rounded.BarChart,
-                stringResource(R.string.local_music) to Icons.Rounded.Folder,
-                stringResource(R.string.storage) to Icons.Rounded.Storage,
-                stringResource(R.string.your_data) to Icons.Rounded.VisibilityOff,
-                stringResource(R.string.backup) to Icons.Rounded.FileUpload,
-                stringResource(R.string.updates) to Icons.Rounded.Download,
-                stringResource(R.string.miscellaneous) to Icons.Rounded.Apps,
-                stringResource(R.string.language) to Icons.Rounded.Language,
-                stringResource(R.string.advanced_options) to Icons.Rounded.Extension,
-                "About" to Icons.Rounded.Info,
+            val lastCrashLog by CrashReporter.lastCrashState.collectAsStateWithLifecycle()
+            val hasCrashLog = lastCrashLog != null
+
+            val catAudioQuality = audioQualityCategory
+            val catPlayback = stringResource(R.string.playback)
+            val catAppearance = stringResource(R.string.appearance)
+            val catDownloads = stringResource(R.string.downloads)
+            val catLocalMusic = stringResource(R.string.local_music)
+            val catStorage = stringResource(R.string.storage)
+            val catAccount = stringResource(R.string.account_integrations)
+            val catPerformance = stringResource(R.string.performance)
+            val catBackup = stringResource(R.string.backup)
+            val catYourData = stringResource(R.string.your_data)
+            val catLanguage = stringResource(R.string.language)
+            val catUpdates = stringResource(R.string.updates)
+            val catAdvanced = stringResource(R.string.advanced_options)
+
+            ProfileHeroCard(
+                signedIn = signedIn,
+                account = account,
+                partyCode = party.code,
+                inParty = party.inParty,
+                onAccountScrobbling = onAccountScrobbling,
+                onListenTogether = onListenTogether,
             )
-            categories.forEach { (title, icon) ->
-                SettingsCategoryCard(
-                    title = title,
-                    icon = icon,
-                    onClick = { selectedCategory = title },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(top = 10.dp),
-                )
-            }
+
+            SettingsSectionHeader("Audio & Playback")
+            SettingsCategoryCard(
+                title = catAudioQuality,
+                subtitle = "Streaming bitrates, lossless addon sources, Wi-Fi & cellular rules, Dolby Atmos",
+                icon = Icons.Rounded.GraphicEq,
+                badge = wifiQuality.localizedLabel(),
+                onClick = { selectedCategory = catAudioQuality },
+            )
+            SettingsCategoryCard(
+                title = catPlayback,
+                subtitle = "Crossfade duration, smart fade, automix curves, silence skipping & pause on mute",
+                icon = Icons.Rounded.SmartDisplay,
+                badge = if (crossfade > 0) "${crossfade}s" else null,
+                onClick = { selectedCategory = catPlayback },
+            )
+            SettingsCategoryCard(
+                title = "Equalizer & DSP",
+                subtitle = "Parametric tone controls, 10-band sliders, 3D spatial audio & loudness leveling",
+                icon = Icons.Rounded.Tune,
+                onClick = onEqualizer,
+            )
+
+            SettingsSectionHeader("Look & Experience")
+            SettingsCategoryCard(
+                title = catAppearance,
+                subtitle = "Theme mode, liquid glass, dynamic blur, mesh gradients & full-bleed cover art",
+                icon = Icons.Rounded.Brightness4,
+                badge = theme.localizedLabel(),
+                onClick = { selectedCategory = catAppearance },
+            )
+            SettingsCategoryCard(
+                title = "Typography & Fonts",
+                subtitle = "Default NevTune+ Geom font across the entire app, SF Pro Display, or system typeface",
+                icon = Icons.Rounded.Draw,
+                badge = fontChoice.label,
+                onClick = { selectedCategory = catAppearance },
+            )
+
+            SettingsSectionHeader("Library & Storage")
+            SettingsCategoryCard(
+                title = catDownloads,
+                subtitle = "Download quality ceilings, Wi-Fi only downloading & file export to Music folder",
+                icon = Icons.Rounded.Download,
+                badge = downloadQuality.localizedLabel(),
+                onClick = { selectedCategory = catDownloads },
+            )
+            SettingsCategoryCard(
+                title = catLocalMusic,
+                subtitle = "Scan local device folders, select audio directories & index custom tracks",
+                icon = Icons.Rounded.Folder,
+                onClick = { selectedCategory = catLocalMusic },
+            )
+            SettingsCategoryCard(
+                title = catStorage,
+                subtitle = "Manage song cache limits, clear temporary artwork memory & inspect storage",
+                icon = Icons.Rounded.Storage,
+                onClick = { selectedCategory = catStorage },
+            )
+
+            SettingsSectionHeader("Integrations & Sharing")
+            SettingsCategoryCard(
+                title = catAccount,
+                subtitle = "YouTube Music account connection, Last.fm & ListenBrainz scrobblers",
+                icon = Icons.Rounded.Person,
+                badge = if (signedIn) "Active" else "Guest",
+                onClick = onAccountScrobbling,
+            )
+            SettingsCategoryCard(
+                title = stringResource(R.string.listen_together),
+                subtitle = "Real-time synchronized listening parties, friend sessions & custom server",
+                icon = Icons.Rounded.Groups,
+                badge = if (party.inParty) "${party.members.size} online" else null,
+                onClick = onListenTogether,
+            )
+
+            SettingsSectionHeader("Stability & System")
+            SettingsCategoryCard(
+                title = "Diagnostics & Crash Logs",
+                subtitle = "Verify silent crashes, prevent OEM background kills & inspect error logs",
+                icon = Icons.Rounded.BugReport,
+                badge = if (hasCrashLog) "Log Ready" else "Healthy",
+                badgeColor = if (hasCrashLog) AccentRed else Color(0xFF34C759),
+                onClick = { selectedCategory = "Diagnostics & Crash Logs" },
+            )
+            SettingsCategoryCard(
+                title = catPerformance,
+                subtitle = "High refresh rate screen modes, reduced animation & background execution",
+                icon = Icons.Rounded.BarChart,
+                onClick = { selectedCategory = catPerformance },
+            )
+            SettingsCategoryCard(
+                title = catBackup,
+                subtitle = "Export or import playlists, listening history, favorites & app settings",
+                icon = Icons.Rounded.FileUpload,
+                onClick = { selectedCategory = catBackup },
+            )
+            SettingsCategoryCard(
+                title = catYourData,
+                subtitle = "Search history, explicit content filter, library sync conflicts & listening data",
+                icon = Icons.Rounded.VisibilityOff,
+                onClick = { selectedCategory = catYourData },
+            )
+
+            SettingsSectionHeader("General & About")
+            SettingsCategoryCard(
+                title = catLanguage,
+                subtitle = "App display language, lyrics translation target & regional settings",
+                icon = Icons.Rounded.Language,
+                onClick = { selectedCategory = catLanguage },
+            )
+            SettingsCategoryCard(
+                title = catUpdates,
+                subtitle = "Check for newer application builds, inspect changelogs & download APK",
+                icon = Icons.Rounded.Cached,
+                badge = "v$version",
+                onClick = { selectedCategory = catUpdates },
+            )
+            SettingsCategoryCard(
+                title = catAdvanced,
+                subtitle = "InnerTube signature API editor, task kill policies & developer tools",
+                icon = Icons.Rounded.Extension,
+                onClick = { selectedCategory = catAdvanced },
+            )
+            SettingsCategoryCard(
+                title = "About NevTune+",
+                subtitle = "Open-source GPLv3 license, developer team, bug reporting & feature requests",
+                icon = Icons.Rounded.Info,
+                onClick = { selectedCategory = "About" },
+            )
+            Spacer(Modifier.height(16.dp))
         }
 
         SearchableSettingsGroup(search, header = "About") {
@@ -684,16 +826,16 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = Icons.Rounded.Feedback,
                     title = "Contact support",
-                    subtitle = "sachit1771@gmail.com",
+                    subtitle = "nevanherris@gmail.com",
                     onClick = {
-                        val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:sachit1771@gmail.com"))
+                        val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:nevanherris@gmail.com"))
                         runCatching { context.startActivity(intent) }.onFailure {
                             Toast.makeText(context, "No email app is available", Toast.LENGTH_SHORT).show()
                         }
                     },
                 )
             }
-            row("About NevTune+", "version", "source code", "github", "creator", "developer", "maintainer", "sachit") {
+            row("About NevTune+", "version", "source code", "github", "creator", "developer", "maintainer", "nevanstudio") {
                 CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
                 Column(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 18.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -729,14 +871,14 @@ fun SettingsScreen(
                     Spacer(Modifier.height(12.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         AsyncImage(
-                            model = "https://github.com/sachit1751-art.png",
-                            contentDescription = "Sachit's GitHub profile picture",
+                            model = "https://github.com/nevanstudio.png",
+                            contentDescription = "NevanStudio's GitHub profile picture",
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.size(38.dp).clip(CircleShape),
                         )
                         Spacer(Modifier.width(10.dp))
-                        Text("sachit1751-art", fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                        Text("Lead Maintainer", style = MaterialTheme.typography.bodySmall,
+                        Text("NevanStudio", fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Text("Creator & Developer", style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Spacer(Modifier.height(18.dp))
@@ -747,14 +889,21 @@ fun SettingsScreen(
                         Text("License", color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.gnu.org/licenses/gpl-3.0.html"))) })
                         Text("Source code", color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/sachit1751-art/NevTune+"))) })
+                            modifier = Modifier.clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/nevanstudio/NevTuneplus"))) })
                         Text("Developer", color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/sachit1751-art"))) })
+                            modifier = Modifier.clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/nevanstudio"))) })
                     }
                 }
                 }
             }
         }
+
+        DiagnosticsAndCrashLogsGroup(
+            search = search,
+            version = version,
+            stopOnTaskRemoved = stopOnTaskRemoved,
+            highPerformanceMode = highPerformanceMode,
+        )
 
         // Its own group rather than rows bolted onto the two above, because a
         // download is not a third kind of connection. The ceilings answer "what
@@ -1693,21 +1842,21 @@ fun SettingsScreen(
                     val automaticAt = Backup.lastAutomaticBackupAt(context)
                     val externalAt = Backup.lastExternalBackupAt(context)
                     val automatic = if (automaticAt > 0L) {
-                        resources.getString(R.string.sachit_backup_automatic_last, formatter.format(java.util.Date(automaticAt)))
+                        resources.getString(R.string.nevtune_backup_automatic_last, formatter.format(java.util.Date(automaticAt)))
                     } else {
-                        resources.getString(R.string.sachit_backup_automatic_pending)
+                        resources.getString(R.string.nevtune_backup_automatic_pending)
                     }
                     val external = if (externalAt > 0L && System.currentTimeMillis() - externalAt in 0..(30L * 24 * 60 * 60 * 1000)) {
-                        resources.getString(R.string.sachit_backup_external_last, formatter.format(java.util.Date(externalAt)))
+                        resources.getString(R.string.nevtune_backup_external_last, formatter.format(java.util.Date(externalAt)))
                     } else {
-                        resources.getString(R.string.sachit_backup_external_due)
+                        resources.getString(R.string.nevtune_backup_external_due)
                     }
                     "$automatic\n$external"
                 }
                 SettingsRow(
                     icon = Icons.Rounded.FileUpload,
                     title = exportDataTitle,
-                    subtitle = exportStatus ?: "${stringResource(R.string.sachit_backup_export_scope)}\n$backupStatus",
+                    subtitle = exportStatus ?: "${stringResource(R.string.nevtune_backup_export_scope)}\n$backupStatus",
                     onClick = { exportPicker.launch(Backup.suggestedName()) },
                 )
             }
@@ -1937,15 +2086,15 @@ fun SettingsScreen(
                         textDecoration = TextDecoration.Underline,
                     ),
                 )
-                withLink(LinkAnnotation.Url("https://github.com/sachit1751-art/NevTune+", linkStyles)) {
+                withLink(LinkAnnotation.Url("https://github.com/nevanstudio/NevTuneplus", linkStyles)) {
                     append("GitHub")
                 }
                 append("  ")
-                withLink(LinkAnnotation.Url("https://github.com/sachit1751-art", linkStyles)) {
+                withLink(LinkAnnotation.Url("https://github.com/nevanstudio", linkStyles)) {
                     append("Developer")
                 }
                 append("  ")
-                withLink(LinkAnnotation.Url("https://audify-music.vercel.app", linkStyles)) {
+                withLink(LinkAnnotation.Url("https://nevtuneplus.vercel.app/", linkStyles)) {
                     append("Website")
                 }
                 append("\n~YouTube Music & Listen Together Backend")
@@ -2286,7 +2435,7 @@ fun SettingsScreen(
                         }
                     }
                     val emailUri = Uri.parse(
-                        "mailto:sachit1771@gmail.com?subject=${Uri.encode(subject)}&body=${Uri.encode(body)}",
+                        "mailto:nevanherris@gmail.com?subject=${Uri.encode(subject)}&body=${Uri.encode(body)}",
                     )
                     val intent = Intent(Intent.ACTION_SENDTO, emailUri)
                     val launchResult = runCatching {
@@ -2970,46 +3119,464 @@ private class SettingsSearch(
 @Composable
 private fun SettingsCategoryCard(
     title: String,
+    subtitle: String = "",
     icon: ImageVector,
+    badge: String? = null,
+    badgeColor: Color? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
         modifier = modifier
-            .heightIn(min = 76.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
-            .clickable(onClick = onClick)
-                .padding(horizontal = 14.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
     ) {
-        Box(
+        Row(
             modifier = Modifier
-                .size(42.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = .12f)),
-            contentAlignment = Alignment.Center,
+                .padding(horizontal = 16.dp, vertical = 13.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(23.dp))
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = .12f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(23.dp),
+                )
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (badge != null) {
+                        Spacer(Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(badgeColor ?: MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
+                        ) {
+                            Text(
+                                text = badge,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = badgeColor ?: MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 16.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Spacer(Modifier.width(10.dp))
+            Icon(
+                Icons.Rounded.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+                modifier = Modifier.size(19.dp),
+            )
         }
-        Spacer(Modifier.width(10.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
-        )
-        Icon(
-            Icons.Rounded.ChevronRight,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(19.dp),
-        )
     }
 }
+
+@Composable
+private fun SettingsSectionHeader(title: String) {
+    Text(
+        text = title.uppercase(Locale.ROOT),
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 1.1.sp,
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 6.dp),
+    )
+}
+
+@Composable
+private fun CategoryIntroBanner(
+    title: String,
+    description: String,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Info,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 17.sp,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProfileHeroCard(
+    signedIn: Boolean,
+    account: Account?,
+    partyCode: String?,
+    inParty: Boolean,
+    onAccountScrobbling: () -> Unit,
+    onListenTogether: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 2.dp,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(onClick = onAccountScrobbling),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Person,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(26.dp),
+                    )
+                }
+                Spacer(Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = account?.email?.takeIf { it.isNotBlank() }
+                            ?: stringResource(if (signedIn) R.string.signed_in else R.string.not_signed_in),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(if (signedIn) Color(0xFF34C759) else MaterialTheme.colorScheme.onSurfaceVariant),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = if (signedIn) "YouTube Music & Scrobbling" else "Local Session · Tap to Sign In",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                Icon(
+                    Icons.Rounded.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+
+            if (inParty && partyCode != null) {
+                Spacer(Modifier.height(12.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), thickness = 0.5.dp)
+                Spacer(Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(onClick = onListenTogether)
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        Icons.Rounded.Groups,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Listen Together: $partyCode",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = "Party ›",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DiagnosticsAndCrashLogsGroup(
+    search: SettingsSearch,
+    version: String,
+    stopOnTaskRemoved: Boolean,
+    highPerformanceMode: Boolean,
+) {
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
+    val lastCrash by CrashReporter.lastCrashState.collectAsStateWithLifecycle()
+    val lowMemoryLevel by CrashReporter.lastLowMemoryLevel.collectAsStateWithLifecycle()
+    var batteryIgnored by remember { mutableStateOf(CrashReporter.isBatteryOptimizationIgnored(context)) }
+
+    SearchableSettingsGroup(search, header = "Diagnostics & Crash Logs") {
+        row("System Health", "status", "stability", "crash", "health") {
+            val isHealthy = lastCrash == null
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = if (isHealthy) Color(0xFF34C759).copy(alpha = 0.1f) else MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                border = BorderStroke(1.dp, if (isHealthy) Color(0xFF34C759).copy(alpha = 0.35f) else MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = ROW_INSET, vertical = 12.dp),
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(if (isHealthy) Color(0xFF34C759).copy(alpha = 0.2f) else MaterialTheme.colorScheme.error.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = if (isHealthy) Icons.Rounded.Check else Icons.Rounded.BugReport,
+                            contentDescription = null,
+                            tint = if (isHealthy) Color(0xFF34C759) else MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = if (isHealthy) "System Status: Healthy" else "Crash Log Detected",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isHealthy) Color(0xFF34C759) else MaterialTheme.colorScheme.error,
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = if (isHealthy)
+                                "No unhandled crashes or silent stops recorded. NevTune+ background audio services are operating cleanly."
+                            else
+                                "A fatal exception was caught. Review the log details below or share them to report this issue.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            lineHeight = 16.sp,
+                        )
+                    }
+                }
+            }
+        }
+
+        row("Battery Optimization", "doze", "background kill", "silent stop", "prevent crash") {
+            SettingsRow(
+                icon = Icons.Rounded.Shield,
+                title = "Battery Optimization",
+                subtitle = if (batteryIgnored)
+                    "Unrestricted · Protected from silent Android background kills"
+                else
+                    "Restricted · Android or OEM battery savers may silently stop playback when locked",
+                badge = if (batteryIgnored) "Protected" else "Restricted",
+                onClick = {
+                    CrashReporter.requestIgnoreBatteryOptimization(context)
+                    batteryIgnored = CrashReporter.isBatteryOptimizationIgnored(context)
+                },
+            )
+        }
+
+        row("Stop on Task Removed", "swipe", "recents", "background") {
+            SettingsRow(
+                icon = Icons.Rounded.Apps,
+                title = "Stop on Task Removed",
+                subtitle = "When enabled, swiping NevTune+ away from the Recent Apps screen immediately stops playback.",
+                trailing = {
+                    Switch(
+                        checked = stopOnTaskRemoved,
+                        onCheckedChange = AppSettings::setStopOnTaskRemoved,
+                        colors = SwitchDefaults.colors(
+                            checkedTrackColor = MaterialTheme.colorScheme.primary,
+                            checkedBorderColor = MaterialTheme.colorScheme.primary,
+                        ),
+                    )
+                },
+                onClick = { AppSettings.setStopOnTaskRemoved(!stopOnTaskRemoved) },
+            )
+        }
+
+        row("High Performance CPU Mode", "wakelock", "stutter", "audio dropout") {
+            SettingsRow(
+                icon = Icons.Rounded.BarChart,
+                title = "High-Performance CPU Lock",
+                subtitle = "Prevents deep CPU sleep during high-bitrate playback to eliminate buffer under-runs.",
+                trailing = {
+                    Switch(
+                        checked = highPerformanceMode,
+                        onCheckedChange = AppSettings::setHighPerformanceMode,
+                        colors = SwitchDefaults.colors(
+                            checkedTrackColor = MaterialTheme.colorScheme.primary,
+                            checkedBorderColor = MaterialTheme.colorScheme.primary,
+                        ),
+                    )
+                },
+                onClick = { AppSettings.setHighPerformanceMode(!highPerformanceMode) },
+            )
+        }
+
+        if (lowMemoryLevel != null) {
+            row("Low Memory Status", "memory", "ram", "trim") {
+                SettingsRow(
+                    icon = Icons.Rounded.Storage,
+                    title = "System Low Memory Alert",
+                    subtitle = "Android sent a memory pressure warning (trim level: $lowMemoryLevel). Image caches were cleared to prevent OOM kills.",
+                )
+            }
+        }
+
+        if (lastCrash != null) {
+            row("Crash Log Viewer", "trace", "stacktrace", "error", "exception") {
+                Column(modifier = Modifier.padding(horizontal = ROW_INSET, vertical = 8.dp)) {
+                    Text(
+                        text = "LAST RECORDED CRASH LOG",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(bottom = 6.dp),
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 220.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surface)
+                            .verticalScroll(rememberScrollState())
+                            .padding(12.dp),
+                    ) {
+                        Text(
+                            text = lastCrash!!,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 11.sp,
+                                lineHeight = 15.sp,
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                clipboard.setText(AnnotatedString(lastCrash!!))
+                                Toast.makeText(context, "Crash log copied to clipboard", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                        ) {
+                            Text("Copy Log", style = MaterialTheme.typography.labelMedium)
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_SUBJECT, "NevTune+ Crash Report (v$version)")
+                                    putExtra(Intent.EXTRA_TEXT, lastCrash!!)
+                                }
+                                context.startActivity(Intent.createChooser(intent, "Share Crash Report"))
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                        ) {
+                            Text("Share", style = MaterialTheme.typography.labelMedium)
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                CrashReporter.clearCrashLog()
+                                Toast.makeText(context, "Crash log cleared", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                        ) {
+                            Text("Clear", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+            }
+        }
+
+        row("Copy Full Diagnostics", "diagnostics", "report", "debug", "hardware") {
+            SettingsRow(
+                icon = Icons.Rounded.BugReport,
+                title = "Copy Full Diagnostic Report",
+                subtitle = "Copies hardware specs, Android OS version, RAM allocation, and app telemetry to clipboard for bug reporting.",
+                onClick = {
+                    val report = CrashReporter.getFullDiagnosticReport(context)
+                    clipboard.setText(AnnotatedString(report))
+                    Toast.makeText(context, "Full diagnostic report copied to clipboard", Toast.LENGTH_SHORT).show()
+                },
+            )
+        }
+    }
+}
+
 
 /** Collects the rows of one group that survived the search. */
 private class SettingsGroupScope(

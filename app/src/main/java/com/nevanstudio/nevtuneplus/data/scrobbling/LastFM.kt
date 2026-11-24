@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.scrobbling
 
@@ -90,7 +90,7 @@ object LastFM {
         extra: Map<String, String> = emptyMap(),
         format: String = "json",
     ) {
-        headers.append(HttpHeaders.UserAgent, "Audify (https://github.com/sachit1751-art/Audify)")
+        headers.append(HttpHeaders.UserAgent, "NevTune+ (https://github.com/nevanstudio/NevTuneplus)")
         val paramsForSig =
             mutableMapOf(
                 "method" to method,

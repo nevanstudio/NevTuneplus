@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.screens
 
@@ -38,7 +38,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -1505,29 +1507,26 @@ internal fun Shelf(
             shelf.title.equals("Listen again", ignoreCase = true) ||
                 shelf.title.equals("Keep listening", ignoreCase = true) -> {
                 SectionHeader("Keep listening", shelf.subtitle, emphasized = true)
-                BoxWithConstraints(Modifier.fillMaxWidth()) {
-                    val spacing = KEEP_LISTENING_COLUMN_SPACING
-                    val columns = keepListeningColumns(maxWidth)
-                    shelf.items.chunked(columns).forEach { rowItems ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = PAGE_GUTTER),
-                            horizontalArrangement = Arrangement.spacedBy(spacing),
-                        ) {
-                            rowItems.forEach { item ->
-                                ShelfCard(
-                                    item = item,
-                                    onClick = { onItemClick(item) },
-                                    onLongPress = onItemLongPress?.let { { it(item) } },
-                                    modifier = Modifier.weight(1f),
-                                    isCurrent = isCurrentItem(item),
-                                    isPlaying = isCurrentItem(item) && isPlaying,
-                                    titleMaxLines = 3,
-                                    subtitleMaxLines = 2,
-                                )
-                            }
-                            repeat(columns - rowItems.size) { Spacer(Modifier.weight(1f)) }
+                val itemKeys = remember(shelf.items) { shelf.items.stableShelfComposeKeys() }
+                ShelfRow(
+                    contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    itemsIndexed(shelf.items, key = { index, _ -> itemKeys[index] }) { _, item ->
+                        val cardShape = remember(item.videoId ?: item.browseId ?: item.title) {
+                            getMaterial3CardShape(item.videoId ?: item.browseId ?: item.title)
                         }
-                        Spacer(Modifier.height(18.dp))
+                        ShelfCard(
+                            item = item,
+                            onClick = { onItemClick(item) },
+                            onLongPress = onItemLongPress?.let { { it(item) } },
+                            modifier = Modifier.width(160.dp),
+                            isCurrent = isCurrentItem(item),
+                            isPlaying = isCurrentItem(item) && isPlaying,
+                            titleMaxLines = 2,
+                            subtitleMaxLines = 1,
+                            shape = cardShape,
+                        )
                     }
                 }
             }
@@ -1697,6 +1696,27 @@ private fun ServiceCard(colors: List<Color>, trackKey: String, icon: ImageVector
     }
 }
 
+/** Material 3 Expressive shape palette for card randomized shapes. */
+internal val Material3RandomizedShapes: List<CornerBasedShape> = listOf(
+    RoundedCornerShape(16.dp),
+    RoundedCornerShape(24.dp),
+    RoundedCornerShape(topStart = 28.dp, topEnd = 6.dp, bottomStart = 6.dp, bottomEnd = 28.dp),
+    RoundedCornerShape(topStart = 6.dp, topEnd = 28.dp, bottomStart = 28.dp, bottomEnd = 6.dp),
+    RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp, bottomStart = 8.dp, bottomEnd = 8.dp),
+    RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomStart = 28.dp, bottomEnd = 28.dp),
+    RoundedCornerShape(topStart = 28.dp, topEnd = 12.dp, bottomStart = 12.dp, bottomEnd = 12.dp),
+    RoundedCornerShape(topStart = 12.dp, topEnd = 28.dp, bottomStart = 12.dp, bottomEnd = 12.dp),
+    RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomStart = 12.dp, bottomEnd = 28.dp),
+    RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomStart = 28.dp, bottomEnd = 12.dp),
+    RoundedCornerShape(20.dp),
+    RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 24.dp, bottomEnd = 6.dp),
+)
+
+internal fun getMaterial3CardShape(seed: String): CornerBasedShape {
+    val hash = kotlin.math.abs(seed.hashCode())
+    return Material3RandomizedShapes[hash % Material3RandomizedShapes.size]
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun ShelfCard(
@@ -1710,6 +1730,9 @@ internal fun ShelfCard(
     isPlaying: Boolean = false,
     titleMaxLines: Int = 1,
     subtitleMaxLines: Int = 1,
+    shape: Shape = remember(item.videoId ?: item.browseId ?: item.title) {
+        getMaterial3CardShape(item.videoId ?: item.browseId ?: item.title)
+    },
 ) {
     Column(
         modifier = modifier
@@ -1723,7 +1746,7 @@ internal fun ShelfCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(12.dp)),
+                        .clip(shape),
                     contentAlignment = Alignment.Center,
                 ) {
                     MeshGradientBackground(
@@ -1765,9 +1788,9 @@ internal fun ShelfCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(shape)
                         .then(
-                            if (item.videoId == null) Modifier.thumbnailBorder(RoundedCornerShape(12.dp))
+                            if (item.videoId == null) Modifier.thumbnailBorder(shape)
                             else Modifier,
                         )
                         .background(MaterialTheme.colorScheme.surfaceVariant),

@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.settings
 
@@ -33,11 +33,12 @@ object TvSettings {
     val tvLyricsCanvasEnabled = MutableStateFlow(true)
     val tvVideoAuto1080p = MutableStateFlow(true)
     val tvNavLayout = MutableStateFlow("left_rail")
+    val tvLiteMode = MutableStateFlow("auto")
 
     /** UI density/scale multiplier for the TV layout: 0.8 (Small) → 1.0 (Normal) → 1.2 (Large) → 1.4 (XL). */
     val tvUiScale = MutableStateFlow(1.0f)
 
-    fun init(preferences: SharedPreferences) {
+    fun init(preferences: SharedPreferences, context: Context? = null) {
         prefs = preferences
         TvPinThrottle.init(preferences)
         tvRefreshRate.value = prefs.getString(KEY_TV_REFRESH_RATE, "AUTO") ?: "AUTO"
@@ -50,15 +51,21 @@ object TvSettings {
         addFavoriteSongsToLibrary.value = prefs.getBoolean(KEY_ADD_FAVORITE_SONGS_TO_LIBRARY, true)
         tvSetupVersionCompleted.value = prefs.getInt(KEY_TV_SETUP_VERSION, 0)
         tvUiScale.value = prefs.getFloat(KEY_TV_UI_SCALE, 1.0f).coerceIn(0.8f, 1.4f)
-        tvLiquidGlassEnabled.value = prefs.getBoolean(KEY_TV_LIQUID_GLASS, true)
-        tvBlurIntensity.value = prefs.getFloat(KEY_TV_BLUR_INTENSITY, 0.85f).coerceIn(0.0f, 1.0f)
-        tvLyricsCanvasEnabled.value = prefs.getBoolean(KEY_TV_LYRICS_CANVAS, true)
-        tvVideoAuto1080p.value = prefs.getBoolean(KEY_TV_VIDEO_AUTO_1080P, true)
+        tvLiteMode.value = prefs.getString(KEY_TV_LITE_MODE, "auto") ?: "auto"
+
+        val isLowRam = context?.let { com.nevanstudio.nevtuneplus.ui.tv.DeviceType.isLowRam(it) } ?: false
+        val defaultGlass = !isLowRam
+        val defaultLyricsCanvas = !isLowRam
+
+        tvLiquidGlassEnabled.value = prefs.getBoolean(KEY_TV_LIQUID_GLASS, defaultGlass)
+        tvBlurIntensity.value = prefs.getFloat(KEY_TV_BLUR_INTENSITY, if (isLowRam) 0.0f else 0.85f).coerceIn(0.0f, 1.0f)
+        tvLyricsCanvasEnabled.value = prefs.getBoolean(KEY_TV_LYRICS_CANVAS, defaultLyricsCanvas)
+        tvVideoAuto1080p.value = prefs.getBoolean(KEY_TV_VIDEO_AUTO_1080P, !isLowRam)
         tvNavLayout.value = prefs.getString(KEY_TV_NAV_LAYOUT, "left_rail") ?: "left_rail"
     }
 
     fun init(context: Context) {
-        init(context.getSharedPreferences("audify_settings", Context.MODE_PRIVATE))
+        init(context.getSharedPreferences("audify_settings", Context.MODE_PRIVATE), context)
     }
 
     private fun save(edit: SharedPreferences.Editor.() -> Unit) {
@@ -95,6 +102,11 @@ object TvSettings {
     fun setTvVideoAuto1080p(enabled: Boolean) {
         tvVideoAuto1080p.value = enabled
         save { putBoolean(KEY_TV_VIDEO_AUTO_1080P, enabled) }
+    }
+
+    fun setTvLiteMode(mode: String) {
+        tvLiteMode.value = mode
+        save { putString(KEY_TV_LITE_MODE, mode) }
     }
 
     fun setSpatialAudioEnabled(enabled: Boolean) {
@@ -266,9 +278,11 @@ object TvSettings {
     private const val PIN_HASH_PREFIX = "pbkdf2_sha256"
     private const val PIN_SALT_BYTES = 16
     private const val PIN_HASH_BYTES = 32
-    private const val PIN_PBKDF2_ITERATIONS = 120_000
+    // Sized for Android TV processors (e.g. quad Cortex-A53) to eliminate UI freezes / ANRs
+    private const val PIN_PBKDF2_ITERATIONS = 5_000
     private const val PIN_ALGORITHM = "PBKDF2WithHmacSHA256"
 
+    private const val KEY_TV_LITE_MODE = "tv_lite_mode"
     private const val KEY_TV_REFRESH_RATE = "tv_refresh_rate"
     private const val KEY_TV_NICKNAME = "tv_nickname"
     private const val KEY_TV_THEME = "tv_theme"

@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data
 
@@ -58,7 +58,7 @@ object AppUpdateChecker {
     private const val CACHE_SUBDIR = "updates"
 
     private const val LATEST_RELEASE_URL =
-        "https://api.github.com/repos/sachit1751-art/NevTune+/releases/latest"
+        "https://api.github.com/repos/nevanstudio/NevTuneplus/releases/latest"
 
     private val json = Json { ignoreUnknownKeys = true }
 

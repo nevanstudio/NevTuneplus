@@ -1,1 +1,0 @@
-An open-source Android music player for discovery, playlists and local audio

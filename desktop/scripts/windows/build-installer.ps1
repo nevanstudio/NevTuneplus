@@ -1,10 +1,10 @@
 param(
-    [string]$Version = "1.9.1",
-    [string]$Executable = "target/release/audify.exe",
+    [string]$Version = (Get-Date -Format "yy.MM.dd"),
+    [string]$Executable = "target/release/nevtuneplus.exe",
     [string]$Output = "dist",
     [ValidateSet("x64compatible", "arm64")]
     [string]$Architecture = "x64compatible",
-    [string]$SetupName = "Audify-Setup"
+    [string]$SetupName = "NevTune+-Setup"
 )
 
 $ErrorActionPreference = "Stop"
@@ -27,7 +27,7 @@ $env:AUDIFY_DIST = (Resolve-Path $outputPath).Path
 $env:AUDIFY_ARCH = $Architecture
 $env:AUDIFY_SETUP = $SetupName
 
-& $iscc (Join-Path $PSScriptRoot "audify.iss")
+& $iscc (Join-Path $PSScriptRoot "nevtuneplus.iss")
 if ($LASTEXITCODE -ne 0) {
     throw "Inno Setup failed with exit code $LASTEXITCODE"
 }

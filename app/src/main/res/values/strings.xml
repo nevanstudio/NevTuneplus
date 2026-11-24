@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2026 Sachit. All rights reserved.
+Copyright (c) 2026 NevanStudio. All rights reserved.
 Project: NevTune+
 -->
 <resources>
@@ -123,8 +123,8 @@ Project: NevTune+
     <string name="update_downloading_body">Downloading NevTune+ %1$s…</string>
     <string name="update_ready_body">NevTune+ %1$s is ready to install.</string>
     <string name="update_failed_body">Couldn’t download NevTune+ %1$s.</string>
-    <string name="update_manual_migration_body" translatable="false">Important: NevTune+’s signing certificate changed. If you have NevTune+ 1.8.7 or older, a normal in-app update will not install. First back up any important data stored only in NevTune+. Open the v1.8.9 release below, download the correct APK for your device, uninstall your existing NevTune+ app, then install the APK you downloaded. Do not try to install it over the old app. Release: https://github.com/sachit1751-art/Audify/releases/tag/v1.8.9</string>
-    <string name="update_migration_complete_body" translatable="false">The signing certificate changed in v1.8.9, so NevTune+ 1.8.7 and older had to be uninstalled before this version could be installed. Data stored only inside the old installation may not have carried over. If you made a backup, restore it from NevTune+’s backup tools. You can find this version and its downloads at: https://github.com/sachit1751-art/Audify/releases/tag/v1.8.9</string>
+    <string name="update_manual_migration_body" translatable="false">Important: NevTune+’s signing certificate changed. If you have NevTune+ 1.8.7 or older, a normal in-app update will not install. First back up any important data stored only in NevTune+. Open the v1.8.9 release below, download the correct APK for your device, uninstall your existing NevTune+ app, then install the APK you downloaded. Do not try to install it over the old app. Release: https://github.com/nevanstudio/NevTuneplus/releases/tag/v1.8.9</string>
+    <string name="update_migration_complete_body" translatable="false">The signing certificate changed in v1.8.9, so NevTune+ 1.8.7 and older had to be uninstalled before this version could be installed. Data stored only inside the old installation may not have carried over. If you made a backup, restore it from NevTune+’s backup tools. You can find this version and its downloads at: https://github.com/nevanstudio/NevTuneplus/releases/tag/v1.8.9</string>
     <string name="update_manual_migration_title" translatable="false">You’re using the new NevTune+ installation.</string>
     <string name="open_v189_release" translatable="false">Open v1.8.9 release</string>
     <string name="check_for_updates" translatable="false">Check for updates</string>

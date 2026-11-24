@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.tv.player
 
@@ -124,19 +124,39 @@ fun TvPlayerBackground(
     artworkUrl: String?,
     modifier: Modifier = Modifier,
 ) {
-    val mesh = rememberArtworkMesh(imageUrl = artworkUrl)
-    Box(modifier = modifier.fillMaxSize()) {
-        ArtworkMeshBackdrop(
-            mesh = mesh,
-            blurRadius = 34.dp,
-            seam = 0.dp,
-            modifier = Modifier.fillMaxSize(),
-        )
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val isLite = com.nevanstudio.nevtuneplus.ui.tv.DeviceType.isTvLite(context)
+    val liquidGlass by com.nevanstudio.nevtuneplus.data.settings.TvSettings.tvLiquidGlassEnabled.collectAsState()
+
+    if (isLite || !liquidGlass) {
+        // High-performance Spotify-level TV backdrop: deep AMOLED vertical gradient with zero GPU blur overhead
+        val palette = com.nevanstudio.nevtuneplus.ui.tv.theme.TvThemeColors.current
         Box(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.22f)),
-        )
+                .background(Brush.verticalGradient(listOf(palette.canvasTop, palette.canvasBottom, Color(0xFF070709))))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.25f))
+            )
+        }
+    } else {
+        val mesh = rememberArtworkMesh(imageUrl = artworkUrl)
+        Box(modifier = modifier.fillMaxSize()) {
+            ArtworkMeshBackdrop(
+                mesh = mesh,
+                blurRadius = 34.dp,
+                seam = 0.dp,
+                modifier = Modifier.fillMaxSize(),
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.22f)),
+            )
+        }
     }
 }
 
@@ -162,12 +182,16 @@ internal fun TvNowPlayingStage(
     modifier: Modifier = Modifier,
 ) {
     val reduceMotion = com.nevanstudio.nevtuneplus.ui.tv.theme.LocalTvReduceMotion.current
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val isLite = com.nevanstudio.nevtuneplus.ui.tv.DeviceType.isTvLite(context)
+    val lyricsCanvas by com.nevanstudio.nevtuneplus.data.settings.TvSettings.tvLyricsCanvasEnabled.collectAsState()
+
     // While the transport is up the lyrics fade out above it rather than run under it.
     val underControls by animateFloatAsState(if (controlsVisible) 1f else 0f, tween(if (reduceMotion) 120 else 320), label = "lyricsFade")
     val canvasEnabled by AppSettings.animatedCanvas.collectAsState()
     var canvas by remember(song.videoId) { mutableStateOf<CanvasArtwork?>(null) }
-    LaunchedEffect(song.videoId, canvasEnabled) {
-        canvas = if (canvasEnabled) CanvasRepository.canvasFor(song) else null
+    LaunchedEffect(song.videoId, canvasEnabled, lyricsCanvas, isLite) {
+        canvas = if (!isLite && canvasEnabled && lyricsCanvas) CanvasRepository.canvasFor(song) else null
     }
     val animatedSide by animateFloatAsState(if (showLyrics) 1f else 0f, tween(if (reduceMotion) 0 else 520), label = "artToSide")
     val side = if (reduceMotion) if (showLyrics) 1f else 0f else animatedSide
@@ -193,12 +217,12 @@ internal fun TvNowPlayingStage(
                     scaleY = scale
                     translationX = lerp(0f, (sideStart - centredX).toPx(), side)
                     translationY = lerp(0f, (sideY - centredY).toPx(), side)
-                    shadowElevation = 29.dp.toPx()
+                    shadowElevation = if (isLite) 8.dp.toPx() else 29.dp.toPx()
                     this.shape = shape
                     clip = true
                 },
         ) {
-            TvArtwork(url = song.thumbnailUrl, px = 720, shape = RectangleShape, modifier = Modifier.fillMaxSize())
+            TvArtwork(url = song.thumbnailUrl, px = if (isLite) 320 else 512, shape = RectangleShape, modifier = Modifier.fillMaxSize())
             canvas?.let { CanvasArtworkPlayer(canvas = it, isPlaying = isPlaying, modifier = Modifier.fillMaxSize()) }
         }
 
@@ -475,8 +499,19 @@ private fun TvScrubber(
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val frame = remember { mutableLongStateOf(0L) }
-    LaunchedEffect(isPlaying) {
-        if (isPlaying) while (true) withFrameNanos { frame.longValue = it }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val isLite = com.nevanstudio.nevtuneplus.ui.tv.DeviceType.isTvLite(context)
+    LaunchedEffect(isPlaying, isLite) {
+        if (isPlaying) {
+            if (isLite) {
+                while (true) {
+                    kotlinx.coroutines.delay(160L)
+                    frame.longValue = System.nanoTime()
+                }
+            } else {
+                while (true) withFrameNanos { frame.longValue = it }
+            }
+        }
     }
     val reduceMotion = com.nevanstudio.nevtuneplus.ui.tv.theme.LocalTvReduceMotion.current
     val thickness by animateDpAsState(if (focused) 6.dp else 4.dp, tween(if (reduceMotion) 0 else 160), label = "scrubThickness")

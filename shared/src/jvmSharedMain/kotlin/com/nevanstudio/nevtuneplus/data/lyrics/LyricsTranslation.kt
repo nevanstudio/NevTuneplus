@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.lyrics
 
@@ -351,7 +351,7 @@ object LyricsTranslation {
             .build()
         val request = Request.Builder()
             .url(ENDPOINT)
-            .header("User-Agent", "NevTune+/1.9.1")
+            .header("User-Agent", "NevTune+/1.0.0")
             .header("Accept", "application/json")
             .post(body)
             .build()
@@ -384,7 +384,7 @@ object LyricsTranslation {
             .build()
         val request = Request.Builder()
             .url(ENDPOINT)
-            .header("User-Agent", "NevTune+/1.9.1")
+            .header("User-Agent", "NevTune+/1.0.0")
             .header("Accept", "application/json")
             .post(body)
             .build()
@@ -439,7 +439,7 @@ object LyricsTranslation {
             .build()
         val request = Request.Builder()
             .url(INPUT_TOOLS_ENDPOINT)
-            .header("User-Agent", "NevTune+/1.9.1")
+            .header("User-Agent", "NevTune+/1.0.0")
             .header("Accept", "application/json")
             .post(body)
             .build()

@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 import java.util.Properties
 
@@ -36,7 +36,7 @@ val signing = Properties().apply {
     }
 }
 
-val betaSuffix = rootProject.extra["audifyBetaSuffix"] as String
+val betaSuffix = rootProject.extra["nevtuneBetaSuffix"] as String
 
 android {
     namespace = "com.nevanstudio.nevtuneplus.wear"
@@ -48,19 +48,14 @@ android {
         minSdk = 30
         targetSdk = 36
         // The phone's version — see the root build.gradle.kts.
-        versionCode = rootProject.extra["audifyVersionCode"] as Int
-        versionName = rootProject.extra["audifyVersionName"] as String
-    }
+        versionCode = rootProject.extra["nevtuneVersionCode"] as Int
+        versionName = rootProject.extra["nevtuneVersionName"] as String
 
-    // Keep the same universal + ABI-specific release outputs as phone and TV.
-    splits {
-        abi {
-            isEnable = true
-            reset()
-            include("armeabi-v7a", "arm64-v8a", "x86_64")
-            isUniversalApk = true
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
         }
     }
+
 
     sourceSets {
         // The phone <-> watch protocol, shared with :app. See WearProtocol.

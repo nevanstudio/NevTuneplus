@@ -21,7 +21,7 @@ use self::souvlaki::Controls;
 use mpris::Controls;
 
 const BUS_NAME: &str = "nevtuneplus";
-const DISPLAY_NAME: &str = "Audify";
+const DISPLAY_NAME: &str = "NevTune+";
 /// How far the position may stray from where steady playback would have put it before the
 /// widget is told the track was seeked.
 const SEEK_SLACK: Duration = Duration::from_secs(2);

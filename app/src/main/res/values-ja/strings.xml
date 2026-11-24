@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2026 Sachit. All rights reserved.
+Copyright (c) 2026 NevanStudio. All rights reserved.
 Project: NevTune+
 -->
 <resources>
@@ -1141,18 +1141,18 @@ Project: NevTune+
     <string name="download_file_check_unchecked">保存済み · ファイル確認は未実行</string>
     <string name="download_file_check_available">ファイル確認に成功 · ファイルを読み取れます</string>
     <string name="download_file_check_unavailable">ファイル確認に失敗 · ファイルを読み取れませんでした</string>
-    <string name="sachit_listening_summary_save">再生サマリーを保存（CSV）</string>
-    <string name="sachit_listening_summary_share">再生サマリーを共有（CSV）</string>
-    <string name="sachit_listening_summary_note">各曲について保持されている月ごとの合計です。個々の再生時刻は保存されません。</string>
-    <string name="sachit_listening_summary_chooser">再生サマリーを共有</string>
-    <string name="sachit_listening_summary_saved">再生サマリーを保存しました。</string>
-    <string name="sachit_listening_summary_save_failed">再生サマリーを保存できませんでした。</string>
-    <string name="sachit_spotify_import_file_button">Spotify CSV/TSV ファイルを選択</string>
-    <string name="sachit_spotify_import_file_note">Track Name と Artist 列を含む Spotify の CSV または TSV エクスポートもインポートできます。</string>
-    <string name="sachit_spotify_import_file_read_failed">選択したファイルを読み取れませんでした。</string>
-    <string name="sachit_spotify_import_json_unsupported">Spotify の JSON エクスポートにはまだ対応していません。</string>
-    <string name="sachit_spotify_import_file_unsupported">未対応のファイルです。Spotify の CSV または TSV エクスポートを選択してください。</string>
-    <string name="sachit_spotify_import_file_default_title">インポートした Spotify プレイリスト</string>
+    <string name="nevtune_listening_summary_save">再生サマリーを保存（CSV）</string>
+    <string name="nevtune_listening_summary_share">再生サマリーを共有（CSV）</string>
+    <string name="nevtune_listening_summary_note">各曲について保持されている月ごとの合計です。個々の再生時刻は保存されません。</string>
+    <string name="nevtune_listening_summary_chooser">再生サマリーを共有</string>
+    <string name="nevtune_listening_summary_saved">再生サマリーを保存しました。</string>
+    <string name="nevtune_listening_summary_save_failed">再生サマリーを保存できませんでした。</string>
+    <string name="nevtune_spotify_import_file_button">Spotify CSV/TSV ファイルを選択</string>
+    <string name="nevtune_spotify_import_file_note">Track Name と Artist 列を含む Spotify の CSV または TSV エクスポートもインポートできます。</string>
+    <string name="nevtune_spotify_import_file_read_failed">選択したファイルを読み取れませんでした。</string>
+    <string name="nevtune_spotify_import_json_unsupported">Spotify の JSON エクスポートにはまだ対応していません。</string>
+    <string name="nevtune_spotify_import_file_unsupported">未対応のファイルです。Spotify の CSV または TSV エクスポートを選択してください。</string>
+    <string name="nevtune_spotify_import_file_default_title">インポートした Spotify プレイリスト</string>
 <string name="download_storage_budget">ダウンロードの保存容量上限</string>
     <string name="download_storage_unknown_title">ダウンロードをブロック · サイズ不明</string>
     <string name="download_storage_budget_title">ダウンロードの保存容量上限に達しました</string>

@@ -19,7 +19,7 @@ fn main() {
         resource.set("InternalName", "nevtuneplus");
         resource.set("OriginalFilename", "nevtuneplus.exe");
         resource.set("CompanyName", "NevTune+ Contributors");
-        resource.set("LegalCopyright", "Copyright © 2026 Audify Contributors");
+        resource.set("LegalCopyright", "Copyright © 2026 NevTune+ Contributors");
         if let Err(error) = resource.compile() {
             println!("cargo:warning=cannot embed the windows icon: {error}");
         }

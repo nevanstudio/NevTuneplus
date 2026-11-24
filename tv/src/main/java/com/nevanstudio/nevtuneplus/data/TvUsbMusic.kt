@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data
 
@@ -18,7 +18,8 @@ import java.util.Locale
  */
 object TvUsbMusic {
     private const val TAG = "NevTunePlus"
-    private const val MAX_DEPTH = 4
+    private const val MAX_DEPTH = 3
+    private const val MAX_USB_SONGS = 500
 
     private val audioExtensions = setOf(
         "mp3", "m4a", "flac", "wav", "ogg", "opus", "aac", "webm", "3gp",
@@ -65,16 +66,22 @@ object TvUsbMusic {
         knownPaths: MutableSet<String>,
         maxDepth: Int,
     ) {
-        if (maxDepth <= 0 || !dir.canRead() || dir.name.startsWith(".")) return
+        if (results.size >= MAX_USB_SONGS || maxDepth <= 0 || !dir.canRead() || dir.name.startsWith(".")) return
 
-        dir.listFiles()?.forEach { file ->
-            if (file.isDirectory) {
-                scan(context, file, results, knownPaths, maxDepth - 1)
-            } else if (file.isFile && file.extension.lowercase(Locale.ROOT) in audioExtensions) {
-                if (knownPaths.add(file.absolutePath)) {
-                    results.add(songFromFile(context, file))
+        try {
+            val children = dir.listFiles() ?: return
+            for (file in children) {
+                if (results.size >= MAX_USB_SONGS) break
+                if (file.isDirectory) {
+                    scan(context, file, results, knownPaths, maxDepth - 1)
+                } else if (file.isFile && file.extension.lowercase(Locale.ROOT) in audioExtensions) {
+                    if (knownPaths.add(file.absolutePath)) {
+                        results.add(songFromFile(context, file))
+                    }
                 }
             }
+        } catch (e: Throwable) {
+            Log.w(TAG, "Failed reading USB directory ${dir.absolutePath}: ${e.message}")
         }
     }
 

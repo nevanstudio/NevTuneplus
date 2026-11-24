@@ -77,4 +77,4 @@ Material changes to this privacy policy will be published in the Audify source r
 
 Privacy-related questions may be submitted through the Audify GitHub repository:
 
-https://github.com/sachit1751-art/NevTune+
+https://github.com/Nevanstudio/NevTune+

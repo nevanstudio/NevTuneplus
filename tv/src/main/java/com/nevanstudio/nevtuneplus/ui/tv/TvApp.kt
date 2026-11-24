@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.tv
 
@@ -274,7 +274,18 @@ fun TvApp(
  */
 @Composable
 private fun Modifier.tvCanvas(artworkUrl: String?): Modifier {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val isLite = com.nevanstudio.nevtuneplus.ui.tv.DeviceType.isTvLite(context)
     val palette = TvThemeColors.current
+
+    if (isLite) {
+        val top = palette.canvasTop
+        val bottom = palette.canvasBottom
+        return drawBehind {
+            drawRect(Brush.verticalGradient(listOf(top, bottom)))
+        }
+    }
+
     val tintSource = rememberDominantCardColor(
         artworkUrl = if (palette.tintsCanvas) artworkUrl else null,
         defaultColor = palette.canvasTop,

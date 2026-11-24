@@ -1,13 +1,13 @@
 [Desktop Entry]
 Type=Application
-Name=Audify
+Name=NevTune+
 GenericName=Music Player
 Comment=A native, familiar music streaming client
-Icon=audify
-Exec=audify %U
+Icon=nevtuneplus
+Exec=nevtuneplus %U
 Terminal=false
 Categories=AudioVideo;Audio;Player;
 Keywords=music;spotify;audio;player;
-MimeType=x-scheme-handler/audify;x-scheme-handler/spotify;x-scheme-handler/deezer;x-scheme-handler/tidal;audio/mpeg;audio/flac;audio/mp4;audio/aac;audio/ogg;audio/opus;audio/x-wav;audio/x-aiff;audio/webm;audio/x-matroska;audio/x-wavpack;audio/x-ape;
-StartupWMClass=audify
+MimeType=x-scheme-handler/nevtuneplus;x-scheme-handler/spotify;x-scheme-handler/deezer;x-scheme-handler/tidal;audio/mpeg;audio/flac;audio/mp4;audio/aac;audio/ogg;audio/opus;audio/x-wav;audio/x-aiff;audio/webm;audio/x-matroska;audio/x-wavpack;audio/x-ape;
+StartupWMClass=nevtuneplus
 StartupNotify=true

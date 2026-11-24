@@ -17,15 +17,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/sachit1751-art/NevTune+/releases/latest">
+  <a href="https://github.com/nevanstudio/NevTuneplus/releases/latest">
     <img src="https://img.shields.io/badge/⬇️%20Download%20APK-Latest%20Release-F59E0B?style=flat-square" alt="Download" />
   </a>
   &nbsp;
-  <a href="https://github.com/sachit1751-art/NevTune+/issues/new?template=bug_report.yml">
+  <a href="https://github.com/nevanstudio/NevTuneplus/issues/new?template=bug_report.yml">
     <img src="https://img.shields.io/badge/🐛%20Report%20a%20Bug-Issues-EF4444?style=flat-square" alt="Bug Report" />
   </a>
   &nbsp;
-  <a href="https://github.com/sachit1751-art/NevTune+/releases">
+  <a href="https://github.com/nevanstudio/NevTuneplus/releases">
     <img src="https://img.shields.io/badge/📋%20Release%20Notes-Changelog-64748B?style=flat-square" alt="Changelog" />
   </a>
 </p>
@@ -249,7 +249,7 @@ LISTEN_TOGETHER_SERVER=https://your-server.example.com
 |----------|---------|
 | Android Phone / Tablet (Universal) | `NevTune+-1.0.0.apk` |
 | Android Phone / Tablet (ARM64) | `NevTune+-1.0.0_arm64-v8a.apk` |
-| Android TV / Google TV | `NevTunePlusTV-1.0.0apk` |
+| Android TV / Google TV | `NevTunePlusTV-1.0.0.apk` |
 | Wear OS | `NevTunePlusWear-prod-universal-release.apk` |
 | Windows x64 | `NevTune+-Setup.exe` |
 
@@ -277,7 +277,7 @@ Planned improvements and features on the horizon:
 Contributions, bug reports, and feature suggestions are welcome!
 
 - 🐛 **Bug report:** [Open an issue](https://github.com/nevanstudio/NevTuneplus/issues/new?template=bug_report.yml)
-- 💬 **Feedback:** [General tester feedback]([https://github.com/sachit1751-art/NevTune+/issues](https://github.com/nevanstudio/NevTuneplus/issues)/new?template=tester-feedback.yml)
+- 💬 **Feedback:** [General tester feedback](https://github.com/nevanstudio/NevTuneplus/issues/new?template=tester-feedback.yml)
 - 📖 **Documentation:** See [`docs/`](./docs/) and [`plans/`](./plans/) for architecture and design notes
 
 Please read the [Code of Conduct](./CODE_OF_CONDUCT.md) before contributing.
@@ -304,7 +304,7 @@ See the full [LICENSE](./LICENSE) file for details.
 ## 👨‍💻 Developer
 
 <p align="center">
-  <strong>NevTune+ is designed and developed by <a href="https://github.com/sachit1751-art">NevanStudio</a></strong><br/>
+  <strong>NevTune+ is designed and developed by <a href="https://github.com/nevanstudio">NevanStudio</a></strong><br/>
   <em>Built for music lovers. Designed to feel at home on every screen.</em>
 </p>
 

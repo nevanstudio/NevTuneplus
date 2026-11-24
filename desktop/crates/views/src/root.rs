@@ -1283,7 +1283,7 @@ impl Render for Root {
                             .p_8()
                             .rounded_xl()
                             .bg(theme.overlay)
-                            .child(div().text_size(theme.text(ui::Text::Display)).font_weight(gpui::FontWeight::BOLD).child("Welcome to Audify"))
+                            .child(div().text_size(theme.text(ui::Text::Display)).font_weight(gpui::FontWeight::BOLD).child("Welcome to NevTune+"))
                             .child(div().text_size(theme.text(ui::Text::Body)).text_color(theme.muted_foreground).text_center().child("Your nevanstudio, together in one desktop player. Explore your library, connect a nevanstudio service, or add folders with local nevanstudio from Settings."))
                             .child(div().flex().flex_row().gap_2().child(
                                 Button::new("onboarding-get-started")

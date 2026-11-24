@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus
 
@@ -157,7 +157,7 @@ class SourceFormatsTest {
         val reason = reason(SourceFormats.detect(body, "https://host/registry.json"))
 
         assertTrue(reason, reason.contains("extensions"))
-        assertTrue(reason, reason.contains("not a format Audify reads"))
+        assertTrue(reason, reason.contains("not a format NevTune+ reads"))
     }
 
     @Test

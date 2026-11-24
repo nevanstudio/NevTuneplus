@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.components
 
@@ -87,10 +87,10 @@ fun SpotifyImportAlert(
 ) {
     val context = LocalContext.current
     val fetchingMessage = stringResource(R.string.spotify_import_fetching)
-    val fileReadFailedMessage = stringResource(R.string.sachit_spotify_import_file_read_failed)
-    val jsonUnsupportedMessage = stringResource(R.string.sachit_spotify_import_json_unsupported)
-    val fileUnsupportedMessage = stringResource(R.string.sachit_spotify_import_file_unsupported)
-    val defaultFileTitle = stringResource(R.string.sachit_spotify_import_file_default_title)
+    val fileReadFailedMessage = stringResource(R.string.nevtune_spotify_import_file_read_failed)
+    val jsonUnsupportedMessage = stringResource(R.string.nevtune_spotify_import_json_unsupported)
+    val fileUnsupportedMessage = stringResource(R.string.nevtune_spotify_import_file_unsupported)
+    val defaultFileTitle = stringResource(R.string.nevtune_spotify_import_file_default_title)
     val matchingFormat = stringResource(R.string.spotify_import_matching)
     val noSongsMatchedMessage = stringResource(R.string.spotify_import_none)
     val importFailedFormat = stringResource(R.string.spotify_import_failed)
@@ -280,7 +280,7 @@ fun SpotifyImportAlert(
                     keyboardActions = KeyboardActions(onDone = { if (link.isNotBlank() && !working) start() }),
                 )
                 Text(
-                    text = stringResource(R.string.sachit_spotify_import_file_note),
+                    text = stringResource(R.string.nevtune_spotify_import_file_note),
                     modifier = Modifier.padding(top = 10.dp),
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -384,7 +384,7 @@ fun SpotifyImportAlert(
             )
             AlertRule()
             AlertAction(
-                label = stringResource(R.string.sachit_spotify_import_file_button),
+                label = stringResource(R.string.nevtune_spotify_import_file_button),
                 emphasised = false,
                 onClick = { filePicker.launch(arrayOf("*/*")) },
                 enabled = !working,

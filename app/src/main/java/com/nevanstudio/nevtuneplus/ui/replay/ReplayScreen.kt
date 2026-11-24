@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.replay
 
@@ -130,8 +130,8 @@ fun ReplayScreen(
     landingPage: ReplayStoryPage = ReplayStoryPage.INTRO,
 ) {
     val context = LocalContext.current
-    val listeningSummaryNote = stringResource(R.string.sachit_listening_summary_note)
-    val listeningSummaryChooser = stringResource(R.string.sachit_listening_summary_chooser)
+    val listeningSummaryNote = stringResource(R.string.nevtune_listening_summary_note)
+    val listeningSummaryChooser = stringResource(R.string.nevtune_listening_summary_chooser)
     val scope = rememberCoroutineScope()
     var pendingCsv by remember { mutableStateOf<String?>(null) }
     val saveCsvLauncher = rememberLauncherForActivityResult(
@@ -149,7 +149,7 @@ fun ReplayScreen(
                 }
                 Toast.makeText(
                     context,
-                    if (saved) R.string.sachit_listening_summary_saved else R.string.sachit_listening_summary_save_failed,
+                    if (saved) R.string.nevtune_listening_summary_saved else R.string.nevtune_listening_summary_save_failed,
                     Toast.LENGTH_SHORT,
                 ).show()
             }
@@ -292,13 +292,13 @@ fun ReplayScreen(
                     item("habits") { Habits(summary, dark) }
                     item("listening-summary-export") {
                         Note(
-                            text = stringResource(R.string.sachit_listening_summary_note),
+                            text = stringResource(R.string.nevtune_listening_summary_note),
                             dark = dark,
                             modifier = Modifier.padding(horizontal = PAGE_GUTTER + 4.dp),
                         )
                         ReplayActionRow(
                             Icons.Rounded.Download,
-                            stringResource(R.string.sachit_listening_summary_save),
+                            stringResource(R.string.nevtune_listening_summary_save),
                             dark,
                         ) {
                             scope.launch {
@@ -307,7 +307,7 @@ fun ReplayScreen(
                                         ListeningSummaryCsv.write(ListeningStats.exportAll())
                                     }
                                 } catch (_: Exception) {
-                                    Toast.makeText(context, R.string.sachit_listening_summary_save_failed, Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, R.string.nevtune_listening_summary_save_failed, Toast.LENGTH_SHORT).show()
                                     return@launch
                                 }
                                 pendingCsv = csv
@@ -316,7 +316,7 @@ fun ReplayScreen(
                         }
                         ReplayActionRow(
                             Icons.Rounded.IosShare,
-                            stringResource(R.string.sachit_listening_summary_share),
+                            stringResource(R.string.nevtune_listening_summary_share),
                             dark,
                         ) {
                             scope.launch {
@@ -325,7 +325,7 @@ fun ReplayScreen(
                                         ListeningSummaryCsv.write(ListeningStats.exportAll())
                                     }
                                 } catch (_: Exception) {
-                                    Toast.makeText(context, R.string.sachit_listening_summary_save_failed, Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, R.string.nevtune_listening_summary_save_failed, Toast.LENGTH_SHORT).show()
                                     return@launch
                                 }
                                 val uri = withContext(Dispatchers.IO) {
@@ -354,7 +354,7 @@ fun ReplayScreen(
                                         ),
                                     )
                                 } else {
-                                    Toast.makeText(context, R.string.sachit_listening_summary_save_failed, Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, R.string.nevtune_listening_summary_save_failed, Toast.LENGTH_SHORT).show()
                                 }
                             }
                         }

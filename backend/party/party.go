@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package party
 
@@ -10,9 +10,9 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/sachit1751-art/Audify/backend/clock"
-	"github.com/sachit1751-art/Audify/backend/codes"
-	"github.com/sachit1751-art/Audify/backend/config"
+	"github.com/Nevanstudio/Audify/backend/clock"
+	"github.com/Nevanstudio/Audify/backend/codes"
+	"github.com/Nevanstudio/Audify/backend/config"
 )
 
 // PartyError represents an error with an HTTP status code and wire error code.

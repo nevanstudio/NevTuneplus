@@ -545,51 +545,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "audify"
-version = "1.9.1"
-dependencies = [
- "anyhow",
- "block2 0.6.2",
- "cli",
- "dirs",
- "embed",
- "env_logger",
- "futures",
- "gpui",
- "gpui_platform",
- "i18n",
- "icons",
- "image",
- "input",
- "interprocess",
- "ksni",
- "libc",
- "log",
- "music",
- "objc2 0.6.4",
- "objc2-app-kit 0.3.2",
- "objc2-foundation 0.3.2",
- "raw-window-handle",
- "reqwest 0.13.4",
- "resvg",
- "router",
- "rustls 0.23.43",
- "sha2",
- "state",
- "storage",
- "tokio",
- "tray-icon",
- "ui",
- "views",
- "webview",
- "widestring",
- "windows 0.62.2",
- "windows-sys 0.61.2",
- "winresource",
- "zbus",
-]
-
-[[package]]
 name = "audio-core"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4568,6 +4523,51 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee6cda3051665f1fb8d9e08fc35c96d5a244fb1be711a03b71118828afc9a873"
 dependencies = [
  "jni-sys 0.3.1",
+]
+
+[[package]]
+name = "nevtuneplus"
+version = "1.9.1"
+dependencies = [
+ "anyhow",
+ "block2 0.6.2",
+ "cli",
+ "dirs",
+ "embed",
+ "env_logger",
+ "futures",
+ "gpui",
+ "gpui_platform",
+ "i18n",
+ "icons",
+ "image",
+ "input",
+ "interprocess",
+ "ksni",
+ "libc",
+ "log",
+ "music",
+ "objc2 0.6.4",
+ "objc2-app-kit 0.3.2",
+ "objc2-foundation 0.3.2",
+ "raw-window-handle",
+ "reqwest 0.13.4",
+ "resvg",
+ "router",
+ "rustls 0.23.43",
+ "sha2",
+ "state",
+ "storage",
+ "tokio",
+ "tray-icon",
+ "ui",
+ "views",
+ "webview",
+ "widestring",
+ "windows 0.62.2",
+ "windows-sys 0.61.2",
+ "winresource",
+ "zbus",
 ]
 
 [[package]]

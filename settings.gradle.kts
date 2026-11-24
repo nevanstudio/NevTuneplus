@@ -17,7 +17,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "NevTune+"
+rootProject.name = "nevtuneplus"
 include(":shared")
 include(":sharedUi")
 include(":app")
