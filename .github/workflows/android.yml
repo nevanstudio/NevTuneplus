@@ -9,11 +9,19 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Optional release tag (defaults to vYY.MM.DD for today)
+        description: "Release tag (defaults to vYY.MM.DD for today)"
+        required: false
+        type: string
+      release_notes:
+        description: "Release notes / changelog (markdown). Leave blank to auto-generate from git log."
+        required: false
+        type: string
+      banner_url:
+        description: "Optional banner image URL to show at the top of the release notes (e.g. https://...)"
         required: false
         type: string
       dry_run:
-        description: Build and verify only; do not create or publish a release
+        description: "Build and verify only — do not create or publish a release"
         required: false
         default: false
         type: boolean
@@ -307,11 +315,28 @@ jobs:
 
       - name: Prepare release notes and publish GitHub Release
         shell: bash
+        env:
+          CUSTOM_NOTES: ${{ inputs.release_notes }}
+          BANNER_URL: ${{ inputs.banner_url }}
         run: |
           set -euo pipefail
           NOTES_FILE="docs/releases/RELEASE_NOTES_${VERSION_NAME}.md"
-          if [ ! -s "$NOTES_FILE" ]; then
-            mkdir -p docs/releases
+          mkdir -p docs/releases
+
+          if [ -n "${CUSTOM_NOTES:-}" ]; then
+            # Use the notes typed in the workflow dispatch form
+            {
+              # Prepend banner image if provided
+              if [ -n "${BANNER_URL:-}" ]; then
+                echo "![Release banner](${BANNER_URL})"
+                echo ""
+              fi
+              echo "# NevTune+ ${VERSION_NAME}"
+              echo ""
+              echo "${CUSTOM_NOTES}"
+            } > "$NOTES_FILE"
+          elif [ ! -s "$NOTES_FILE" ]; then
+            # Fall back to auto-generating from git log
             PREV_TAG="$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || git tag --sort=-creatordate | head -n 1 || true)"
             if [ -n "$PREV_TAG" ] && [ "$PREV_TAG" != "$TAG" ]; then
               LOG_RANGE="${PREV_TAG}..HEAD"
@@ -319,10 +344,14 @@ jobs:
               LOG_RANGE="-n 20"
             fi
             {
-              echo "# NevTune+ $VERSION_NAME"
+              if [ -n "${BANNER_URL:-}" ]; then
+                echo "![Release banner](${BANNER_URL})"
+                echo ""
+              fi
+              echo "# NevTune+ ${VERSION_NAME}"
               echo ""
               echo "## What's New"
-              git log $LOG_RANGE --no-merges --pretty=format:"- %s" || echo "- Release $VERSION_NAME"
+              git log $LOG_RANGE --no-merges --pretty=format:"- %s" || echo "- Release ${VERSION_NAME}"
             } > "$NOTES_FILE"
           fi
 
@@ -334,15 +363,15 @@ jobs:
               exit 1
             fi
             echo "Reusing the existing empty draft release for $TAG."
-            gh release edit "$TAG" --title "NevTune+ $VERSION_NAME" --notes-file "$NOTES_FILE"
+            gh release edit "$TAG" --title "NevTune+ ${VERSION_NAME}" --notes-file "$NOTES_FILE"
           else
             echo "Creating a new draft release for $TAG."
-            gh release create "$TAG" --draft --title "NevTune+ $VERSION_NAME" --notes-file "$NOTES_FILE"
+            gh release create "$TAG" --draft --title "NevTune+ ${VERSION_NAME}" --notes-file "$NOTES_FILE"
           fi
 
-          gh release upload "$TAG" "dist/NevTunePlus-$VERSION_NAME.apk"
-          gh release upload "$TAG" "dist/NevTunePlusTV-$VERSION_NAME.apk"
-          gh release upload "$TAG" "dist/NevTunePlusWear-$VERSION_NAME.apk"
+          gh release upload "$TAG" "dist/NevTunePlus-${VERSION_NAME}.apk"
+          gh release upload "$TAG" "dist/NevTunePlusTV-${VERSION_NAME}.apk"
+          gh release upload "$TAG" "dist/NevTunePlusWear-${VERSION_NAME}.apk"
 
           (cd dist && sha256sum *.apk > SHA256SUMS.txt)
           gh release upload "$TAG" dist/SHA256SUMS.txt
