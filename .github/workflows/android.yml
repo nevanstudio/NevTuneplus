@@ -375,5 +375,7 @@ jobs:
 
           (cd dist && sha256sum *.apk > SHA256SUMS.txt)
           gh release upload "$TAG" dist/SHA256SUMS.txt
-          gh release edit "$TAG" --draft=false
+          # Leave as draft — go to GitHub Releases and click "Publish release" when ready
+          echo "✅ Draft release created: $(gh release view "$TAG" --json url -q .url)"
+          echo "Review the APKs and changelog, then publish manually from GitHub."
           gh release view "$TAG" --json name,tagName,isDraft,url,assets
