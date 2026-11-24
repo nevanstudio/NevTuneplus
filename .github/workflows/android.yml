@@ -106,7 +106,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          EXPECTED_CERT: 4bde8155328a9a8659ce6b75d1a0df2e4811c0ccdc555a52ccb3df2a4be94e21
+          EXPECTED_CERT: 831f7b35eecfb342adf9698a1619024518300733d9a1d586d29bb5ec7a1b2781
         run: |
           set -euo pipefail
           cat > "$RUNNER_TEMP/VerifyNevTuneSigning.java" <<'JAVA'
