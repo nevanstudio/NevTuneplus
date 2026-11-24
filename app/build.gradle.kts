@@ -502,8 +502,9 @@ tasks.matching { it.name == "installDevDebug" }.configureEach { finalizedBy(veri
 // release assets. The release workflow still selects the universal and ARM64
 // files by their ABI suffixes, then assigns the public versioned asset names.
 tasks.matching { it.name == "assembleProdRelease" }.configureEach {
+    val releaseApkDir = layout.buildDirectory.dir("outputs/apk/prod/release")
     doLast {
-        val outputDir = layout.buildDirectory.dir("outputs/apk/prod/release").get().asFile
+        val outputDir = releaseApkDir.get().asFile
         outputDir.listFiles { file -> file.isFile && file.name.startsWith("app-prod-") && file.name.endsWith("-release.apk") }
             ?.forEach { source ->
                 val target = source.resolveSibling(source.name.replaceFirst("app-prod-", "NevTune+-prod-"))

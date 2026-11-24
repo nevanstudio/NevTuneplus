@@ -247,7 +247,7 @@ jobs:
 
           EXPECTED_COUNT=0
           if [ "$BUILD_MOBILE" = "true" ]; then
-            copy_one app/build/outputs/apk/prod/release '*-universal-release.apk' "NevTunePlus-$VERSION_NAME.apk"
+            copy_one app/build/outputs/apk/prod/release 'app-prod-*universal-release.apk' "NevTunePlus-$VERSION_NAME.apk"
             echo "1. NevTune+ Mobile — $VERSION_NAME"
             EXPECTED_COUNT=$((EXPECTED_COUNT + 1))
           fi
