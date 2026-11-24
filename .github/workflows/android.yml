@@ -189,6 +189,42 @@ jobs:
           [ "$BUILD_TV" = "true" ] && TASKS=":tv:testProdDebugUnitTest $TASKS"
           ./gradlew --no-daemon --max-workers=2 $TASKS
 
+      - name: Print failing unit test details
+        if: failure()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          for path in sorted(glob.glob("**/build/test-results/**/*.xml", recursive=True)):
+              try:
+                  root = ET.parse(path).getroot()
+              except Exception:
+                  continue
+              for tc in root.findall("testcase"):
+                  for tag in ("failure", "error"):
+                      el = tc.find(tag)
+                      if el is not None:
+                          print(f"FAIL: {tc.attrib.get('classname')}.{tc.attrib.get('name')}")
+                          print(el.attrib.get("message", ""))
+                          print((el.text or "")[:1500])
+                          print("-" * 60)
+          PY
+
+      - name: Upload test & lint diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-diagnostics
+          path: |
+            app/build/reports/
+            app/build/test-results/
+            tv/build/reports/
+            tv/build/test-results/
+            shared/build/reports/
+            sharedUi/build/reports/
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Run production release lint
         shell: bash
         env:
