@@ -8,7 +8,7 @@ pkgver=@PKGVER@
 pkgrel=1
 pkgdesc='A native, familiar music streaming client'
 arch=('x86_64' 'aarch64')
-url='https://github.com/sachit1751-art/Audify'
+url='https://github.com/nevanstudio/NevTuneplus'
 license=('GPL-3.0-or-later')
 depends=('glibc' 'alsa-lib' 'dbus' 'fontconfig' 'hicolor-icon-theme' 'libxcb'
          'libxkbcommon' 'libxkbcommon-x11' 'sqlite' 'vulkan-icd-loader' 'wayland')

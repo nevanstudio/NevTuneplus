@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Copyright (c) 2026 Sachit. All rights reserved.
+# Copyright (c) 2026 NevanStudio. All rights reserved.
 # Project: NevTune+
-# Audify (Sachit Music) — build APKs for release
+# NevTune+ (NevanStudio Music) — build APKs for release
 # Double-click build-apks.bat on Windows, or run this directly on macOS/Linux.
 set -euo pipefail
 
@@ -15,7 +15,7 @@ WITH_DEBUG="${WITH_DEBUG:-false}"
 
 mkdir -p "$DIST"
 
-echo "=== Building Audify $FLAVOR release ==="
+echo "=== Building NevTune+ $FLAVOR release ==="
 ./gradlew "assemble${FLAVOR^}Release" \
   -Pandroid.injected.buildCacheDir="$DIST/.build-cache" \
   --no-daemon \
@@ -23,7 +23,7 @@ echo "=== Building Audify $FLAVOR release ==="
   -Paudify.bundleWear=false
 
 if [ "$WITH_DEBUG" = "true" ]; then
-  echo "=== Building Audify $FLAVOR debug ==="
+  echo "=== Building NevTune+ $FLAVOR debug ==="
   ./gradlew "assemble${FLAVOR^}Debug" \
     -Pandroid.injected.buildCacheDir="$DIST/.build-cache" \
     --no-daemon \

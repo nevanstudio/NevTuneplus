@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.playback
 
@@ -229,7 +229,14 @@ object AudioCache {
         val dir = File(context.noBackupFilesDir, CACHE_DIR_NAME)
         val databaseProvider = StandaloneDatabaseProvider(context)
         migrateFromCacheDir(File(context.cacheDir, LEGACY_CACHE_DIR_NAME), dir, databaseProvider)
-        cache = SimpleCache(dir, evictor, databaseProvider)
+        cache = try {
+            SimpleCache(dir, evictor, databaseProvider)
+        } catch (e: Throwable) {
+            TrackLog.e(TAG, "AudioCache SimpleCache open failed; resetting cache dir to prevent bootloop", e)
+            runCatching { SimpleCache.delete(dir, databaseProvider) }
+            runCatching { dir.deleteRecursively(); dir.mkdirs() }
+            SimpleCache(dir, evictor, databaseProvider)
+        }
         // Builds before album/explicit/video-aware and credit-aware matching
         // may have cached a completely different recording under a YouTube
         // track's `#alt` key.

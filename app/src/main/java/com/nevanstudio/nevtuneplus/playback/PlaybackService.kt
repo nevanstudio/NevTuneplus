@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.playback
 
@@ -3344,6 +3344,7 @@ class PlaybackService : MediaLibraryService() {
         // Back restarts the track once you're this far into it; only a
         // press before that steps to the previous one.
         .setMaxSeekToPreviousPositionMs(BACK_RESTARTS_AFTER_MS)
+        .setWakeMode(if (ownsSession) C.WAKE_MODE_NETWORK else C.WAKE_MODE_NONE)
         .build()
 
     /**
@@ -3410,6 +3411,7 @@ class PlaybackService : MediaLibraryService() {
     private fun setSessionOwner(target: ExoPlayer, owns: Boolean) {
         target.setAudioAttributes(AUDIO_ATTRIBUTES, /* handleAudioFocus = */ owns)
         target.setHandleAudioBecomingNoisy(owns)
+        target.setWakeMode(if (owns) C.WAKE_MODE_NETWORK else C.WAKE_MODE_NONE)
     }
 
     /**
@@ -6440,16 +6442,32 @@ class PlaybackService : MediaLibraryService() {
      *    is genuinely struggling, and coming back with a second of audio in
      *    hand only buys the next stall.
      */
-    private fun farBufferingLoadControl() = DefaultLoadControl.Builder()
-        .setBufferDurationsMs(
-            DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
-            /* maxBufferMs = */ FAR_BUFFER_MS,
-            /* bufferForPlaybackMs = */ START_PLAYBACK_MS,
-            /* bufferForPlaybackAfterRebufferMs = */ RESUME_PLAYBACK_MS,
-        )
-        .setTargetBufferBytes(FAR_BUFFER_BYTES)
-        .setBackBuffer(/* backBufferDurationMs = */ BACK_BUFFER_MS, /* retainBackBufferFromKeyframe = */ true)
-        .build()
+    private fun farBufferingLoadControl(): DefaultLoadControl {
+        val uiModeManager = getSystemService(Context.UI_MODE_SERVICE) as? android.app.UiModeManager
+        val isTv = uiModeManager?.currentModeType == android.content.res.Configuration.UI_MODE_TYPE_TELEVISION ||
+            packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_LEANBACK)
+        val am = getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+        val memInfo = android.app.ActivityManager.MemoryInfo()
+        am?.getMemoryInfo(memInfo)
+        val isLowRam = am?.isLowRamDevice == true || (memInfo.totalMem in 1L..2_684_354_560L)
+
+        val targetBufferBytes = if (isLowRam) 4 * 1024 * 1024 else FAR_BUFFER_BYTES
+        val startPlaybackMs = if (isTv || isLowRam) 1_200 else 1_500
+        val resumePlaybackMs = if (isTv || isLowRam) 1_800 else RESUME_PLAYBACK_MS
+        val backBufferMs = if (isLowRam) 10 * 1000 else BACK_BUFFER_MS
+        val maxBufferMs = if (isLowRam) 5 * 60 * 1000 else FAR_BUFFER_MS
+
+        return DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
+                /* maxBufferMs = */ maxBufferMs,
+                /* bufferForPlaybackMs = */ startPlaybackMs,
+                /* bufferForPlaybackAfterRebufferMs = */ resumePlaybackMs,
+            )
+            .setTargetBufferBytes(targetBufferBytes)
+            .setBackBuffer(/* backBufferDurationMs = */ backBufferMs, /* retainBackBufferFromKeyframe = */ true)
+            .build()
+    }
 
     /**
      * Renderers whose audio sink only skips silence worth skipping.
@@ -7517,10 +7535,12 @@ class PlaybackService : MediaLibraryService() {
                 val lastStart = listenBrainzStartMs
                 val lastDuration = player?.duration?.takeIf { it > 0 }
                 CoroutineScope(Dispatchers.IO).launch {
-                    ListenBrainzManager.submitFinished(
-                        lbToken, lastSong, lastStart, System.currentTimeMillis(), lastDuration,
-                        AppSettings.listenBrainzPrimaryArtistOnly.value,
-                    )
+                    runCatching {
+                        ListenBrainzManager.submitFinished(
+                            lbToken, lastSong, lastStart, System.currentTimeMillis(), lastDuration,
+                            AppSettings.listenBrainzPrimaryArtistOnly.value,
+                        )
+                    }
                 }
             }
         }

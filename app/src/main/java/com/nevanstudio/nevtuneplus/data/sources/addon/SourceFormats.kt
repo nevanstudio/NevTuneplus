@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.sources.addon
 
@@ -137,7 +137,7 @@ object SourceFormats {
 
         val obj = root as? JsonObject
             ?: return DetectedFormat.Unsupported(
-                "That JSON is a list, and every format Audify reads is an object",
+                "That JSON is a list, and every format NevTune+ reads is an object",
             )
 
         // 1. A module index: JS plugins filed under "category:*" keys. First
@@ -173,7 +173,7 @@ object SourceFormats {
             if (manifest.resources.isNotEmpty() && !manifest.declares("search")) {
                 val declared = manifest.resources.joinToString(", ")
                 return DetectedFormat.Unsupported(
-                    "This addon declares $declared — Audify needs search",
+                    "This addon declares $declared — NevTune+ needs search",
                 )
             }
             return DetectedFormat.Addon(manifest, AddonClient.normalizeBase(url))
@@ -187,7 +187,7 @@ object SourceFormats {
             .firstOrNull { it.value is JsonArray && (it.value as JsonArray).isNotEmpty() }?.key
         if (listKey != null) {
             return DetectedFormat.Unsupported(
-                "That JSON lists \"$listKey\", which is not a format Audify reads",
+                "That JSON lists \"$listKey\", which is not a format NevTune+ reads",
             )
         }
 
@@ -212,7 +212,7 @@ object SourceFormats {
     private suspend fun fetch(url: String): Result<String> = runCatching {
         val request = Request.Builder().url(url)
             .header("Accept", "application/json")
-            .header("User-Agent", "Audify/v${com.nevanstudio.nevtuneplus.BuildConfig.VERSION_NAME}")
+            .header("User-Agent", "NevTune+/v${com.nevanstudio.nevtuneplus.BuildConfig.VERSION_NAME}")
             .build()
         Http.client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {

@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.sources.addon
 
@@ -91,7 +91,7 @@ class AddonClient(rawBaseUrl: String) {
             }
             if (!manifest.isPlayable) {
                 val declared = manifest.resources.joinToString(", ")
-                throw AddonException("This addon declares $declared — Audify needs search")
+                throw AddonException("This addon declares $declared — NevTune+ needs search")
             }
             manifest
         }.recoverCatching { failure ->
@@ -356,7 +356,7 @@ class AddonClient(rawBaseUrl: String) {
                     // sends people to re-paste a URL that was always correct.
                     response.code >= 500 -> throw AddonUnavailable("HTTP ${response.code}")
                     response.code != 429 -> throw AddonException("HTTP ${response.code}")
-                    attempt >= MAX_RETRIES -> throw AddonUnavailable("This addon is rate limiting Audify")
+                    attempt >= MAX_RETRIES -> throw AddonUnavailable("This addon is rate limiting NevTune+")
                     else -> retryAfterMs(response.header("Retry-After"), attempt)
                 }
             }
@@ -498,7 +498,7 @@ class AddonClient(rawBaseUrl: String) {
         private const val BACKOFF_BASE_MS = 500L
         private const val BACKOFF_CAP_MS = 8_000L
 
-        private val USER_AGENT = "Audify/v${com.nevanstudio.nevtuneplus.BuildConfig.VERSION_NAME}"
+        private val USER_AGENT = "NevTune+/v${com.nevanstudio.nevtuneplus.BuildConfig.VERSION_NAME}"
 
         /**
          * What [probeSearch] asks for. Deliberately an ordinary word rather

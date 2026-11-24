@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.lyrics
 
@@ -52,7 +52,7 @@ private val CREDITS = listOf(
     Regex("""\s+(feat|ft|featuring)\.?\s+.*$""", RegexOption.IGNORE_CASE),
     // How the upload was labelled, not what was recorded.
     Regex(
-        """\s*[(\[]\s*(official\s*)?(nevanstudio\s*)?""" +
+        """\s*[(\[]\s*(official\s*)?(music\s*|nevanstudio\s*)?""" +
             """(video|audio|visuali[sz]er|lyrics?\s*video|lyrics?|m/?v|hd|hq|4k|full\s*song)""" +
             """\s*[)\]]""",
         RegexOption.IGNORE_CASE,

@@ -19,11 +19,11 @@ function Find-SdkManager([string]$Sdk) {
     return $Candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 }
 
-Write-Host '=== Audify development environment ===' -ForegroundColor Cyan
+Write-Host '=== NevTune+ development environment ===' -ForegroundColor Cyan
 $Java = Get-Command java -ErrorAction SilentlyContinue
 if (-not $Java) { Fail 'JDK 21 is missing. Install Eclipse Temurin 21 (https://adoptium.net/temurin/releases/?version=21), reopen PowerShell, and rerun this script.' }
 $JavaVersion = (cmd /c "java -version 2>&1" | Out-String)
-if ($JavaVersion -notmatch 'version "21\.') { Fail "Audify requires JDK 21. Detected: $($JavaVersion.Trim())" }
+if ($JavaVersion -notmatch 'version "21\.') { Fail "NevTune+ requires JDK 21. Detected: $($JavaVersion.Trim())" }
 Write-Host 'JDK 21: OK' -ForegroundColor Green
 
 if (-not $SdkPath) {

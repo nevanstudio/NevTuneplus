@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 /*
  * Vendored verbatim from NewPipeExtractor v0.26.3 (GPL-3.0-or-later), the version

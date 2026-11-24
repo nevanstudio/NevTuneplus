@@ -1,6 +1,6 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
-module github.com/sachit1751-art/Audify/backend
+module github.com/nevanstudio/NevTuneplus/backend
 
 go 1.27.3
 

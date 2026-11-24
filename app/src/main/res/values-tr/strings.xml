@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2026 Sachit. All rights reserved.
+Copyright (c) 2026 NevanStudio. All rights reserved.
 Project: NevTune+
 -->
 <resources>
@@ -1134,18 +1134,18 @@ Project: NevTune+
     <string name="download_file_check_unchecked">Kaydedildi · dosya denetimi çalıştırılmadı</string>
     <string name="download_file_check_available">Dosya denetimi başarılı · dosya okunabilir</string>
     <string name="download_file_check_unavailable">Dosya denetimi başarısız · dosya okunamadı</string>
-    <string name="sachit_listening_summary_save">Dinleme özetini kaydet (CSV)</string>
-    <string name="sachit_listening_summary_share">Dinleme özetini paylaş (CSV)</string>
-    <string name="sachit_listening_summary_note">Her şarkı için saklanan tüm aylık toplamlar. Tek tek çalma zamanları saklanmaz.</string>
-    <string name="sachit_listening_summary_chooser">Dinleme özetini paylaş</string>
-    <string name="sachit_listening_summary_saved">Dinleme özeti kaydedildi.</string>
-    <string name="sachit_listening_summary_save_failed">Dinleme özeti kaydedilemedi.</string>
-    <string name="sachit_spotify_import_file_button">Spotify CSV/TSV dosyası seç</string>
-    <string name="sachit_spotify_import_file_note">Track Name ve Artist sütunlarını içeren bir Spotify CSV veya TSV dışa aktarımını da içe aktarabilirsiniz.</string>
-    <string name="sachit_spotify_import_file_read_failed">Seçilen dosya okunamadı.</string>
-    <string name="sachit_spotify_import_json_unsupported">Spotify JSON dışa aktarımları henüz desteklenmiyor.</string>
-    <string name="sachit_spotify_import_file_unsupported">Desteklenmeyen dosya. Bir Spotify CSV veya TSV dışa aktarımı seçin.</string>
-    <string name="sachit_spotify_import_file_default_title">İçe aktarılan Spotify çalma listesi</string>
+    <string name="nevtune_listening_summary_save">Dinleme özetini kaydet (CSV)</string>
+    <string name="nevtune_listening_summary_share">Dinleme özetini paylaş (CSV)</string>
+    <string name="nevtune_listening_summary_note">Her şarkı için saklanan tüm aylık toplamlar. Tek tek çalma zamanları saklanmaz.</string>
+    <string name="nevtune_listening_summary_chooser">Dinleme özetini paylaş</string>
+    <string name="nevtune_listening_summary_saved">Dinleme özeti kaydedildi.</string>
+    <string name="nevtune_listening_summary_save_failed">Dinleme özeti kaydedilemedi.</string>
+    <string name="nevtune_spotify_import_file_button">Spotify CSV/TSV dosyası seç</string>
+    <string name="nevtune_spotify_import_file_note">Track Name ve Artist sütunlarını içeren bir Spotify CSV veya TSV dışa aktarımını da içe aktarabilirsiniz.</string>
+    <string name="nevtune_spotify_import_file_read_failed">Seçilen dosya okunamadı.</string>
+    <string name="nevtune_spotify_import_json_unsupported">Spotify JSON dışa aktarımları henüz desteklenmiyor.</string>
+    <string name="nevtune_spotify_import_file_unsupported">Desteklenmeyen dosya. Bir Spotify CSV veya TSV dışa aktarımı seçin.</string>
+    <string name="nevtune_spotify_import_file_default_title">İçe aktarılan Spotify çalma listesi</string>
 <string name="download_storage_budget">İndirme depolama sınırı</string>
     <string name="download_storage_unknown_title">İndirme engellendi · boyut bilinmiyor</string>
     <string name="download_storage_budget_title">İndirme depolama sınırına ulaşıldı</string>

@@ -17,7 +17,7 @@ const ICON: Pixels = px(16.);
 const LEADING: f32 = 1.4;
 const REACH: Pixels = px(400.);
 /// Where the README says what to install alongside Audify.
-const INSTALL: &str = "https://github.com/sachit1751-art/Audify#linux";
+const INSTALL: &str = "https://github.com/nevanstudio/NevTuneplus#linux";
 
 type Handler = Box<dyn Fn(&ClickEvent, &mut Window, &mut App) + 'static>;
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Sachit. All rights reserved.
+# Copyright (c) 2026 NevanStudio. All rights reserved.
 # Project: AUDIFY
 """Draws the README's contributor grid from the live GitHub contributor list.
 

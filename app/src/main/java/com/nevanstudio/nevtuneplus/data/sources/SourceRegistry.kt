@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.sources
 
@@ -94,6 +94,15 @@ object SourceRegistry {
     private const val TAG = "NevTunePlus"
 
     private lateinit var prefs: SharedPreferences
+    @Volatile
+    private var initStarted = false
+    private val initLatch = java.util.concurrent.CountDownLatch(1)
+
+    fun ensureInitialized(timeoutMs: Long = 3000L) {
+        if (initStarted && initLatch.count > 0) {
+            runCatching { initLatch.await(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS) }
+        }
+    }
 
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
@@ -110,23 +119,30 @@ object SourceRegistry {
     private var instances: Map<String, MusicSource> = emptyMap()
 
     fun init(context: Context) {
-        // Same repair and degradation as AuthStore; see EncryptedPrefs.
-        prefs = EncryptedPrefs.open(context, "audify_sources", "audify_sources_plain")
+        initStarted = true
+        try {
+            // Same repair and degradation as AuthStore; see EncryptedPrefs.
+            prefs = EncryptedPrefs.open(context, "audify_sources", "audify_sources_plain")
 
-        val stored = prefs.getString(KEY_SOURCES, null)?.let(::decodeStored) ?: emptyList()
-        val jioOptInMigrationDone = prefs.getBoolean(KEY_JIOSAAVN_OPT_IN_V1, false)
-        val after = sourcesForInit(stored, forceJioSaavnOff = !jioOptInMigrationDone)
+            val stored = prefs.getString(KEY_SOURCES, null)?.let(::decodeStored) ?: emptyList()
+            val jioOptInMigrationDone = prefs.getBoolean(KEY_JIOSAAVN_OPT_IN_V1, false)
+            val after = sourcesForInit(stored, forceJioSaavnOff = !jioOptInMigrationDone)
 
-        // Publish state and the migration marker in one preferences edit. If a
-        // process dies after recording the marker but before recording the
-        // disabled source, the next launch would otherwise believe the forced
-        // opt-out had already happened and silently restore the old on state.
-        publish(after, persist = false)
-        if (after != stored || !jioOptInMigrationDone) {
-            prefs.edit {
+            // Publish state and the migration marker in one preferences edit. If a
+            // process dies after recording the marker but before recording the
+            // disabled source, the next launch would otherwise believe the forced
+            // opt-out had already happened and silently restore the old on state.
+            publish(after, persist = false)
+            if (after != stored || !jioOptInMigrationDone) {
+                prefs.edit {
                     putString(KEY_SOURCES, json.encodeToString(ListSerializer(SourceConfig.serializer()), after))
-                    .putBoolean(KEY_JIOSAAVN_OPT_IN_V1, true)
+                        .putBoolean(KEY_JIOSAAVN_OPT_IN_V1, true)
                 }
+            }
+        } catch (t: Throwable) {
+            TrackLog.e(TAG, "SourceRegistry initialization failed: ${t.message}", t)
+        } finally {
+            initLatch.countDown()
         }
     }
 
@@ -188,14 +204,16 @@ object SourceRegistry {
      * stream is budgeted further by [activeForPlayback]; downloads deliberately
      * apply no connection-quality ceiling — see [SourceResolver.forDownload].
      */
-    fun active(): List<MusicSource> =
-        enabledConfigs(configs.value)
+    fun active(): List<MusicSource> {
+        ensureInitialized()
+        return enabledConfigs(configs.value)
             // Not in the walk at all while it would be refused anyway: an addon
             // that asked for a lossless output costs nothing — not even a timed
             // out search — while there isn't one. See [SourceConfig.checkValidLossless].
             .filterNot { it.awaitsLosslessOutput }
             .sortedBy { it.kind.rank }
             .mapNotNull { instances[it.id] }
+    }
 
     /**
      * [active], minus the addons whose manifest said `allowDownloads: 0`. A
@@ -250,7 +268,10 @@ object SourceRegistry {
 
     fun instance(configId: String): MusicSource? = instances[configId]
 
-    fun config(configId: String): SourceConfig? = configs.value.firstOrNull { it.id == configId }
+    fun config(configId: String): SourceConfig? {
+        ensureInitialized()
+        return configs.value.firstOrNull { it.id == configId }
+    }
 
     /**
      * Drops completed addon track answers for an explicit quality retry.

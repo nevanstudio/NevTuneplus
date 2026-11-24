@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.tv.dialogs
 
@@ -1210,8 +1210,8 @@ fun TvAboutDialog(onDismiss: () -> Unit) {
     TvDialog(title = "NevTune+", message = "Version ${BuildConfig.VERSION_NAME}", onDismissRequest = onDismiss) {
         TvAppMark(size = 77.dp, modifier = Modifier.padding(bottom = 21.dp))
         Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-            TvListRow(title = "Kushagra Singh", value = "Creator", enabled = false, onClick = {})
-            TvListRow(title = "Nithyanantha", value = "TV App", enabled = false, onClick = {})
+            TvListRow(title = "NevanStudio", value = "Creator & Developer", enabled = false, onClick = {})
+            TvListRow(title = "NevanStudio", value = "TV App", enabled = false, onClick = {})
         }
         Spacer(modifier = Modifier.height(14.dp))
         Text(

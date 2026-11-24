@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.settings
 
@@ -106,7 +106,10 @@ enum class ThemeMode(val label: String) {
 
 /** App-wide typeface preference. AUDIFY keeps its bundled display face by default. */
 enum class AppFontChoice(val label: String) {
-    AUDIFY("NevTune+"), SYSTEM("System"), SERIF("Serif")
+    AUDIFY("NevTune+"),
+    SF_PRO("SF Pro"),
+    SYSTEM("System"),
+    SERIF("Serif"),
 }
 
 /**
@@ -423,14 +426,14 @@ object AppSettings {
     /** Analyzes audio waveform/envelope to align matching playback moment between versions. */
     val smartVersionAlignment = MutableStateFlow(true)
 
-    /** Drops haze blur (status bar, mini player, bottom fade, lyrics focus) for a solid-fill look. */
-    val reduceDynamicBlur = MutableStateFlow(false)
+    /** Drops haze blur (status bar, mini player, bottom fade, lyrics focus) for a solid-fill look. Enabled by default. */
+    val reduceDynamicBlur = MutableStateFlow(true)
 
     /** Progressive blur feathering at the top and bottom edges of scrollable content. */
     val progressiveScrollEdgeBlur = MutableStateFlow(true)
 
-    /** Real backdrop-sampled glass (blur, lens refraction) on the floating nav bar, Android 12+ only. */
-    val liquidGlass = MutableStateFlow(true)
+    /** Real backdrop-sampled glass (blur, lens refraction) on the floating nav bar, Android 12+ only. Disabled by default. */
+    val liquidGlass = MutableStateFlow(false)
 
     /** Blurs unfocused lyric lines, keeping the active line sharp. */
     val lyricsBlur = MutableStateFlow(true)
@@ -923,9 +926,9 @@ object AppSettings {
         dontRepeatSuggestions.value = prefs.getBoolean(KEY_DONT_REPEAT_SUGGESTIONS, false)
         preferMusicOnly.value = prefs.getBoolean(KEY_PREFER_MUSIC_ONLY, false)
         smartVersionAlignment.value = prefs.getBoolean(KEY_SMART_VERSION_ALIGNMENT, true)
-        reduceDynamicBlur.value = prefs.getBoolean(KEY_REDUCE_BLUR, false)
+        reduceDynamicBlur.value = prefs.getBoolean(KEY_REDUCE_BLUR, true)
         progressiveScrollEdgeBlur.value = prefs.getBoolean(KEY_PROGRESSIVE_SCROLL_EDGE_BLUR, true)
-        liquidGlass.value = prefs.getBoolean(KEY_LIQUID_GLASS, true)
+        liquidGlass.value = prefs.getBoolean(KEY_LIQUID_GLASS, false)
         lyricsBlur.value = prefs.getBoolean(KEY_LYRICS_BLUR, true)
         lyricsOffsetMs.value = prefs.getInt(KEY_LYRICS_OFFSET_MS, 0)
             .coerceIn(MIN_LYRICS_OFFSET_MS, MAX_LYRICS_OFFSET_MS)

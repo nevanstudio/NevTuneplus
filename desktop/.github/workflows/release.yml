@@ -42,11 +42,11 @@ jobs:
           - target: x86_64-pc-windows-msvc
             os: windows-latest
             arch: x64compatible
-            setup: Audify-Setup
+            setup: NevTune+-Setup
           - target: aarch64-pc-windows-msvc
             os: windows-11-arm
             arch: arm64
-            setup: Audify-Setup-arm64
+            setup: NevTune+-Setup-arm64
     steps:
       - uses: actions/checkout@v5
 
@@ -94,7 +94,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -n "$NIGHTLY" ]; then export AUDIFY_VERSION="$NIGHTLY"; fi
-          cargo build --release --locked --package audify --target "$TARGET"
+          cargo build --release --locked --package nevtuneplus --target "$TARGET"
 
       - name: sccache stats
         if: always()
@@ -110,20 +110,20 @@ jobs:
           case "$RUNNER_OS" in
             macOS)
               cp \
-                "target/$TARGET/release/audify" \
-                "dist/audify-$TARGET"
+                "target/$TARGET/release/nevtuneplus" \
+                "dist/nevtuneplus-$TARGET"
               ;;
 
             Windows)
               cp \
-                "target/$TARGET/release/audify.exe" \
-                "dist/audify-$VERSION-$TARGET.exe"
+                "target/$TARGET/release/nevtuneplus.exe" \
+                "dist/nevtuneplus-$VERSION-$TARGET.exe"
               ;;
 
             *)
               cp \
-                "target/$TARGET/release/audify" \
-                "dist/audify-$VERSION-$TARGET"
+                "target/$TARGET/release/nevtuneplus" \
+                "dist/nevtuneplus-$VERSION-$TARGET"
               ;;
           esac
 
@@ -147,9 +147,9 @@ jobs:
             $number = "0.0.0"
           }
           $env:AUDIFY_VERSION = $number
-          $env:AUDIFY_EXE = (Resolve-Path "target/$env:TARGET/release/audify.exe").Path
+          $env:AUDIFY_EXE = (Resolve-Path "target/$env:TARGET/release/nevtuneplus.exe").Path
           $env:AUDIFY_DIST = (Resolve-Path "dist").Path
-          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "scripts/windows/audify.iss"
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "scripts/windows/nevtuneplus.iss"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -395,25 +395,25 @@ jobs:
           # entry the Flatpak and the distribution packages install stays as it is.
           homepage="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
           mkdir -p desktop
-          cp assets/linux/audify.desktop desktop/audify.desktop
+          cp assets/linux/nevtuneplus.desktop desktop/nevtuneplus.desktop
           {
-            echo "X-AppImage-Name=Audify"
+            echo "X-AppImage-Name=NevTune+"
             echo "X-AppImage-Arch=$ARCH"
             echo "X-AppImage-Homepage=$homepage"
             if [ -n "$NUMBER" ]; then echo "X-AppImage-Version=$NUMBER"; fi
             if [ -n "$UPDATE" ]; then echo "X-AppImage-UpdateURL=$homepage"; fi
-          } >> desktop/audify.desktop
-          desktop-file-validate desktop/audify.desktop
+          } >> desktop/nevtuneplus.desktop
+          desktop-file-validate desktop/nevtuneplus.desktop
 
           ./linuxdeploy \
             --appdir AppDir \
-            --executable AppDir/usr/bin/audify \
-            --desktop-file desktop/audify.desktop \
-            --icon-file assets/linux/audify.svg
+            --executable AppDir/usr/bin/nevtuneplus \
+            --desktop-file desktop/nevtuneplus.desktop \
+            --icon-file assets/linux/nevtuneplus.svg
 
           # appimagetool makes the image's own icon only from a PNG or XPM in the top level of the
           # AppDir, and linuxdeploy puts the SVG there.
-          cp assets/linux/icons/hicolor/256x256/apps/audify.png AppDir/audify.png
+          cp assets/linux/icons/hicolor/256x256/apps/nevtuneplus.png AppDir/nevtuneplus.png
 
           # The Vulkan loader has to be the host's: it is what finds the host's ICD, and a loader
           # this old paired with a current driver is how an AppImage stops starting.
@@ -455,13 +455,13 @@ jobs:
         run: |
           set -euo pipefail
           cd dist
-          image="audify-$VERSION-$ARCH.AppImage"
+          image="nevtuneplus-$VERSION-$ARCH.AppImage"
           "./$image" --appimage-extract > /dev/null
-          test -x squashfs-root/usr/bin/audify
-          test -f squashfs-root/audify.desktop
-          grep -qx "X-AppImage-Arch=$ARCH" squashfs-root/audify.desktop
+          test -x squashfs-root/usr/bin/nevtuneplus
+          test -f squashfs-root/nevtuneplus.desktop
+          grep -qx "X-AppImage-Arch=$ARCH" squashfs-root/nevtuneplus.desktop
           if [ -n "$NUMBER" ]; then
-            grep -qx "X-AppImage-Version=$NUMBER" squashfs-root/audify.desktop
+            grep -qx "X-AppImage-Version=$NUMBER" squashfs-root/nevtuneplus.desktop
           fi
           if [ -n "$UPDATE" ]; then
             test -f "$image.zsync"

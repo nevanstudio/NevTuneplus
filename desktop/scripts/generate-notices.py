@@ -16,7 +16,7 @@ PREAMBLE = """# Third-party licenses
 
 Audify is licensed under the GNU General Public License v3.0 or later; the full
 text is in `COPYING`. The complete corresponding source is the tagged commit of
-<https://github.com/sachit1751-art/Audify> together with the dependency revisions
+<https://github.com/nevanstudio/NevTuneplus> together with the dependency revisions
 pinned in `Cargo.lock`.
 
 The binary embeds:

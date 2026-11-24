@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2026 Sachit. All rights reserved.
+Copyright (c) 2026 NevanStudio. All rights reserved.
 Project: NevTune+
 -->
 <resources>
@@ -1181,18 +1181,18 @@ Project: NevTune+
     <string name="download_file_check_unchecked">Enregistré · vérification du fichier non effectuée</string>
     <string name="download_file_check_available">Vérification réussie · le fichier est lisible</string>
     <string name="download_file_check_unavailable">Échec de la vérification · impossible de lire le fichier</string>
-    <string name="sachit_listening_summary_save">Enregistrer le récapitulatif d’écoute (CSV)</string>
-    <string name="sachit_listening_summary_share">Partager le récapitulatif d’écoute (CSV)</string>
-    <string name="sachit_listening_summary_note">Tous les totaux mensuels conservés pour chaque morceau. Les heures de lecture individuelles ne sont pas stockées.</string>
-    <string name="sachit_listening_summary_chooser">Partager le récapitulatif d’écoute</string>
-    <string name="sachit_listening_summary_saved">Récapitulatif d’écoute enregistré.</string>
-    <string name="sachit_listening_summary_save_failed">Impossible d’enregistrer le récapitulatif d’écoute.</string>
-    <string name="sachit_spotify_import_file_button">Choisir un fichier Spotify CSV/TSV</string>
-    <string name="sachit_spotify_import_file_note">Vous pouvez également importer un export Spotify CSV ou TSV contenant les colonnes Track Name et Artist.</string>
-    <string name="sachit_spotify_import_file_read_failed">Impossible de lire le fichier sélectionné.</string>
-    <string name="sachit_spotify_import_json_unsupported">Les exports Spotify JSON ne sont pas encore pris en charge.</string>
-    <string name="sachit_spotify_import_file_unsupported">Fichier non pris en charge. Choisissez un export Spotify CSV ou TSV.</string>
-    <string name="sachit_spotify_import_file_default_title">Playlist Spotify importée</string>
+    <string name="nevtune_listening_summary_save">Enregistrer le récapitulatif d’écoute (CSV)</string>
+    <string name="nevtune_listening_summary_share">Partager le récapitulatif d’écoute (CSV)</string>
+    <string name="nevtune_listening_summary_note">Tous les totaux mensuels conservés pour chaque morceau. Les heures de lecture individuelles ne sont pas stockées.</string>
+    <string name="nevtune_listening_summary_chooser">Partager le récapitulatif d’écoute</string>
+    <string name="nevtune_listening_summary_saved">Récapitulatif d’écoute enregistré.</string>
+    <string name="nevtune_listening_summary_save_failed">Impossible d’enregistrer le récapitulatif d’écoute.</string>
+    <string name="nevtune_spotify_import_file_button">Choisir un fichier Spotify CSV/TSV</string>
+    <string name="nevtune_spotify_import_file_note">Vous pouvez également importer un export Spotify CSV ou TSV contenant les colonnes Track Name et Artist.</string>
+    <string name="nevtune_spotify_import_file_read_failed">Impossible de lire le fichier sélectionné.</string>
+    <string name="nevtune_spotify_import_json_unsupported">Les exports Spotify JSON ne sont pas encore pris en charge.</string>
+    <string name="nevtune_spotify_import_file_unsupported">Fichier non pris en charge. Choisissez un export Spotify CSV ou TSV.</string>
+    <string name="nevtune_spotify_import_file_default_title">Playlist Spotify importée</string>
 <string name="download_storage_budget">Limite de stockage des téléchargements</string>
     <string name="download_storage_unknown_title">Téléchargement bloqué · taille inconnue</string>
     <string name="download_storage_budget_title">Limite de stockage des téléchargements atteinte</string>

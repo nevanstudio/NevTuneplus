@@ -13,7 +13,7 @@ const TRUST: u32 = 180;
 const AGENT: &str = concat!(
     "nevtuneplus/",
     env!("CARGO_PKG_VERSION"),
-    " (https://github.com/sachit1751-art/Audify)"
+    " (https://github.com/nevanstudio/NevTuneplus)"
 );
 
 pub struct Binimum {

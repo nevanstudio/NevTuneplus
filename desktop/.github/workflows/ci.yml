@@ -200,9 +200,9 @@ jobs:
           AUDIFY_SETUP: ${{ matrix.setup }}
         run: |
           $env:AUDIFY_VERSION = "0.0.0"
-          $env:AUDIFY_EXE = (Resolve-Path "target/$env:TARGET/release/audify.exe").Path
+          $env:AUDIFY_EXE = (Resolve-Path "target/$env:TARGET/release/nevtuneplus.exe").Path
           $env:AUDIFY_DIST = (Resolve-Path "dist").Path
-          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "scripts/windows/audify.iss"
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "scripts/windows/nevtuneplus.iss"
 
       - name: sign the installer
         if: runner.os == 'Windows' && github.event_name == 'workflow_dispatch' && env.SIGNPATH_API_TOKEN != ''

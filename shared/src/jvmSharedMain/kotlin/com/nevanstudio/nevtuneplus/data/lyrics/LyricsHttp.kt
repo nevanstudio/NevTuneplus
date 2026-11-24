@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.lyrics
 
@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
  */
 private const val LYRICS_TIMEOUT_SECONDS = 6L
 
-internal const val LYRICS_AGENT = "NevTune+ (https://github.com/sachit1751-art/NevTune+)"
+internal const val LYRICS_AGENT = "NevTune+ (https://github.com/nevanstudio/NevTuneplus)"
 
 val lyricsJson = Json { ignoreUnknownKeys = true; isLenient = true }
 

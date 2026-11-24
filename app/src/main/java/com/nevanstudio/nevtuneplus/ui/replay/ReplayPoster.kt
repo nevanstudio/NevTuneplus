@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.replay
 
@@ -732,9 +732,9 @@ internal fun ellipsised(text: String, paint: Paint, width: Float): String {
  * share button.
  */
 internal class Fonts(context: Context) {
-    private val heavy = font(context, R.font.sf_pro_display_heavy) ?: Typeface.DEFAULT_BOLD
-    private val semibold = font(context, R.font.sf_pro_display_semibold) ?: Typeface.DEFAULT_BOLD
-    private val regular = font(context, R.font.sf_pro_display_regular) ?: Typeface.DEFAULT
+    private val heavy = font(context, R.font.geom_extrabold) ?: font(context, R.font.sf_pro_display_heavy) ?: Typeface.DEFAULT_BOLD
+    private val semibold = font(context, R.font.geom_semibold) ?: font(context, R.font.sf_pro_display_semibold) ?: Typeface.DEFAULT_BOLD
+    private val regular = font(context, R.font.geom_regular) ?: font(context, R.font.sf_pro_display_regular) ?: Typeface.DEFAULT
 
     fun heading(size: Float, color: Int) = paint(heavy, size, color)
 

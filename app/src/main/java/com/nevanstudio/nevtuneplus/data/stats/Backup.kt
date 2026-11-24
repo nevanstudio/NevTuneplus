@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.stats
 
@@ -265,7 +265,7 @@ object Backup {
     private fun decodeAndValidate(text: String): BackupFile {
         require(text.toByteArray().size <= MAX_BACKUP_BYTES) { "Backup file is too large" }
         val file = runCatching { json.decodeFromString(BackupFile.serializer(), text) }
-            .getOrElse { error("That doesn't look like an Audify backup") }
+            .getOrElse { error("That doesn't look like a NevTune+ backup") }
         require(file.app == APP_TAG) { "That backup is from another app" }
         require(file.version in 1..SCHEMA_VERSION) { "That backup version isn't supported" }
         require(file.favorites.size <= 100_000 && file.history.size <= 100_000) { "Backup contains too many songs" }

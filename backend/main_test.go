@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package main
 
@@ -15,10 +15,10 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/sachit1751-art/Audify/backend/clock"
-	"github.com/sachit1751-art/Audify/backend/config"
-	"github.com/sachit1751-art/Audify/backend/presence"
-	"github.com/sachit1751-art/Audify/backend/protocol"
+	"github.com/Nevanstudio/Audify/backend/clock"
+	"github.com/Nevanstudio/Audify/backend/config"
+	"github.com/Nevanstudio/Audify/backend/presence"
+	"github.com/Nevanstudio/Audify/backend/protocol"
 )
 
 func setupTestServer() *httptest.Server {

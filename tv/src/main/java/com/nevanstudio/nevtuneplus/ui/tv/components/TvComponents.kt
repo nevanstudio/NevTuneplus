@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.tv.components
 
@@ -69,16 +69,28 @@ import kotlinx.coroutines.withContext
 // Artwork colour
 // ─────────────────────────────────────────────────────────────────────────────
 
-private val cardColorCache = androidx.collection.LruCache<String, Color>(300)
+private val cardColorCache = androidx.collection.LruCache<String, Color>(150)
+
+object TvComponents {
+    fun clearCache() {
+        cardColorCache.evictAll()
+    }
+}
 
 /**
  * A deep, saturated colour taken from the artwork — the footer of a Top Picks
  * card and the tint of the canvas behind everything. Decodes a 24px copy through
  * the app's shared loader, so the disk cache already holding the cover serves it.
+ *
+ * In TV Lite mode or low-RAM environments, skips expensive background decoding
+ * and per-pixel color sampling, instantly returning [defaultColor].
  */
 @Composable
 fun rememberDominantCardColor(artworkUrl: String?, defaultColor: Color = Color(0xFF2C2D31)): Color {
     val context = LocalContext.current
+    val isLite = com.nevanstudio.nevtuneplus.ui.tv.DeviceType.isTvLite(context)
+    if (isLite) return defaultColor
+
     var color by remember(artworkUrl) {
         mutableStateOf(artworkUrl?.let { cardColorCache.get(it) } ?: defaultColor)
     }

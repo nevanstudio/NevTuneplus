@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.lyrics
 
@@ -28,7 +28,7 @@ import kotlin.math.abs
 object LrcLib {
 
     private const val BASE = "https://lrclib.net/api"
-    private const val AGENT = "NevTune+ (https://github.com/sachit1751-art/NevTune+)"
+    private const val AGENT = "NevTune+ (https://github.com/nevanstudio/NevTuneplus)"
 
     private val json = Json { ignoreUnknownKeys = true }
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-Copyright (c) 2026 Sachit. All rights reserved.
+Copyright (c) 2026 NevanStudio. All rights reserved.
 Project: NevTune+
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -75,7 +75,7 @@ Project: NevTune+
         android:required="false" />
 
     <application
-        android:name=".NevTunePlusApplication"
+        android:name=".TvApplication"
         android:allowBackup="true"
         android:appCategory="audio"
         android:banner="@drawable/tv_banner"

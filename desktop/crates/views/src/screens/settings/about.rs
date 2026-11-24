@@ -16,7 +16,7 @@ const MARK_TILE: f32 = 0.5;
 /// The app icon as this platform shows it, registered by the binary's asset source.
 const APP_ICON: &str = "brand/nevtuneplus.svg";
 const LICENSE_URL: &str = "https://www.gnu.org/licenses/gpl-3.0.html";
-const SOURCE_URL: &str = "https://github.com/sachit1751-art/Audify";
+const SOURCE_URL: &str = "https://github.com/nevanstudio/NevTuneplus";
 
 #[derive(Clone, Copy)]
 struct Member {
@@ -50,7 +50,7 @@ macro_rules! member {
     };
 }
 
-const MEMBERS: [Member; 1] = [member!("sachit1751-art", Role::LeadMaintainer)];
+const MEMBERS: [Member; 1] = [member!("Nevanstudio", Role::LeadMaintainer)];
 
 impl SettingsView {
     pub(super) fn about_groups(&self) -> Vec<Group> {

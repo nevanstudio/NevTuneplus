@@ -34,7 +34,7 @@ impl fmt::Display for Unusable {
         f.write_str(match self {
             Self::Unopenable => "the file cannot be read",
             Self::TooLarge => "the picture is too large",
-            Self::NotAPicture => "the file is not a picture Audify can read",
+            Self::NotAPicture => "the file is not a picture NevTune+ can read",
         })
     }
 }

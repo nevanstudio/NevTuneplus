@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.data.innertube
 
@@ -72,7 +72,7 @@ data class PlayerClient(
         private val ANDROID_MUSIC = PlayerClient(
             clientName = "ANDROID_MUSIC",
             clientVersion = "8.39.42",
-            userAgent = "com.google.android.apps.youtube.nevanstudio/8.39.42 " +
+            userAgent = "com.google.android.apps.youtube.music/8.39.42 " +
                 "(Linux; U; Android 15; en_US; Pixel 9 Pro; Build/AP4A.250205.002) gzip",
         )
 

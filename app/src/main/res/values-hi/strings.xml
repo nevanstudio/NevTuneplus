@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2026 Sachit. All rights reserved.
+Copyright (c) 2026 NevanStudio. All rights reserved.
 Project: NevTune+
 -->
 <resources>
@@ -1162,18 +1162,18 @@ Project: NevTune+
     <string name="download_file_check_unchecked">सहेजा गया · फ़ाइल जाँच नहीं हुई</string>
     <string name="download_file_check_available">फ़ाइल जाँच सफल · फ़ाइल पढ़ी जा सकती है</string>
     <string name="download_file_check_unavailable">फ़ाइल जाँच विफल · फ़ाइल पढ़ी नहीं जा सकी</string>
-    <string name="sachit_listening_summary_save">सुनने का सारांश सहेजें (CSV)</string>
-    <string name="sachit_listening_summary_share">सुनने का सारांश साझा करें (CSV)</string>
-    <string name="sachit_listening_summary_note">हर गाने के लिए सुरक्षित रखे गए सभी मासिक कुल। अलग-अलग प्लेबैक समय संग्रहीत नहीं किए जाते।</string>
-    <string name="sachit_listening_summary_chooser">सुनने का सारांश साझा करें</string>
-    <string name="sachit_listening_summary_saved">सुनने का सारांश सहेजा गया।</string>
-    <string name="sachit_listening_summary_save_failed">सुनने का सारांश सहेजा नहीं जा सका।</string>
-    <string name="sachit_spotify_import_file_button">Spotify CSV/TSV फ़ाइल चुनें</string>
-    <string name="sachit_spotify_import_file_note">आप Track Name और Artist कॉलम वाला Spotify CSV या TSV एक्सपोर्ट भी आयात कर सकते हैं।</string>
-    <string name="sachit_spotify_import_file_read_failed">चुनी गई फ़ाइल पढ़ी नहीं जा सकी।</string>
-    <string name="sachit_spotify_import_json_unsupported">Spotify JSON एक्सपोर्ट अभी समर्थित नहीं हैं।</string>
-    <string name="sachit_spotify_import_file_unsupported">असमर्थित फ़ाइल। Spotify CSV या TSV एक्सपोर्ट चुनें।</string>
-    <string name="sachit_spotify_import_file_default_title">आयात की गई Spotify प्लेलिस्ट</string>
+    <string name="nevtune_listening_summary_save">सुनने का सारांश सहेजें (CSV)</string>
+    <string name="nevtune_listening_summary_share">सुनने का सारांश साझा करें (CSV)</string>
+    <string name="nevtune_listening_summary_note">हर गाने के लिए सुरक्षित रखे गए सभी मासिक कुल। अलग-अलग प्लेबैक समय संग्रहीत नहीं किए जाते।</string>
+    <string name="nevtune_listening_summary_chooser">सुनने का सारांश साझा करें</string>
+    <string name="nevtune_listening_summary_saved">सुनने का सारांश सहेजा गया।</string>
+    <string name="nevtune_listening_summary_save_failed">सुनने का सारांश सहेजा नहीं जा सका।</string>
+    <string name="nevtune_spotify_import_file_button">Spotify CSV/TSV फ़ाइल चुनें</string>
+    <string name="nevtune_spotify_import_file_note">आप Track Name और Artist कॉलम वाला Spotify CSV या TSV एक्सपोर्ट भी आयात कर सकते हैं।</string>
+    <string name="nevtune_spotify_import_file_read_failed">चुनी गई फ़ाइल पढ़ी नहीं जा सकी।</string>
+    <string name="nevtune_spotify_import_json_unsupported">Spotify JSON एक्सपोर्ट अभी समर्थित नहीं हैं।</string>
+    <string name="nevtune_spotify_import_file_unsupported">असमर्थित फ़ाइल। Spotify CSV या TSV एक्सपोर्ट चुनें।</string>
+    <string name="nevtune_spotify_import_file_default_title">आयात की गई Spotify प्लेलिस्ट</string>
 <string name="download_storage_budget">डाउनलोड स्टोरेज सीमा</string>
     <string name="download_storage_unknown_title">डाउनलोड अवरुद्ध · आकार अज्ञात</string>
     <string name="download_storage_budget_title">डाउनलोड स्टोरेज सीमा पूरी हो गई</string>

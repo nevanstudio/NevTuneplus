@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Sachit. All rights reserved.
+# Copyright (c) 2026 NevanStudio. All rights reserved.
 # Project: NevTune+
 """
 Drives a real party over the wire, the way two phones would.

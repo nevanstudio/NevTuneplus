@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2026 Sachit. All rights reserved.
+Copyright (c) 2026 NevanStudio. All rights reserved.
 Project: NevTune+
 -->
 <resources>
@@ -1188,18 +1188,18 @@ Project: NevTune+
     <string name="download_file_check_unchecked">Сохранено · проверка файла не запускалась</string>
     <string name="download_file_check_available">Проверка пройдена · файл доступен для чтения</string>
     <string name="download_file_check_unavailable">Проверка не пройдена · файл не удалось прочитать</string>
-    <string name="sachit_listening_summary_save">Сохранить сводку прослушивания (CSV)</string>
-    <string name="sachit_listening_summary_share">Поделиться сводкой прослушивания (CSV)</string>
-    <string name="sachit_listening_summary_note">Все сохранённые месячные итоги для каждой песни. Время отдельных воспроизведений не хранится.</string>
-    <string name="sachit_listening_summary_chooser">Поделиться сводкой прослушивания</string>
-    <string name="sachit_listening_summary_saved">Сводка прослушивания сохранена.</string>
-    <string name="sachit_listening_summary_save_failed">Не удалось сохранить сводку прослушивания.</string>
-    <string name="sachit_spotify_import_file_button">Выбрать файл Spotify CSV/TSV</string>
-    <string name="sachit_spotify_import_file_note">Также можно импортировать экспорт Spotify в формате CSV или TSV со столбцами Track Name и Artist.</string>
-    <string name="sachit_spotify_import_file_read_failed">Не удалось прочитать выбранный файл.</string>
-    <string name="sachit_spotify_import_json_unsupported">Экспорт Spotify в JSON пока не поддерживается.</string>
-    <string name="sachit_spotify_import_file_unsupported">Неподдерживаемый файл. Выберите экспорт Spotify в формате CSV или TSV.</string>
-    <string name="sachit_spotify_import_file_default_title">Импортированный плейлист Spotify</string>
+    <string name="nevtune_listening_summary_save">Сохранить сводку прослушивания (CSV)</string>
+    <string name="nevtune_listening_summary_share">Поделиться сводкой прослушивания (CSV)</string>
+    <string name="nevtune_listening_summary_note">Все сохранённые месячные итоги для каждой песни. Время отдельных воспроизведений не хранится.</string>
+    <string name="nevtune_listening_summary_chooser">Поделиться сводкой прослушивания</string>
+    <string name="nevtune_listening_summary_saved">Сводка прослушивания сохранена.</string>
+    <string name="nevtune_listening_summary_save_failed">Не удалось сохранить сводку прослушивания.</string>
+    <string name="nevtune_spotify_import_file_button">Выбрать файл Spotify CSV/TSV</string>
+    <string name="nevtune_spotify_import_file_note">Также можно импортировать экспорт Spotify в формате CSV или TSV со столбцами Track Name и Artist.</string>
+    <string name="nevtune_spotify_import_file_read_failed">Не удалось прочитать выбранный файл.</string>
+    <string name="nevtune_spotify_import_json_unsupported">Экспорт Spotify в JSON пока не поддерживается.</string>
+    <string name="nevtune_spotify_import_file_unsupported">Неподдерживаемый файл. Выберите экспорт Spotify в формате CSV или TSV.</string>
+    <string name="nevtune_spotify_import_file_default_title">Импортированный плейлист Spotify</string>
 <string name="download_storage_budget">Лимит хранилища загрузок</string>
     <string name="download_storage_unknown_title">Загрузка заблокирована · размер неизвестен</string>
     <string name="download_storage_budget_title">Достигнут лимит хранилища загрузок</string>

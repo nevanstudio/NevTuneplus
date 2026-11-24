@@ -11,7 +11,7 @@ const ENDPOINT: &str = "https://nevtuneplus-stats.nolight.dev/install";
 const AGENT: &str = concat!(
     "nevtuneplus/",
     env!("CARGO_PKG_VERSION"),
-    " (https://github.com/sachit1751-art/Audify)"
+    " (https://github.com/nevanstudio/NevTuneplus)"
 );
 const REPORTED: &str = "reported_usage";
 const LOGGED_IN: &str = "logged_in_once";

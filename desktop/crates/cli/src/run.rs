@@ -44,7 +44,7 @@ pub fn run<S: Read + Write>(stream: &mut S, request: &Request, format: Format) -
             ExitCode::from(FAILED)
         }
         Err(wire::Error::Closed) => {
-            eprintln!("nevtuneplus: the running Audify did not answer; it may be older, restart it");
+            eprintln!("nevtuneplus: the running NevTune+ did not answer; it may be older, restart it");
             ExitCode::from(FAILED)
         }
         Err(error) => {
@@ -89,7 +89,7 @@ fn follow<S: Read + Write>(stream: &mut S, request: &Request) -> ExitCode {
 
 /// Says that no Audify runs, for a command that has nowhere to go.
 pub fn not_running() -> ExitCode {
-    eprintln!("nevtuneplus: Audify is not running");
+    eprintln!("nevtuneplus: NevTune+ is not running");
     ExitCode::from(NOT_RUNNING)
 }
 
@@ -207,9 +207,9 @@ fn clock(seconds: u64) -> String {
 
 fn describe(failure: &Failure) -> String {
     match failure {
-        Failure::Version(v) => format!("the running Audify speaks protocol {v}; restart it"),
+        Failure::Version(v) => format!("the running NevTune+ speaks protocol {v}; restart it"),
         Failure::Malformed => {
-            "the running Audify could not read the command; if it is older, restart it".to_owned()
+            "the running NevTune+ could not read the command; if it is older, restart it".to_owned()
         }
         Failure::Unsupported => "this command is not supported yet".to_owned(),
         Failure::SignedOut => "no provider is signed in".to_owned(),

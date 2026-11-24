@@ -51,7 +51,7 @@
       };
 
       # The nightly prerelease, in the same shape as `release` plus its tag. Only the commit the
-      # nightly workflow tags `nightly` carries this file, so `github:sachit1751-art/Audify/nightly` is
+      # nightly workflow tags `nightly` carries this file, so `github:Nevanstudio/Audify/nightly` is
       # the one flake ref that installs it.
       nightly = lib.optionalAttrs (builtins.pathExists ./nix/nightly.json) (
         lib.importJSON ./nix/nightly.json
@@ -276,7 +276,7 @@
               inherit pname version meta;
 
               src = pkgs.fetchurl {
-                url = "https://github.com/sachit1751-art/NevTune+/releases/download/${tag}/audify-${tag}-${asset.target}${
+                url = "https://github.com/Nevanstudio/NevTune+/releases/download/${tag}/audify-${tag}-${asset.target}${
                   if pkgs.stdenv.hostPlatform.isDarwin then ".dmg" else ""
                 }";
                 inherit (asset) hash;

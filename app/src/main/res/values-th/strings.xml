@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2026 Sachit. All rights reserved.
+Copyright (c) 2026 NevanStudio. All rights reserved.
 Project: NevTune+
 -->
 <resources>
@@ -1118,18 +1118,18 @@ Project: NevTune+
     <string name="download_file_check_unchecked">บันทึกแล้ว · ยังไม่ได้ตรวจสอบไฟล์</string>
     <string name="download_file_check_available">ตรวจสอบผ่าน · อ่านไฟล์ได้</string>
     <string name="download_file_check_unavailable">ตรวจสอบไม่ผ่าน · อ่านไฟล์ไม่ได้</string>
-    <string name="sachit_listening_summary_save">บันทึกสรุปการฟังเพลง (CSV)</string>
-    <string name="sachit_listening_summary_share">แชร์สรุปการฟังเพลง (CSV)</string>
-    <string name="sachit_listening_summary_note">ยอดรวมรายเดือนทั้งหมดที่เก็บไว้สำหรับแต่ละเพลง จะไม่มีการจัดเก็บเวลาเล่นแต่ละครั้ง</string>
-    <string name="sachit_listening_summary_chooser">แชร์สรุปการฟังเพลง</string>
-    <string name="sachit_listening_summary_saved">บันทึกสรุปการฟังเพลงแล้ว</string>
-    <string name="sachit_listening_summary_save_failed">บันทึกสรุปการฟังเพลงไม่ได้</string>
-    <string name="sachit_spotify_import_file_button">เลือกไฟล์ Spotify CSV/TSV</string>
-    <string name="sachit_spotify_import_file_note">คุณยังสามารถนำเข้าไฟล์ส่งออก Spotify แบบ CSV หรือ TSV ที่มีคอลัมน์ Track Name และ Artist ได้</string>
-    <string name="sachit_spotify_import_file_read_failed">อ่านไฟล์ที่เลือกไม่ได้</string>
-    <string name="sachit_spotify_import_json_unsupported">ยังไม่รองรับไฟล์ส่งออก Spotify JSON</string>
-    <string name="sachit_spotify_import_file_unsupported">ไฟล์ที่ไม่รองรับ โปรดเลือกไฟล์ส่งออก Spotify แบบ CSV หรือ TSV</string>
-    <string name="sachit_spotify_import_file_default_title">เพลย์ลิสต์ Spotify ที่นำเข้า</string>
+    <string name="nevtune_listening_summary_save">บันทึกสรุปการฟังเพลง (CSV)</string>
+    <string name="nevtune_listening_summary_share">แชร์สรุปการฟังเพลง (CSV)</string>
+    <string name="nevtune_listening_summary_note">ยอดรวมรายเดือนทั้งหมดที่เก็บไว้สำหรับแต่ละเพลง จะไม่มีการจัดเก็บเวลาเล่นแต่ละครั้ง</string>
+    <string name="nevtune_listening_summary_chooser">แชร์สรุปการฟังเพลง</string>
+    <string name="nevtune_listening_summary_saved">บันทึกสรุปการฟังเพลงแล้ว</string>
+    <string name="nevtune_listening_summary_save_failed">บันทึกสรุปการฟังเพลงไม่ได้</string>
+    <string name="nevtune_spotify_import_file_button">เลือกไฟล์ Spotify CSV/TSV</string>
+    <string name="nevtune_spotify_import_file_note">คุณยังสามารถนำเข้าไฟล์ส่งออก Spotify แบบ CSV หรือ TSV ที่มีคอลัมน์ Track Name และ Artist ได้</string>
+    <string name="nevtune_spotify_import_file_read_failed">อ่านไฟล์ที่เลือกไม่ได้</string>
+    <string name="nevtune_spotify_import_json_unsupported">ยังไม่รองรับไฟล์ส่งออก Spotify JSON</string>
+    <string name="nevtune_spotify_import_file_unsupported">ไฟล์ที่ไม่รองรับ โปรดเลือกไฟล์ส่งออก Spotify แบบ CSV หรือ TSV</string>
+    <string name="nevtune_spotify_import_file_default_title">เพลย์ลิสต์ Spotify ที่นำเข้า</string>
 <string name="download_storage_budget">ขีดจำกัดพื้นที่จัดเก็บสำหรับการดาวน์โหลด</string>
     <string name="download_storage_unknown_title">บล็อกการดาวน์โหลด · ไม่ทราบขนาด</string>
     <string name="download_storage_budget_title">ถึงขีดจำกัดพื้นที่จัดเก็บสำหรับการดาวน์โหลดแล้ว</string>

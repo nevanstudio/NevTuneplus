@@ -57,7 +57,7 @@ pub(crate) async fn check(http: reqwest::Client, socket: Url) -> Result<()> {
     }
     let body = answer.text().await.context("cannot read the answer")?;
     if body.trim() != "ok" {
-        bail!("the server does not answer as a Audify Sessions server");
+        bail!("the server does not answer as a NevTune+ Sessions server");
     }
     Ok(())
 }

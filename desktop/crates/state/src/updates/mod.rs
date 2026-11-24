@@ -12,7 +12,7 @@ use sha2::{Digest as _, Sha256};
 use crate::{AppSettings, Io, join};
 use install::Install;
 
-const RELEASES: &str = "https://api.github.com/repos/sachit1751-art/NevTune+/releases";
+const RELEASES: &str = "https://api.github.com/repos/nevanstudio/NevTuneplus/releases";
 const SUMS: &str = "SHA256SUMS";
 /// What the nightly workflow puts before the version label in the nightly release's title.
 const NIGHTLY_TITLE: &str = "Nightly ";
@@ -26,7 +26,7 @@ pub const VERSION: &str = match option_env!("AUDIFY_VERSION") {
 const AGENT: &str = concat!(
     "nevtuneplus/",
     env!("CARGO_PKG_VERSION"),
-    " (https://github.com/sachit1751-art/Audify)"
+    " (https://github.com/nevanstudio/NevTuneplus)"
 );
 
 /// The builds Audify updates to. Stable follows tagged releases, and Nightly follows the build

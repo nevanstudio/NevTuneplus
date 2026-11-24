@@ -1,7 +1,7 @@
-REM Copyright (c) 2026 Sachit. All rights reserved.
-REM Project: AUDIFY
+REM Copyright (c) 2026 NevanStudio. All rights reserved.
+REM Project: NevTune+
 @echo off
-rem Audify (Sachit Music) - double-click wrapper that builds every shippable APK
+rem NevTune+ (NevanStudio Music) - double-click wrapper that builds every shippable APK
 rem with the bundled Gradle wrapper, drops a fresh set into dist\ at the project
 rem root, and pauses at the end so the results stay visible from Explorer.
 

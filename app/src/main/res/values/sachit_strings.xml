@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-Copyright (c) 2026 Sachit. All rights reserved.
+Copyright (c) 2026 NevanStudio. All rights reserved.
 Project: NevTune+
 -->
 <resources>
@@ -29,18 +29,18 @@ Project: NevTune+
     <string name="download_file_check_unchecked">Saved Â· file check not run</string>
     <string name="download_file_check_available">File check passed Â· file is readable</string>
     <string name="download_file_check_unavailable">File check failed Â· file could not be read</string>
-    <string name="sachit_listening_summary_save">Save listening summary (CSV)</string>
-    <string name="sachit_listening_summary_share">Share listening summary (CSV)</string>
-    <string name="sachit_listening_summary_note">All retained monthly totals for each song. Individual play timestamps are not stored.</string>
-    <string name="sachit_listening_summary_chooser">Share listening summary</string>
-    <string name="sachit_listening_summary_saved">Listening summary saved.</string>
-    <string name="sachit_listening_summary_save_failed">Could not save the listening summary.</string>
-    <string name="sachit_spotify_import_file_button">Choose Spotify CSV/TSV file</string>
-    <string name="sachit_spotify_import_file_note">You can also import a Spotify CSV or TSV export with Track Name and Artist columns.</string>
-    <string name="sachit_spotify_import_file_read_failed">Could not read the selected file.</string>
-    <string name="sachit_spotify_import_json_unsupported">Spotify JSON exports are not supported yet.</string>
-    <string name="sachit_spotify_import_file_unsupported">Unsupported file. Choose a Spotify CSV or TSV export.</string>
-    <string name="sachit_spotify_import_file_default_title">Imported Spotify Playlist</string>
+    <string name="nevtune_listening_summary_save">Save listening summary (CSV)</string>
+    <string name="nevtune_listening_summary_share">Share listening summary (CSV)</string>
+    <string name="nevtune_listening_summary_note">All retained monthly totals for each song. Individual play timestamps are not stored.</string>
+    <string name="nevtune_listening_summary_chooser">Share listening summary</string>
+    <string name="nevtune_listening_summary_saved">Listening summary saved.</string>
+    <string name="nevtune_listening_summary_save_failed">Could not save the listening summary.</string>
+    <string name="nevtune_spotify_import_file_button">Choose Spotify CSV/TSV file</string>
+    <string name="nevtune_spotify_import_file_note">You can also import a Spotify CSV or TSV export with Track Name and Artist columns.</string>
+    <string name="nevtune_spotify_import_file_read_failed">Could not read the selected file.</string>
+    <string name="nevtune_spotify_import_json_unsupported">Spotify JSON exports are not supported yet.</string>
+    <string name="nevtune_spotify_import_file_unsupported">Unsupported file. Choose a Spotify CSV or TSV export.</string>
+    <string name="nevtune_spotify_import_file_default_title">Imported Spotify Playlist</string>
     <!-- Plan 035 storage-budget strings -->
     <string name="download_storage_budget">Download storage budget</string>
     <string name="download_storage_unknown_title">Download blocked Â· size unknown</string>
@@ -68,9 +68,9 @@ Project: NevTune+
     <string name="share_feedback_subtitle" translatable="false">Suggest improvements or share your experience using NevTune+</string>
     <string name="could_not_open_feedback" translatable="false">Could not open the feedback form.</string>
     <string name="wear_os_update_busy" translatable="false">Another watch update is in progress</string>
-    <string name="sachit_backup_export_scope" translatable="false">Favorites, playlists, listening history, statistics and supported settings. Credentials are excluded.</string>
-    <string name="sachit_backup_automatic_last" translatable="false">On-device automatic backup · %1$s</string>
-    <string name="sachit_backup_automatic_pending" translatable="false">On-device automatic backup · No completed snapshot yet</string>
-    <string name="sachit_backup_external_last" translatable="false">External copy exported · %1$s</string>
-    <string name="sachit_backup_external_due" translatable="false">External copy recommended · Export to protect against device loss</string>
+    <string name="nevtune_backup_export_scope" translatable="false">Favorites, playlists, listening history, statistics and supported settings. Credentials are excluded.</string>
+    <string name="nevtune_backup_automatic_last" translatable="false">On-device automatic backup · %1$s</string>
+    <string name="nevtune_backup_automatic_pending" translatable="false">On-device automatic backup · No completed snapshot yet</string>
+    <string name="nevtune_backup_external_last" translatable="false">External copy exported · %1$s</string>
+    <string name="nevtune_backup_external_due" translatable="false">External copy recommended · Export to protect against device loss</string>
 </resources>

@@ -1,5 +1,5 @@
 <!--
-Copyright (c) 2026 Sachit. All rights reserved.
+Copyright (c) 2026 NevanStudio. All rights reserved.
 Project: NevTune+
 -->
 # NevTune+ — Listen Together
@@ -359,4 +359,4 @@ party/party_test.go   Capacity limits, queue limits, delta moves, step
 ```
 ---
 
-> **NevTune+** — made by [Sachit](https://github.com/sachit1751-art).
+> **NevTune+** — made by [NevanStudio](https://github.com/nevanstudio).

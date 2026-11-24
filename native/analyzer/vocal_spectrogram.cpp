@@ -1,11 +1,11 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 /*
  * Ported from Orchard (https://github.com/SFG5453/Orchard), whose native STFT
  * front end this file is adapted from almost unchanged.
  *
  * Copyright (C) 2026 SFG545 (original Orchard implementation)
- * Copyright (C) 2026 Kushagra Singh (Audify adaptation)
+ * Copyright (C) 2026 NevanStudio (Audify adaptation)
  *
  * Orchard's original source is licensed under the GNU Affero General Public
  * License, version 3 or later. Per AGPLv3 section 13, this file is combined

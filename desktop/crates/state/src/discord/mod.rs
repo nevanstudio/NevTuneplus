@@ -25,7 +25,7 @@ const MAX_TEXT_UTF16_UNITS: usize = 128;
 /// What the status says when it names the nevanstudio rather than a service.
 const MUSIC: &str = "Music";
 /// Where the Audify button sends a friend who presses it.
-const AUDIFY_URL: &str = "https://github.com/sachit1751-art/Audify";
+const AUDIFY_URL: &str = "https://github.com/nevanstudio/NevTuneplus";
 
 struct Attached {
     _discord: Entity<Discord>,
@@ -551,7 +551,7 @@ fn buttons(
     }
     if settings.discord_audify_button() {
         buttons.push(Button {
-            label: "Get Audify".to_string(),
+            label: "Get NevTune+".to_string(),
             url: AUDIFY_URL.to_string(),
         });
     }

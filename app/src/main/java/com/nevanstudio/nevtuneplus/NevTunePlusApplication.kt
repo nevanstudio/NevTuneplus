@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus
 
@@ -6,6 +6,7 @@ import com.nevanstudio.nevtuneplus.ui.motion.MotionTokens
 
 import android.app.ActivityManager
 import android.app.Application
+import android.content.Context
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import coil3.ImageLoader
@@ -60,15 +61,7 @@ open class NevTunePlusApplication : Application(), SingletonImageLoader.Factory 
     @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
-        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
-        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            android.util.Log.e("NevTunePlusCrash", "FATAL UNCAUGHT EXCEPTION on thread ${thread.name}", throwable)
-            runCatching {
-                val crashFile = java.io.File(filesDir, "last_crash.txt")
-                crashFile.writeText("Thread: ${thread.name}\nTime: ${System.currentTimeMillis()}\nException: ${throwable.stackTraceToString()}")
-            }
-            defaultHandler?.uncaughtException(thread, throwable)
-        }
+        com.nevanstudio.nevtuneplus.data.CrashReporter.install(this)
         // The player is drawn by the shared UI module; this is what it reads
         // underneath — settings, the Canvas decoder, outputs, the party.
         AndroidStreamHooks.installEarly()
@@ -134,7 +127,10 @@ open class NevTunePlusApplication : Application(), SingletonImageLoader.Factory 
             // first would restore it into the value about to be wiped.
             restoredSession.profiles.firstOrNull { it.profileId == restoredSession.activeProfileId }
                 ?.let { Innertube.selectChannel(it.pageId, it.dataSyncId, it.authUser) }
-            CoroutineScope(Dispatchers.IO).launch { Innertube.ensureSessionScope() }
+            CoroutineScope(Dispatchers.IO).launch {
+                runCatching { Innertube.ensureSessionScope() }
+                    .onFailure { android.util.Log.w("NevTunePlus", "Failed to ensure session scope: ${it.message}") }
+            }
         }
         AppSettings.init(this, authStore)
         CoroutineScope(Dispatchers.IO).launch {
@@ -194,7 +190,10 @@ open class NevTunePlusApplication : Application(), SingletonImageLoader.Factory 
         initLastfm()
         // The public "apps open right now" count; see Presence.
         com.nevanstudio.nevtuneplus.data.presence.AndroidPresence.install(this)
-        backgroundInit.join()
+
+        // Do not block the UI thread during cold startup; allow background initialization
+        // to complete concurrently so MainActivity and TvActivity draw their initial frames immediately.
+        // SourceRegistry and CanvasCache are thread-safe and await initialization on demand.
     }
 
     /**
@@ -206,14 +205,14 @@ open class NevTunePlusApplication : Application(), SingletonImageLoader.Factory 
      * HTTP 403 under its User-Agent policy, so every image request carries an
      * identifying agent. Anything else falls through to Coil's own fetchers.
      */
-    private val coilHttpClient: OkHttpClient by lazy {
+    protected val coilHttpClient: OkHttpClient by lazy {
         Http.client.newBuilder()
             .addInterceptor { chain ->
                 chain.proceed(
                     chain.request().newBuilder()
                         .header(
                             "User-Agent",
-                            "NevTune+/${BuildConfig.VERSION_NAME} (Android; +https://github.com/sachit1751-art/NevTune+)",
+                            "NevTune+/${BuildConfig.VERSION_NAME} (Android; +https://github.com/nevanstudio/NevTuneplus)",
                         )
                         .build(),
                 )
@@ -270,15 +269,24 @@ open class NevTunePlusApplication : Application(), SingletonImageLoader.Factory 
 
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
-        if (level >= TRIM_MEMORY_BACKGROUND) {
+        com.nevanstudio.nevtuneplus.data.CrashReporter.recordLowMemory(level)
+        @Suppress("DEPRECATION")
+        if (level >= TRIM_MEMORY_RUNNING_LOW || level >= TRIM_MEMORY_BACKGROUND) {
             runCatching {
-                SingletonImageLoader.get(this).memoryCache?.clear()
+                val cache = SingletonImageLoader.get(this).memoryCache ?: return@runCatching
+                @Suppress("DEPRECATION")
+                if (level >= TRIM_MEMORY_RUNNING_CRITICAL || level >= TRIM_MEMORY_COMPLETE) {
+                    cache.clear()
+                } else {
+                    cache.trimToSize(cache.size / 2)
+                }
             }
         }
     }
 
     override fun onLowMemory() {
         super.onLowMemory()
+        com.nevanstudio.nevtuneplus.data.CrashReporter.recordLowMemory(999)
         runCatching {
             SingletonImageLoader.get(this).memoryCache?.clear()
         }

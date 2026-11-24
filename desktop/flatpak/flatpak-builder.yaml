@@ -48,7 +48,7 @@ modules:
     sources:
       # Use source from GitHub:
       #- type: git
-      #  url: https://github.com/sachit1751-art/NevTune+.git
+      #  url: https://github.com/Nevanstudio/NevTune+.git
       #  tag: v0.28.0
 
       # Use source from this machine:

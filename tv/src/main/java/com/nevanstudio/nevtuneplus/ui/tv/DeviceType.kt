@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.tv
 
@@ -41,11 +41,53 @@ object DeviceType {
 
     /**
      * Returns true if the device is a memory-constrained (low-RAM) device.
-     * Used to throttle mesh gradient blur, video canvas playback, and cache sizes.
+     * Evaluates both Android's isLowRamDevice flag AND checks for total system
+     * RAM <= 2.5GB to ensure all 2GB RAM and 1.5GB RAM TV devices (like Chromecast,
+     * Mi Box, onn. TV boxes, Fire Sticks) are reliably identified.
      */
     fun isLowRam(context: Context): Boolean {
         val am = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return false
-        return am.isLowRamDevice
+        if (am.isLowRamDevice) return true
+        val memInfo = ActivityManager.MemoryInfo()
+        am.getMemoryInfo(memInfo)
+        // 2.5GB threshold reliably covers 2GB and 1.5GB TV boards
+        return memInfo.totalMem > 0L && memInfo.totalMem <= 2_684_354_560L
+    }
+
+    /**
+     * Returns total physical system RAM in bytes, or 0 if unqueryable.
+     */
+    fun getTotalRamBytes(context: Context): Long {
+        val am = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return 0L
+        val memInfo = ActivityManager.MemoryInfo()
+        am.getMemoryInfo(memInfo)
+        return memInfo.totalMem
+    }
+
+    /**
+     * Returns the available CPU core count.
+     */
+    fun getCpuCoreCount(): Int = Runtime.getRuntime().availableProcessors()
+
+    /**
+     * Returns true if the hardware is low-end (e.g. quad-core A53 or <= 2.5GB RAM).
+     */
+    fun isLowEndHardware(context: Context): Boolean {
+        return isLowRam(context) || getCpuCoreCount() <= 4
+    }
+
+    /**
+     * Determines whether the TV app should operate in TV Lite mode.
+     * Respects user preference in [com.nevanstudio.nevtuneplus.data.settings.TvSettings]
+     * if configured, or automatically defaults to true on low-RAM / low-end hardware.
+     */
+    fun isTvLite(context: Context): Boolean {
+        val pref = com.nevanstudio.nevtuneplus.data.settings.TvSettings.tvLiteMode.value
+        return when (pref) {
+            "on" -> true
+            "off" -> false
+            else -> isLowRam(context)
+        }
     }
 
     /**

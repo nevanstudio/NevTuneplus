@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-Copyright (c) 2026 Sachit. All rights reserved.
+Copyright (c) 2026 NevanStudio. All rights reserved.
 Project: NevTune+
 -->
 <resources>
@@ -1134,18 +1134,18 @@ Project: NevTune+
     <string name="download_file_check_unchecked">Đã lưu · chưa chạy kiểm tra tệp</string>
     <string name="download_file_check_available">Kiểm tra thành công · có thể đọc tệp</string>
     <string name="download_file_check_unavailable">Kiểm tra thất bại · không thể đọc tệp</string>
-    <string name="sachit_listening_summary_save">Lưu bản tổng kết nghe nhạc (CSV)</string>
-    <string name="sachit_listening_summary_share">Chia sẻ bản tổng kết nghe nhạc (CSV)</string>
-    <string name="sachit_listening_summary_note">Tất cả tổng số hằng tháng được lưu cho từng bài hát. Không lưu thời điểm phát riêng lẻ.</string>
-    <string name="sachit_listening_summary_chooser">Chia sẻ bản tổng kết nghe nhạc</string>
-    <string name="sachit_listening_summary_saved">Đã lưu bản tổng kết nghe nhạc.</string>
-    <string name="sachit_listening_summary_save_failed">Không thể lưu bản tổng kết nghe nhạc.</string>
-    <string name="sachit_spotify_import_file_button">Chọn tệp Spotify CSV/TSV</string>
-    <string name="sachit_spotify_import_file_note">Bạn cũng có thể nhập bản xuất Spotify CSV hoặc TSV có các cột Track Name và Artist.</string>
-    <string name="sachit_spotify_import_file_read_failed">Không thể đọc tệp đã chọn.</string>
-    <string name="sachit_spotify_import_json_unsupported">Hiện chưa hỗ trợ bản xuất Spotify JSON.</string>
-    <string name="sachit_spotify_import_file_unsupported">Tệp không được hỗ trợ. Hãy chọn bản xuất Spotify CSV hoặc TSV.</string>
-    <string name="sachit_spotify_import_file_default_title">Danh sách phát Spotify đã nhập</string>
+    <string name="nevtune_listening_summary_save">Lưu bản tổng kết nghe nhạc (CSV)</string>
+    <string name="nevtune_listening_summary_share">Chia sẻ bản tổng kết nghe nhạc (CSV)</string>
+    <string name="nevtune_listening_summary_note">Tất cả tổng số hằng tháng được lưu cho từng bài hát. Không lưu thời điểm phát riêng lẻ.</string>
+    <string name="nevtune_listening_summary_chooser">Chia sẻ bản tổng kết nghe nhạc</string>
+    <string name="nevtune_listening_summary_saved">Đã lưu bản tổng kết nghe nhạc.</string>
+    <string name="nevtune_listening_summary_save_failed">Không thể lưu bản tổng kết nghe nhạc.</string>
+    <string name="nevtune_spotify_import_file_button">Chọn tệp Spotify CSV/TSV</string>
+    <string name="nevtune_spotify_import_file_note">Bạn cũng có thể nhập bản xuất Spotify CSV hoặc TSV có các cột Track Name và Artist.</string>
+    <string name="nevtune_spotify_import_file_read_failed">Không thể đọc tệp đã chọn.</string>
+    <string name="nevtune_spotify_import_json_unsupported">Hiện chưa hỗ trợ bản xuất Spotify JSON.</string>
+    <string name="nevtune_spotify_import_file_unsupported">Tệp không được hỗ trợ. Hãy chọn bản xuất Spotify CSV hoặc TSV.</string>
+    <string name="nevtune_spotify_import_file_default_title">Danh sách phát Spotify đã nhập</string>
 <string name="download_storage_budget">Giới hạn dung lượng tải xuống</string>
     <string name="download_storage_unknown_title">Đã chặn tải xuống · chưa rõ kích thước</string>
     <string name="download_storage_budget_title">Đã đạt giới hạn dung lượng tải xuống</string>

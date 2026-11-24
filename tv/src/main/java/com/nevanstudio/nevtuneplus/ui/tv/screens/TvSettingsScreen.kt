@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sachit. All rights reserved.
+// Copyright (c) 2026 NevanStudio. All rights reserved.
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.tv.screens
 
@@ -92,6 +92,13 @@ fun TvSettingsScreen(
     val refreshRate by TvRefreshRateController.preference.collectAsState()
     val reduceMotion by AppSettings.reduceAnimation.collectAsState()
     val reduceTransparency by AppSettings.reduceDynamicBlur.collectAsState()
+    val tvLiteMode by TvSettings.tvLiteMode.collectAsState()
+    val liquidGlass by TvSettings.tvLiquidGlassEnabled.collectAsState()
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val ramMb = remember { com.nevanstudio.nevtuneplus.ui.tv.DeviceType.getTotalRamBytes(context) / (1024 * 1024) }
+    val cpuCores = remember { com.nevanstudio.nevtuneplus.ui.tv.DeviceType.getCpuCoreCount() }
+    val isLiteActive = com.nevanstudio.nevtuneplus.ui.tv.DeviceType.isTvLite(context)
 
     var blurb by remember { mutableStateOf(DefaultBlurb) }
     var sheet by remember { mutableStateOf<SettingsSheet?>(null) }
@@ -313,6 +320,48 @@ fun TvSettingsScreen(
                     value = onOff(reduceTransparency),
                     onFocused = { blurb = "Replaces blurred backgrounds with solid ones. Helps on slower TVs." },
                     onClick = { AppSettings.setReduceDynamicBlur(!reduceTransparency) },
+                )
+            }
+
+            item { TvListHeader("Performance & TV Lite") }
+            item {
+                val liteLabel = when (tvLiteMode) {
+                    "on" -> "On (Forced)"
+                    "off" -> "Off"
+                    else -> if (isLiteActive) "Auto (Active)" else "Auto (Off)"
+                }
+                TvListRow(
+                    title = "TV Lite Experience",
+                    value = liteLabel,
+                    onFocused = {
+                        blurb = "Optimizes for low-RAM TVs (2GB or less): bounds memory, minimizes CPU usage, and skips heavy visual shaders for Spotify-level responsiveness."
+                    },
+                    onClick = {
+                        val next = when (tvLiteMode) {
+                            "auto" -> "on"
+                            "on" -> "off"
+                            else -> "auto"
+                        }
+                        TvSettings.setTvLiteMode(next)
+                    },
+                )
+            }
+            item {
+                TvListRow(
+                    title = "Liquid Glass Blur",
+                    value = onOff(liquidGlass),
+                    onFocused = { blurb = "Enables real-time shader blur on TV menus and playback backdrops. Automatically disabled in TV Lite mode." },
+                    onClick = { TvSettings.setTvLiquidGlassEnabled(!liquidGlass) },
+                )
+            }
+            item {
+                TvListRow(
+                    title = "Hardware Profile",
+                    value = if (ramMb > 0) "${ramMb}MB RAM • $cpuCores Cores" else "$cpuCores CPU Cores",
+                    onFocused = {
+                        blurb = "Detected TV system resources. TV Lite mode automatically scales playback and graphic buffers to keep memory below critical limits."
+                    },
+                    onClick = {},
                 )
             }
 

@@ -1,10 +1,10 @@
 # NevTune+ Desktop
 
-NevTune+ Desktop is a native Rust music client built with GPUI. It incorporates an existing open-source application foundation and is maintained here under the Audify product identity.
+NevTune+ Desktop is a native Rust music client built with GPUI.
 
 ## Download
 
-The **Audify 1.9.1 Windows x64 installer** is available from the [GitHub release](https://github.com/sachit1751-art/NevTune+/releases/download/v1.9.1/NevTune+-Setup.exe). The installer is unsigned; Windows may show an unrecognized-publisher warning. Review the release page if you need the full asset list.
+The **NevTune+ 1.0.0 Windows x64 installer** is available from the [GitHub release](https://github.com/Nevanstudio/NevTune+/releases/download/v1.0.0/NevTune+-Setup.exe). The installer is unsigned; Windows may show an unrecognized-publisher warning. Review the release page if you need the full asset list.
 
 ## License
 
@@ -18,16 +18,21 @@ Use a Windows MSVC Rust toolchain, the Visual Studio C++ build tools, a Windows 
 cargo fmt --all -- --check
 cargo check --locked --workspace
 cargo test --locked --workspace
-cargo build --release --locked --package audify
-./scripts/windows/build-installer.ps1 -Version 1.9.1
+cargo build --release --locked --package nevtuneplus
+./scripts/windows/build-installer.ps1 -Version 1.0.0
 ```
 
-The executable is written to `target/release/audify.exe`; the installer is written to `dist/NevTune+-Setup.exe`.
+The executable is written to `target/release/nevtuneplus.exe`; the installer is written to `dist/NevTune+-Setup.exe`.
 
 ## Build
 
 Install the Rust toolchain specified in `rust-toolchain.toml`, then run:
 
-```powershell
-cargo build --release -p audify
+```sh
+nix develop                    # or direnv allow
+cargo run --locked --package nevtuneplus
+cargo fmt
+cargo check --workspace
+cargo test --workspace
+cargo clippy --workspace --all-targets
 ```

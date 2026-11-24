@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-1.9.1-6366F1?style=for-the-badge&logoColor=white" alt="Version" />
+  <img src="https://img.shields.io/badge/Version-1.0.0-6366F1?style=for-the-badge&logoColor=white" alt="Version" />
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20TV%20%7C%20Wear%20OS%20%7C%20Desktop-0EA5E9?style=for-the-badge" alt="Platforms" />
   <img src="https://img.shields.io/badge/License-GPL--3.0-10B981?style=for-the-badge" alt="License" />
   <img src="https://img.shields.io/badge/Build-Kotlin%20%2B%20Jetpack%20Compose-7C3AED?style=for-the-badge" alt="Build" />
@@ -17,15 +17,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/sachit1751-art/NevTune+/releases/latest">
+  <a href="https://github.com/nevanstudio/NevTuneplus/releases/latest">
     <img src="https://img.shields.io/badge/⬇️%20Download%20APK-Latest%20Release-F59E0B?style=flat-square" alt="Download" />
   </a>
   &nbsp;
-  <a href="https://github.com/sachit1751-art/NevTune+/issues/new?template=bug_report.yml">
+  <a href="https://github.com/nevanstudio/NevTuneplus/issues/new?template=bug_report.yml">
     <img src="https://img.shields.io/badge/🐛%20Report%20a%20Bug-Issues-EF4444?style=flat-square" alt="Bug Report" />
   </a>
   &nbsp;
-  <a href="https://github.com/sachit1751-art/NevTune+/releases">
+  <a href="https://github.com/nevanstudio/NevTuneplus/releases">
     <img src="https://img.shields.io/badge/📋%20Release%20Notes-Changelog-64748B?style=flat-square" alt="Changelog" />
   </a>
 </p>
@@ -201,7 +201,7 @@ nevtune_plus1.0.0/
 
 ```bash
 # Clone the repository
-git clone https://github.com/sachit1751-art/NevTune+.git
+git clone https://github.com/nevanstudio/NevTuneplus.git
 cd nevtune_plus1.9.1
 
 # Debug build (phone)
@@ -247,13 +247,13 @@ LISTEN_TOGETHER_SERVER=https://your-server.example.com
 
 | Platform | Download |
 |----------|---------|
-| Android Phone / Tablet (Universal) | `NevTune+-1.9.1.apk` |
-| Android Phone / Tablet (ARM64) | `NevTune+-1.9.1_arm64-v8a.apk` |
-| Android TV / Google TV | `NevTunePlusTV-1.9.1.apk` |
+| Android Phone / Tablet (Universal) | `NevTune+-1.0.0.apk` |
+| Android Phone / Tablet (ARM64) | `NevTune+-1.0.0_arm64-v8a.apk` |
+| Android TV / Google TV | `NevTunePlusTV-1.0.0.apk` |
 | Wear OS | `NevTunePlusWear-prod-universal-release.apk` |
 | Windows x64 | `NevTune+-Setup.exe` |
 
-> All releases: [github.com/sachit1751-art/NevTune+/releases](https://github.com/sachit1751-art/NevTune+/releases)
+> All releases: [github.com/nevanstudio/NevTuneplus/releases](https://github.com/nevanstudio/NevTuneplus/releases)
 
 ---
 
@@ -276,8 +276,8 @@ Planned improvements and features on the horizon:
 
 Contributions, bug reports, and feature suggestions are welcome!
 
-- 🐛 **Bug report:** [Open an issue](https://github.com/sachit1751-art/NevTune+/issues/new?template=bug_report.yml)
-- 💬 **Feedback:** [General tester feedback](https://github.com/sachit1751-art/NevTune+/issues/new?template=tester-feedback.yml)
+- 🐛 **Bug report:** [Open an issue](https://github.com/nevanstudio/NevTuneplus/issues/new?template=bug_report.yml)
+- 💬 **Feedback:** [General tester feedback](https://github.com/nevanstudio/NevTuneplus/issues/new?template=tester-feedback.yml)
 - 📖 **Documentation:** See [`docs/`](./docs/) and [`plans/`](./plans/) for architecture and design notes
 
 Please read the [Code of Conduct](./CODE_OF_CONDUCT.md) before contributing.
@@ -304,7 +304,7 @@ See the full [LICENSE](./LICENSE) file for details.
 ## 👨‍💻 Developer
 
 <p align="center">
-  <strong>NevTune+ is designed and developed by <a href="https://github.com/sachit1751-art">NevanStudio</a></strong><br/>
+  <strong>NevTune+ is designed and developed by <a href="https://github.com/nevanstudio">NevanStudio</a></strong><br/>
   <em>Built for music lovers. Designed to feel at home on every screen.</em>
 </p>
 
