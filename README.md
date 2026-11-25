@@ -168,20 +168,7 @@ You can also pass versions directly to Gradle at build time:
 ./gradlew :app:assembleProdRelease -Pnevtune.release=true -PnevtuneVersionName=26.11.25 -PnevtuneVersionCode=26112500
 ```
 
-### Release Pipeline (`.github/workflows/android.yml`)
-1. Triggered manually via **Actions → NevTune+ Release → Run workflow** (with optional tag, notes, banner URL, dry-run flag, and Mobile/TV/Wear toggles) or by pushing a `v*` tag.
-2. Runs unit test gates and production lint across selected modules, then builds and signs universal APKs using the approved NevanStudio release keystore.
-3. Reads changelog notes from `docs/releases/RELEASE_NOTES_<version>.md` (falling back to recent git history if none exists) and automatically uploads `docs/assets/banners/banner_<version>.png` (`1280×640` recommended) as a release asset.
-4. Creates a **Draft release** on GitHub with verified APKs + `SHA256SUMS.txt` so every build can be inspected before clicking **Publish**.
 
-### In-App & Website Updates
-- **Android & TV App (`AppUpdateChecker.kt`)**:
-  - Polls the latest non-draft GitHub release (`releases/latest`) once per launch (or on manual check in Settings) and compares versions numerically (`YY.MM.DD`).
-  - If unauthenticated REST API requests hit GitHub's hourly IP rate limit, `AppUpdateChecker` automatically falls back to `github.com/.../releases/latest` JSON metadata and `releases/expanded_assets/<tag>` so update checks keep working reliably.
-  - Selects the matching platform APK (avoiding cross-installing TV/Mobile/Wear builds), streams the download in-app into cache, and launches the Android package installer via `FileProvider`.
-  - Users migrating from legacy builds (`v1.8.7` and older, before the NevanStudio release certificate switch) are prompted to perform a one-time manual reinstall.
-- **Website ([nevtuneplus.vercel.app](https://nevtuneplus.vercel.app))**:
-  - Serves cached release data immediately for fast loads while running a lightweight background check on page open (`/api/releases/latest`) so download buttons, version tags, and changelogs always stay current.
 
 ---
 
