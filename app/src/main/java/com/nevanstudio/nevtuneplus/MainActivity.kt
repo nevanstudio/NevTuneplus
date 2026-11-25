@@ -89,6 +89,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.NavigationRailItemDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -167,7 +168,11 @@ import com.nevanstudio.nevtuneplus.data.stats.selectTimeAwareDiscoveryShelf
 import com.nevanstudio.nevtuneplus.data.stats.selectTimeAwareHourBlock
 import com.nevanstudio.nevtuneplus.data.settings.AppSettings
 import com.nevanstudio.nevtuneplus.data.settings.LibrarySort
+import com.nevanstudio.nevtuneplus.data.settings.ThemeColorSource
 import com.nevanstudio.nevtuneplus.data.settings.ThemeMode
+import com.nevanstudio.nevtuneplus.ui.components.rememberRemoteArtworkUrl
+import com.nevanstudio.nevtuneplus.ui.theme.ColorExtractor
+import com.nevanstudio.nevtuneplus.ui.theme.resolveDarkTheme
 import com.nevanstudio.nevtuneplus.ui.animation.ArtworkTransitionContext
 import com.nevanstudio.nevtuneplus.ui.animation.LocalArtworkTransition
 import com.nevanstudio.nevtuneplus.ui.components.AccountProfileSelector
@@ -401,11 +406,7 @@ class MainActivity : AppCompatActivity() {
             LaunchedEffect(highPerformance, performanceRefreshRate, composeView) {
                 applyPerformanceMode(highPerformance, performanceRefreshRate, composeView)
             }
-            val darkTheme = when (theme) {
-                ThemeMode.SYSTEM -> isSystemInDarkTheme()
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
-            }
+            val darkTheme = resolveDarkTheme(theme)
             BoxWithConstraints(Modifier.fillMaxSize()) {
             NevTunePlusTheme(darkTheme = darkTheme, windowWidth = maxWidth) {
                 // The glass surfaces sample this layer, and a layer records only
@@ -776,7 +777,7 @@ private fun NevTunePlusApp(
     }
 
     SystemBarIcons(
-        dark = !darkTheme && !showNowPlaying && route != AppRoute.Replay && replayStory == null && !onboardingVisible,
+        dark = !darkTheme && !showNowPlaying && route != AppRoute.Replay && replayStory == null,
     )
 
     val homeState by viewModel.home.collectAsStateWithLifecycle()
@@ -1016,6 +1017,19 @@ private fun NevTunePlusApp(
     }
     val controller = rememberMediaController()
     val player = rememberPlayerState(controller)
+    val colorSource by AppSettings.colorSource.collectAsStateWithLifecycle()
+    val currentArtworkUrl = rememberRemoteArtworkUrl(player.song)
+    LaunchedEffect(colorSource, player.song?.videoId, currentArtworkUrl) {
+        if (colorSource == ThemeColorSource.ALBUM_ART) {
+            val url = currentArtworkUrl
+            if (!url.isNullOrBlank()) {
+                val seed = ColorExtractor.extractSeedFromUrl(context, url)
+                if (seed != null) {
+                    AppSettings.setExtractedAlbumSeedColor(seed)
+                }
+            }
+        }
+    }
     // A resume in a party is performed on the instant the server schedules, not
     // when it was pressed, and nothing about the player moves in between — so
     // the transport spends that round trip drawn as though the tap never landed.
@@ -2847,6 +2861,13 @@ private fun NevTunePlusApp(
                             icon = { Icon(tab.icon, contentDescription = null) },
                             label = { Text(tab.label, maxLines = 1) },
                             alwaysShowLabel = true,
+                            colors = NavigationRailItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
                         )
                     }
                 }

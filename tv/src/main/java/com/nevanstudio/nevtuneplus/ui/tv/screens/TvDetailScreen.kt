@@ -350,7 +350,7 @@ private fun TvReleaseHeader(
                 Text(
                     text = subtitle,
                     style = TvType.Body.copy(fontSize = 16.sp, fontWeight = FontWeight.W600),
-                    color = TvGlass.AppleRed,
+                    color = com.nevanstudio.nevtuneplus.ui.tv.theme.TvColors.PlayingAccent,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )

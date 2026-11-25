@@ -2,7 +2,8 @@
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.screens
 
-import com.nevanstudio.nevtuneplus.ui.theme.AccentRed
+import com.nevanstudio.nevtuneplus.data.settings.ThemeColorSource
+import com.nevanstudio.nevtuneplus.ui.theme.NevTuneColors
 
 import com.nevanstudio.nevtuneplus.data.CrashReporter
 import androidx.compose.foundation.BorderStroke
@@ -289,6 +290,12 @@ fun SettingsScreen(
     val lyricsSources by AppSettings.lyricsSources.collectAsStateWithLifecycle()
     val translationLanguage by AppSettings.translationLanguage.collectAsStateWithLifecycle()
     val theme by AppSettings.themeMode.collectAsStateWithLifecycle()
+    val amoledTheme by AppSettings.amoledTheme.collectAsStateWithLifecycle()
+    val colorSource by AppSettings.colorSource.collectAsStateWithLifecycle()
+    val customColorScheme by AppSettings.customColorScheme.collectAsStateWithLifecycle()
+    val useExactArtworkColors by AppSettings.useExactArtworkColors.collectAsStateWithLifecycle()
+    val extractedAlbumSeedColor by AppSettings.extractedAlbumSeedColor.collectAsStateWithLifecycle()
+    var showCustomColorSheet by remember { mutableStateOf(false) }
     val fontChoice by AppSettings.fontChoice.collectAsStateWithLifecycle()
     val sessionId by AppSettings.audioSessionId.collectAsStateWithLifecycle()
     val outputPcmMode by AppSettings.outputPcmMode.collectAsStateWithLifecycle()
@@ -698,9 +705,9 @@ fun SettingsScreen(
             SettingsSectionHeader("Look & Experience")
             SettingsCategoryCard(
                 title = catAppearance,
-                subtitle = "Theme mode, liquid glass, dynamic blur, mesh gradients & full-bleed cover art",
+                subtitle = "Theme mode, AMOLED pitch black, dynamic colors, presets & custom palette studio",
                 icon = Icons.Rounded.Brightness4,
-                badge = theme.localizedLabel(),
+                badge = activeThemeBadgeLabel(theme, colorSource, customColorScheme, amoledTheme),
                 onClick = { selectedCategory = catAppearance },
             )
             SettingsCategoryCard(
@@ -754,7 +761,7 @@ fun SettingsScreen(
                 subtitle = "Verify silent crashes, prevent OEM background kills & inspect error logs",
                 icon = Icons.Rounded.BugReport,
                 badge = if (hasCrashLog) "Log Ready" else "Healthy",
-                badgeColor = if (hasCrashLog) AccentRed else Color(0xFF34C759),
+                badgeColor = if (hasCrashLog) MaterialTheme.colorScheme.error else NevTuneColors.success,
                 onClick = { selectedCategory = "Diagnostics & Crash Logs" },
             )
             SettingsCategoryCard(
@@ -1197,6 +1204,37 @@ fun SettingsScreen(
                     onSelect = { AppSettings.setThemeMode(ThemeMode.entries[it]) },
                     modifier = Modifier.padding(start = ROW_INSET, end = ROW_INSET, bottom = 14.dp),
                 )
+            }
+            row("AMOLED Pitch Black", "amoled", "pitch black", "oled", "black") {
+                AmoledBlackSettingRow(
+                    themeMode = theme,
+                    amoledTheme = amoledTheme,
+                    onToggleAmoled = AppSettings::setAmoledTheme,
+                )
+            }
+            row("Dynamic Color Source", "monet", "material you", "wallpaper", "album art", "color source", "dynamic") {
+                ColorSourceSettingRow(
+                    colorSource = colorSource,
+                    onSelectSource = AppSettings::setColorSource,
+                )
+            }
+            if (colorSource == ThemeColorSource.ALBUM_ART) {
+                row("Exact Artwork Hue", "album art", "artwork colors", "dynamic color") {
+                    AlbumArtOptionsContent(
+                        useExactArtworkColors = useExactArtworkColors,
+                        onToggleExactArtworkColors = AppSettings::setUseExactArtworkColors,
+                        extractedSeedArgb = extractedAlbumSeedColor,
+                    )
+                }
+            }
+            if (colorSource == ThemeColorSource.CUSTOM) {
+                row("Color Palette", "presets", "color scheme", "custom colors", "accent", "create custom theme") {
+                    ThemePresetsRowContent(
+                        activeSchemeId = customColorScheme,
+                        onSelectPreset = AppSettings::setCustomColorScheme,
+                        onOpenCustomPicker = { showCustomColorSheet = true },
+                    )
+                }
             }
             val fontChoiceTitle = stringResource(R.string.font_choice)
             row(fontChoiceTitle, "typeface", "typography", "font") {
@@ -2137,6 +2175,18 @@ fun SettingsScreen(
                 },
             )
         }
+    }
+
+    if (showCustomColorSheet) {
+        CustomColorsSheet(
+            currentSchemeId = customColorScheme,
+            onDismiss = { showCustomColorSheet = false },
+            onApply = { newSchemeId ->
+                AppSettings.setColorSource(ThemeColorSource.CUSTOM)
+                AppSettings.setCustomColorScheme(newSchemeId)
+                showCustomColorSheet = false
+            },
+        )
     }
 
     if (pickingDownloadQuality) {
@@ -3165,17 +3215,18 @@ private fun SettingsCategoryCard(
                         overflow = TextOverflow.Ellipsis,
                     )
                     if (badge != null) {
+                        val resolvedBadgeColor = badgeColor ?: MaterialTheme.colorScheme.primary
                         Spacer(Modifier.width(8.dp))
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
-                                .background(badgeColor ?: MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                                .background(resolvedBadgeColor.copy(alpha = 0.15f))
                                 .padding(horizontal = 6.dp, vertical = 2.dp),
                         ) {
                             Text(
                                 text = badge,
                                 style = MaterialTheme.typography.labelSmall,
-                                color = badgeColor ?: MaterialTheme.colorScheme.primary,
+                                color = resolvedBadgeColor,
                                 fontWeight = FontWeight.Bold,
                             )
                         }
@@ -3305,7 +3356,7 @@ private fun ProfileHeroCard(
                             modifier = Modifier
                                 .size(7.dp)
                                 .clip(CircleShape)
-                                .background(if (signedIn) Color(0xFF34C759) else MaterialTheme.colorScheme.onSurfaceVariant),
+                                .background(if (signedIn) NevTuneColors.success else MaterialTheme.colorScheme.onSurfaceVariant),
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
@@ -3376,10 +3427,11 @@ private fun DiagnosticsAndCrashLogsGroup(
     SearchableSettingsGroup(search, header = "Diagnostics & Crash Logs") {
         row("System Health", "status", "stability", "crash", "health") {
             val isHealthy = lastCrash == null
+            val statusColor = if (isHealthy) NevTuneColors.success else MaterialTheme.colorScheme.error
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = if (isHealthy) Color(0xFF34C759).copy(alpha = 0.1f) else MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
-                border = BorderStroke(1.dp, if (isHealthy) Color(0xFF34C759).copy(alpha = 0.35f) else MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
+                color = statusColor.copy(alpha = 0.1f),
+                border = BorderStroke(1.dp, statusColor.copy(alpha = 0.35f)),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = ROW_INSET, vertical = 12.dp),
@@ -3392,13 +3444,13 @@ private fun DiagnosticsAndCrashLogsGroup(
                         modifier = Modifier
                             .size(38.dp)
                             .clip(CircleShape)
-                            .background(if (isHealthy) Color(0xFF34C759).copy(alpha = 0.2f) else MaterialTheme.colorScheme.error.copy(alpha = 0.2f)),
+                            .background(statusColor.copy(alpha = 0.2f)),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
                             imageVector = if (isHealthy) Icons.Rounded.Check else Icons.Rounded.BugReport,
                             contentDescription = null,
-                            tint = if (isHealthy) Color(0xFF34C759) else MaterialTheme.colorScheme.error,
+                            tint = statusColor,
                             modifier = Modifier.size(22.dp),
                         )
                     }
@@ -3408,7 +3460,7 @@ private fun DiagnosticsAndCrashLogsGroup(
                             text = if (isHealthy) "System Status: Healthy" else "Crash Log Detected",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = if (isHealthy) Color(0xFF34C759) else MaterialTheme.colorScheme.error,
+                            color = statusColor,
                         )
                         Spacer(Modifier.height(2.dp))
                         Text(
@@ -3989,7 +4041,7 @@ internal fun SegmentedControl(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.outline)
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
             // Enough of a margin for the track to read as a track. At 2dp the
             // selected pill sat all but flush against the container's own edge,
             // so the two rounded rectangles merged into one shape and the

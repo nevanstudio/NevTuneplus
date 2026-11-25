@@ -44,6 +44,7 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.Icon
+import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import com.nevanstudio.nevtuneplus.wear.R
@@ -54,6 +55,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.nevanstudio.nevtuneplus.wear.data.PhoneLink
 import com.nevanstudio.nevtuneplus.wear.data.Queue
 import com.nevanstudio.nevtuneplus.wear.data.QueueRow
+import com.nevanstudio.nevtuneplus.wear.data.WearSettings
 
 /**
  * Up Next. Text first, thumbnails a beat later — see PhoneLink.applyQueue —
@@ -76,7 +78,7 @@ fun QueueScreen(
             state = state,
             contentPadding = padding,
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.background(Color.Black),
+            modifier = Modifier.background(MaterialTheme.colorScheme.background),
         ) {
             item(key = "header") { Header(stringResource(R.string.up_next)) }
             when {
@@ -122,21 +124,21 @@ private fun QueueCell(row: QueueRow, isCurrent: Boolean, isPast: Boolean, onClic
                 Text(
                     text = stringResource(R.string.playing_now).uppercase(),
                     style = WearType.caption,
-                    color = AccentRed,
+                    color = LocalWearAccent.current,
                     maxLines = 1,
                 )
             }
             Text(
                 text = row.title,
                 style = WearType.row,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = row.artist,
                 style = WearType.rowSub,
-                color = Secondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -150,18 +152,32 @@ fun MoreScreen(
     np: NowPlaying?,
     link: PhoneLink,
     onOpenOutput: () -> Unit,
+    onOpenTheme: () -> Unit = {},
     onReplayOnboarding: () -> Unit = {},
 ) {
     val state = rememberScalingLazyListState(initialCenterItemIndex = 1)
     val onWatch by link.watchSpeaker.collectAsStateWithLifecycle()
+    val accentId by WearSettings.accentPreset.collectAsStateWithLifecycle()
+    val accentLabel = WearAccentPresets.firstOrNull { it.id == accentId }?.label ?: "Default"
     ScreenScaffold(scrollState = state) { padding ->
         ScalingLazyColumn(
             state = state,
             contentPadding = padding,
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.background(Color.Black),
+            modifier = Modifier.background(MaterialTheme.colorScheme.background),
         ) {
             item(key = "header") { Header(stringResource(R.string.more)) }
+            item(key = "appearance") {
+                ToggleCell(
+                    icon = R.drawable.ic_watch,
+                    label = "Appearance",
+                    value = accentLabel,
+                    active = accentId != "default",
+                    activeTint = if (accentId != "default") LocalWearAccent.current else null,
+                    stateDescription = "Appearance: $accentLabel",
+                    onClick = onOpenTheme,
+                )
+            }
             item(key = "output") {
                 ToggleCell(
                     icon = if (onWatch) R.drawable.ic_watch else R.drawable.ic_phone,
@@ -226,9 +242,92 @@ fun MoreScreen(
                     value = null,
                     active = np.liked,
                     stateDescription = if (np.liked) "Liked" else "Not liked",
-                    activeTint = AccentRed,
+                    activeTint = LocalWearAccent.current,
                     onClick = link::toggleLike,
                 )
+            }
+        }
+    }
+}
+
+/** Watch appearance settings: dynamic mesh, pure black background, and accent color presets. */
+@Composable
+fun WearThemeScreen() {
+    val state = rememberScalingLazyListState(initialCenterItemIndex = 1)
+    val meshEnabled by WearSettings.meshBackgroundEnabled.collectAsStateWithLifecycle()
+    val oledBlack by WearSettings.oledBlack.collectAsStateWithLifecycle()
+    val currentAccentId by WearSettings.accentPreset.collectAsStateWithLifecycle()
+
+    ScreenScaffold(scrollState = state) { padding ->
+        ScalingLazyColumn(
+            state = state,
+            contentPadding = padding,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.background(MaterialTheme.colorScheme.background),
+        ) {
+            item(key = "header") { Header("Appearance") }
+            item(key = "mesh") {
+                ToggleCell(
+                    icon = R.drawable.ic_watch,
+                    label = "Mesh Backdrop",
+                    value = stringResource(if (meshEnabled) R.string.on else R.string.off),
+                    active = meshEnabled,
+                    stateDescription = if (meshEnabled) "On" else "Off",
+                    onClick = { WearSettings.setMeshBackgroundEnabled(!meshEnabled) },
+                )
+            }
+            item(key = "oled") {
+                ToggleCell(
+                    icon = R.drawable.ic_watch,
+                    label = "Pure Black",
+                    value = stringResource(if (oledBlack) R.string.on else R.string.off),
+                    active = oledBlack,
+                    stateDescription = if (oledBlack) "On" else "Off",
+                    onClick = { WearSettings.setOledBlack(!oledBlack) },
+                )
+            }
+            item(key = "accent-header") {
+                Text(
+                    text = "ACCENT COLOR",
+                    style = WearType.caption,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 2.dp),
+                )
+            }
+            items(WearAccentPresets, key = { it.id }) { preset ->
+                val selected = preset.id == currentAccentId
+                Cell(
+                    onClick = { WearSettings.setAccentPreset(preset.id) },
+                    stateDescription = if (selected) "Selected" else "Not selected",
+                    semanticRole = Role.RadioButton,
+                ) {
+                    Box(
+                        Modifier
+                            .size(22.dp)
+                            .clip(CircleShape)
+                            .background(preset.color),
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        text = preset.label,
+                        style = WearType.row,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (selected) {
+                        Icon(
+                            painterResource(R.drawable.ic_check),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                }
             }
         }
     }
@@ -250,12 +349,12 @@ private fun ToggleCell(
         val disc = when {
             !active -> Color.White.copy(alpha = 0.12f)
             activeTint != null -> activeTint.copy(alpha = 0.20f)
-            else -> Color.White
+            else -> MaterialTheme.colorScheme.primary
         }
         val glyph = when {
-            !active -> Color.White
+            !active -> MaterialTheme.colorScheme.onSurface
             activeTint != null -> activeTint
-            else -> Color.Black
+            else -> MaterialTheme.colorScheme.onPrimary
         }
         Box(
             Modifier
@@ -278,12 +377,12 @@ private fun ToggleCell(
         Text(
             text = label,
             style = WearType.row,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             modifier = Modifier.weight(1f),
         )
         if (value != null) {
-            Text(text = value, style = WearType.rowSub, color = Secondary, maxLines = 1)
+            Text(text = value, style = WearType.rowSub, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
         }
     }
 }
@@ -305,7 +404,7 @@ private fun Cell(
             .heightIn(min = 48.dp)
             .graphicsLayer { alpha = if (dimmed) 0.5f else 1f }
             .clip(RoundedCornerShape(22.dp))
-            .background(if (pressed) Color(0xFF2C2C2E) else Cell)
+            .background(if (pressed) Color(0xFF2C2C2E) else MaterialTheme.colorScheme.surfaceContainer)
             .clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
             .semantics {
                 role = semanticRole
@@ -322,7 +421,7 @@ private fun Header(text: String) {
     Text(
         text = text,
         style = WearType.header,
-        color = Color.White,
+        color = MaterialTheme.colorScheme.onBackground,
         textAlign = TextAlign.Center,
         modifier = Modifier
             .fillMaxWidth()
@@ -335,7 +434,7 @@ private fun Hint(text: String) {
     Text(
         text = text,
         style = WearType.subtitle,
-        color = Secondary,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
         modifier = Modifier
             .fillMaxWidth()
@@ -360,7 +459,7 @@ fun OutputScreen(link: PhoneLink, onDone: () -> Unit) {
             state = state,
             contentPadding = padding,
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.background(Color.Black),
+            modifier = Modifier.background(MaterialTheme.colorScheme.background),
         ) {
             item(key = "header") { Header(stringResource(R.string.output)) }
             item(key = "watch") {
@@ -428,26 +527,26 @@ private fun OutputCell(
             Modifier
                 .size(32.dp)
                 .clip(CircleShape)
-                .background(if (selected) Color.White else Color.White.copy(alpha = 0.12f)),
+                .background(if (selected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painterResource(icon),
                 contentDescription = null,
-                tint = if (selected) Color.Black else Color.White,
+                tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(18.dp),
             )
         }
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
-            Text(label, style = WearType.row, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(detail, style = WearType.rowSub, color = Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(label, style = WearType.row, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(detail, style = WearType.rowSub, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (selected) {
             Icon(
                 painterResource(R.drawable.ic_check),
                 contentDescription = null,
-                tint = Color.White,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(16.dp),
             )
         }

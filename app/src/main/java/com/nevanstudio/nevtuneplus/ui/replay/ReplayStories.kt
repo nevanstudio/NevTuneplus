@@ -80,7 +80,7 @@ import com.nevanstudio.nevtuneplus.data.stats.ReplaySummary
 import com.nevanstudio.nevtuneplus.ui.player.MeshGradientBackground
 import com.nevanstudio.nevtuneplus.ui.player.MeshPalette
 import com.nevanstudio.nevtuneplus.ui.player.rememberArtworkColors
-import com.nevanstudio.nevtuneplus.ui.theme.AccentRed
+import com.nevanstudio.nevtuneplus.ui.theme.NevTuneColors
 import kotlinx.coroutines.launch
 
 /**
@@ -660,7 +660,7 @@ private fun ColumnScope.Leaderboard(
             Modifier.fillMaxWidth().padding(vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            RankBadge(row.rank, AccentRed)
+            RankBadge(row.rank, NevTuneColors.scrimSafeAccent)
             Cover(row.artworkUrl, row.title, 36.dp, shape, ROW_ART_PX)
             Spacer(Modifier.width(12.dp))
             Text(
@@ -709,7 +709,7 @@ private fun ColumnScope.Genres(summary: ReplaySummary, headline: List<HeadlineRu
             Modifier.fillMaxWidth().padding(vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            RankBadge(row.rank, AccentRed)
+            RankBadge(row.rank, NevTuneColors.scrimSafeAccent)
             Text(
                 text = row.title,
                 style = MaterialTheme.typography.titleMedium,

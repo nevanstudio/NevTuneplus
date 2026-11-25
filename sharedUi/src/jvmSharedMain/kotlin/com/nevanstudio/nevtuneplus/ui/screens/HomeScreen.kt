@@ -68,6 +68,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -1429,10 +1430,15 @@ private fun HeroCard(
                 )
                 .padding(start = 14.dp, end = 14.dp, top = 28.dp, bottom = 12.dp),
         ) {
+            val scrimAccent = if (MaterialTheme.colorScheme.primary.luminance() >= 0.25f) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.inversePrimary.takeIf { it.luminance() >= 0.25f } ?: Color.White
+            }
             ShelfItemTitle(
                 item = item,
                 style = MaterialTheme.typography.titleMedium,
-                color = if (isCurrent) PlayingAccent else Color.White,
+                color = if (isCurrent) scrimAccent else Color.White,
                 maxLines = 1,
             )
             if (item.subtitle.isNotBlank()) {

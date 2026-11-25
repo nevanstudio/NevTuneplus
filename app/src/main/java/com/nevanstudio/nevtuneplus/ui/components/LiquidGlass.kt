@@ -93,6 +93,14 @@ private const val GLASS_RESOLUTION_SCALE = 0.33f
 internal val GLASS_EDGE_WIDTH = 0.5.dp
 internal val GLASS_EDGE_COLOR = Color.White.copy(alpha = 0.10f)
 
+@Composable
+internal fun glassEdgeColor(): Color =
+    if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.65f)
+    } else {
+        Color.White.copy(alpha = 0.10f)
+    }
+
 /**
  * Icon and label colour for content sitting on a glass surface.
  *
@@ -175,7 +183,7 @@ fun Modifier.lightweightLiquidGlass(
                 Modifier
             },
         )
-        .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, shape)
+        .border(GLASS_EDGE_WIDTH, glassEdgeColor(), shape)
 }
 
 /**
@@ -225,7 +233,7 @@ fun Modifier.liquidGlass(
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
     if (reduceDynamicBlur) {
         return background(MaterialTheme.colorScheme.surface, shape)
-            .border(GLASS_EDGE_WIDTH, GLASS_EDGE_COLOR, shape)
+            .border(GLASS_EDGE_WIDTH, glassEdgeColor(), shape)
     }
     val backdrop = LocalAppBackdrop.current
     val exportedBackdrop = LocalGlassExport.current

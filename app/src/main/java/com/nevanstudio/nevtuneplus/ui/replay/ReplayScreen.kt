@@ -78,7 +78,6 @@ import com.nevanstudio.nevtuneplus.ui.components.PAGE_GUTTER
 import com.nevanstudio.nevtuneplus.ui.icons.NevTunePlusIcons
 import com.nevanstudio.nevtuneplus.ui.player.MeshGradientBackground
 import com.nevanstudio.nevtuneplus.ui.player.rememberArtworkColors
-import com.nevanstudio.nevtuneplus.ui.theme.AccentRed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -617,7 +616,7 @@ private fun ReplayChartRow(row: ReplayRow, circular: Boolean, dark: Boolean, onC
             .padding(horizontal = PAGE_GUTTER + 4.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RankBadge(row.rank, AccentRed)
+        RankBadge(row.rank, MaterialTheme.colorScheme.primary)
         if (row.artworkUrl != null) {
             AsyncImage(
                 model = row.artworkUrl.artworkAt(ROW_ART_PX),

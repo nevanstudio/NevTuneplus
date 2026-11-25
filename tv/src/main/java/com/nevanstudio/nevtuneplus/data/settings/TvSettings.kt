@@ -38,6 +38,9 @@ object TvSettings {
     /** UI density/scale multiplier for the TV layout: 0.8 (Small) → 1.0 (Normal) → 1.2 (Large) → 1.4 (XL). */
     val tvUiScale = MutableStateFlow(1.0f)
 
+    /** Accent colour preset for the TV palette. "white" = default monochrome, any other ID references a ThemeColorPresets entry. */
+    val tvAccentPreset = MutableStateFlow("white")
+
     fun init(preferences: SharedPreferences, context: Context? = null) {
         prefs = preferences
         TvPinThrottle.init(preferences)
@@ -52,6 +55,7 @@ object TvSettings {
         tvSetupVersionCompleted.value = prefs.getInt(KEY_TV_SETUP_VERSION, 0)
         tvUiScale.value = prefs.getFloat(KEY_TV_UI_SCALE, 1.0f).coerceIn(0.8f, 1.4f)
         tvLiteMode.value = prefs.getString(KEY_TV_LITE_MODE, "auto") ?: "auto"
+        tvAccentPreset.value = prefs.getString(KEY_TV_ACCENT_PRESET, "white") ?: "white"
 
         val isLowRam = context?.let { com.nevanstudio.nevtuneplus.ui.tv.DeviceType.isLowRam(it) } ?: false
         val defaultGlass = !isLowRam
@@ -158,6 +162,11 @@ object TvSettings {
     fun setTvNavLayout(layout: String) {
         tvNavLayout.value = layout
         save { putString(KEY_TV_NAV_LAYOUT, layout) }
+    }
+
+    fun setTvAccentPreset(presetId: String) {
+        tvAccentPreset.value = presetId
+        save { putString(KEY_TV_ACCENT_PRESET, presetId) }
     }
 
     /**
@@ -298,4 +307,5 @@ object TvSettings {
     private const val KEY_TV_LYRICS_CANVAS = "tv_lyrics_canvas"
     private const val KEY_TV_VIDEO_AUTO_1080P = "tv_video_auto_1080p"
     private const val KEY_TV_NAV_LAYOUT = "tv_nav_layout"
+    private const val KEY_TV_ACCENT_PRESET = "tv_accent_preset"
 }

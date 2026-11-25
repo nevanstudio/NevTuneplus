@@ -720,7 +720,6 @@ internal fun LocalFolderSelectionBar(
     val allSelected = songs.isNotEmpty() && songs.all { it.videoId in state.selectedIds }
     fun chosen() = songs.filter { it.videoId in state.selectedIds }.also { state.clear() }
     val shape = RoundedCornerShape(14.dp)
-    val dark = isSystemInDarkTheme()
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -734,14 +733,14 @@ internal fun LocalFolderSelectionBar(
             Icon(
                 Icons.Rounded.Check,
                 contentDescription = stringResource(R.string.select_all),
-                tint = if (dark) Color.White else MaterialTheme.colorScheme.primary,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp),
             )
         }
         Text(
             text = "$count ${stringResource(R.string.audify_selected)}",
             style = MaterialTheme.typography.titleSmall,
-            color = if (dark) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f),
         )
         folder.onUpload?.let { upload ->
@@ -766,7 +765,7 @@ internal fun LocalFolderSelectionBar(
             SelectionAction(
                 icon = Icons.Rounded.Delete,
                 label = stringResource(R.string.cached_song_remove),
-                color = DESTRUCTIVE,
+                color = MaterialTheme.colorScheme.error,
                 enabled = count > 0,
                 onClick = { remove(chosen()) },
             )
@@ -775,7 +774,7 @@ internal fun LocalFolderSelectionBar(
             SelectionAction(
                 icon = Icons.Rounded.Delete,
                 label = stringResource(R.string.delete),
-                color = DESTRUCTIVE,
+                color = MaterialTheme.colorScheme.error,
                 enabled = count > 0,
                 onClick = { delete(chosen()) },
             )
@@ -854,8 +853,6 @@ private fun SelectionAction(icon: ImageVector, label: String, color: Color, enab
         Text(label, color = color)
     }
 }
-
-private val DESTRUCTIVE = Color(0xFFFF453A)
 
 @Composable
 internal fun LocalMusicSort.localizedLabel(): String = when (this) {

@@ -21,7 +21,6 @@ import com.nevanstudio.nevtuneplus.data.model.Song
 import com.nevanstudio.nevtuneplus.data.model.UiState
 import com.nevanstudio.nevtuneplus.data.model.playingRowMatcher
 import com.nevanstudio.nevtuneplus.ui.components.MessageState
-import com.nevanstudio.nevtuneplus.ui.components.PlayingAccent
 import com.nevanstudio.nevtuneplus.ui.components.ROW_DIVIDER_INSET
 import com.nevanstudio.nevtuneplus.ui.components.SongRow
 import com.nevanstudio.nevtuneplus.ui.components.songListSkeleton
@@ -86,7 +85,6 @@ fun HistoryScreen(
                             isCurrent = isCurrentRow(song),
                             isPlaying = isCurrentRow(song) && isPlaying,
                             searchPlayingStyle = true,
-                            activeTint = PlayingAccent,
                         )
                         if (index < songs.lastIndex) {
                             HorizontalDivider(

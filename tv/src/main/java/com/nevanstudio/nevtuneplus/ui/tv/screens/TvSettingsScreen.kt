@@ -40,6 +40,7 @@ import com.nevanstudio.nevtuneplus.ui.tv.components.TvListHeader
 import com.nevanstudio.nevtuneplus.ui.tv.components.TvListRow
 import com.nevanstudio.nevtuneplus.ui.tv.dialogs.TvAboutDialog
 import com.nevanstudio.nevtuneplus.ui.tv.dialogs.TvEqualizerDialog
+import com.nevanstudio.nevtuneplus.ui.tv.dialogs.TvAccentDialog
 import com.nevanstudio.nevtuneplus.ui.tv.dialogs.TvLyricsSourcesDialog
 import com.nevanstudio.nevtuneplus.ui.tv.dialogs.TvRefreshRateDialog
 import com.nevanstudio.nevtuneplus.ui.tv.dialogs.TvScrobbleDialog
@@ -47,13 +48,14 @@ import com.nevanstudio.nevtuneplus.ui.tv.dialogs.TvThemeDialog
 import com.nevanstudio.nevtuneplus.ui.tv.dialogs.TvUpdateDialog
 import com.nevanstudio.nevtuneplus.ui.tv.display.TvRefreshRateController
 import com.nevanstudio.nevtuneplus.ui.tv.personalization.AppThemeOption
+import com.nevanstudio.nevtuneplus.ui.tv.theme.TvAccentOptions
 import com.nevanstudio.nevtuneplus.ui.tv.theme.TvDimensions
 import com.nevanstudio.nevtuneplus.ui.tv.theme.TvGlass
 import com.nevanstudio.nevtuneplus.ui.tv.theme.TvType
 import com.nevanstudio.nevtuneplus.ui.tv.theme.LocalTvReduceMotion
 
 // Discord Rich Presence is hidden on TV for now; TvDiscordDialog is kept for when it returns.
-private enum class SettingsSheet { Theme, RefreshRate, Equalizer, Scrobbling, LyricsSources, Update, About }
+private enum class SettingsSheet { Theme, Accent, RefreshRate, Equalizer, Scrobbling, LyricsSources, Update, About }
 
 private const val DefaultBlurb = "Playback, sound and display preferences for NevTune+ on this TV."
 
@@ -88,6 +90,7 @@ fun TvSettingsScreen(
     val lyricsCanvas by TvSettings.tvLyricsCanvasEnabled.collectAsState()
     val nerdStats by AppSettings.showNerdStats.collectAsState()
     val themeId by TvSettings.tvTheme.collectAsState()
+    val accentPresetId by TvSettings.tvAccentPreset.collectAsState()
     val uiScale by TvSettings.tvUiScale.collectAsState()
     val refreshRate by TvRefreshRateController.preference.collectAsState()
     val reduceMotion by AppSettings.reduceAnimation.collectAsState()
@@ -288,6 +291,14 @@ fun TvSettingsScreen(
             }
             item {
                 TvListRow(
+                    title = "Accent Color",
+                    value = TvAccentOptions.firstOrNull { it.id == accentPresetId }?.label ?: "White (Default)",
+                    onFocused = { blurb = "The highlight and playback accent color used across NevTune+ on this TV." },
+                    onClick = { sheet = SettingsSheet.Accent },
+                )
+            }
+            item {
+                TvListRow(
                     title = "Interface Size",
                     value = "${(uiScale * 100).toInt()}%",
                     onFocused = { blurb = "Makes everything larger or smaller. Select to step through sizes." },
@@ -405,6 +416,7 @@ fun TvSettingsScreen(
 
     when (sheet) {
         SettingsSheet.Theme -> TvThemeDialog(onDismiss = { sheet = null })
+        SettingsSheet.Accent -> TvAccentDialog(onDismiss = { sheet = null })
         SettingsSheet.RefreshRate -> TvRefreshRateDialog(onDismiss = { sheet = null })
         SettingsSheet.Equalizer -> TvEqualizerDialog(onDismiss = { sheet = null })
         SettingsSheet.Scrobbling -> TvScrobbleDialog(onDismiss = { sheet = null })

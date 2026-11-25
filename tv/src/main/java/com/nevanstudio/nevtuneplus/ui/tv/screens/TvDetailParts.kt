@@ -68,7 +68,7 @@ internal fun TvActionRow(
             contentDescription = "Play",
             size = 58.dp,
             iconScale = 0.5f,
-            resting = playColor ?: TvGlass.AppleRed,
+            resting = playColor ?: com.nevanstudio.nevtuneplus.ui.tv.theme.TvColors.PlayingAccent,
             enabled = canPlay,
             onClick = onPlay,
             modifier = Modifier.tvInitialFocus(canPlay),

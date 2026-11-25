@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -24,7 +25,9 @@ import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Typography
 import androidx.tv.material3.darkColorScheme
 import com.nevanstudio.nevtuneplus.R
+import com.nevanstudio.nevtuneplus.data.settings.AppSettings
 import com.nevanstudio.nevtuneplus.data.settings.TvSettings
+import com.nevanstudio.nevtuneplus.ui.theme.ThemeColorPresets
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Immutable palette data class — one instance per theme variant
@@ -73,6 +76,8 @@ data class TvColorPalette(
     val canvasBottom: Color = Color(0xFF101012),
     // Whether the canvas picks up a tint from the playing song's artwork
     val tintsCanvas: Boolean = true,
+    // Accent used for now-playing indicators, equalizer bars, and play buttons
+    val playingAccent: Color = Color(0xFFFA2D48),
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -316,6 +321,11 @@ object TvColors {
         @Composable
         @ReadOnlyComposable
         get() = LocalTvColors.current.backgroundGradient
+
+    val PlayingAccent: Color
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalTvColors.current.playingAccent
 }
 
 object TvThemeColors {
@@ -527,6 +537,54 @@ object TvType {
 val LocalTvFontFamily = compositionLocalOf { TvSFProDisplay }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Accent Presets — TV accent color options matching the phone app's presets
+// ─────────────────────────────────────────────────────────────────────────────
+
+@Immutable
+data class TvAccentOption(
+    val id: String,
+    val label: String,
+    val swatch: Color,
+)
+
+/** Monochrome white (the original default), Album Art, + all curated phone presets. */
+val TvAccentOptions: List<TvAccentOption> = buildList {
+    add(TvAccentOption("white", "White (Default)", Color.White))
+    add(TvAccentOption("album_art", "Album Art", Color(0xFFFA2D48)))
+    ThemeColorPresets.forEach { preset ->
+        add(TvAccentOption(preset.id, preset.displayName, preset.primaryColor))
+    }
+}
+
+/**
+ * Applies a named accent preset onto a [TvColorPalette], swapping the accent,
+ * playingAccent and glow to the preset's primary colour while leaving surfaces,
+ * text, gradients and canvas untouched.
+ */
+private fun TvColorPalette.withAccent(presetId: String, albumSeedArgb: Int?): TvColorPalette {
+    if (presetId == "white" || presetId.isBlank()) return this
+    if (presetId == "album_art") {
+        val seed = albumSeedArgb?.let { Color(it) } ?: return this
+        return copy(
+            accentRed = seed,
+            accentRedGlow = seed.copy(alpha = 0.40f),
+            accentBlue = seed,
+            playingAccent = seed,
+        )
+    }
+    val preset = ThemeColorPresets.firstOrNull { it.id == presetId } ?: return this
+    val primary = preset.primaryColor
+    return copy(
+        accentRed = primary,
+        accentRedGlow = primary.copy(alpha = 0.40f),
+        accentPink = preset.secondaryColor,
+        accentPurple = preset.tertiaryColor,
+        accentBlue = preset.primaryColor,
+        playingAccent = primary,
+    )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Theme wrapper — reacts directly to TvSettings.tvTheme
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -536,20 +594,29 @@ fun NevTunePlusTvTheme(
 ) {
     val tvThemeId by TvSettings.tvTheme.collectAsState()
     val tvUiScale by TvSettings.tvUiScale.collectAsState()
+    val tvAccentId by TvSettings.tvAccentPreset.collectAsState()
+    val albumSeedArgb by AppSettings.extractedAlbumSeedColor.collectAsState()
 
-    val palette = when (tvThemeId.lowercase()) {
+    val basePalette = when (tvThemeId.lowercase()) {
         "pure_black", "oled", "pure_black_oled" -> TvOledPalette
         "midnight" -> TvMidnightPalette
         else -> TvDarkPalette // Dynamic Artwork (default) — light/white mode removed
     }
 
+    val palette = remember(basePalette, tvAccentId, albumSeedArgb) {
+        basePalette.withAccent(tvAccentId, albumSeedArgb)
+    }
+
+    val onPrimaryColor = if (palette.accentRed.luminance() > 0.5f) Color.Black else Color.White
+    val onSecondaryColor = if (palette.accentPink.luminance() > 0.5f) Color.Black else Color.White
+
     val colorScheme = darkColorScheme(
         primary = palette.accentRed,
-        onPrimary = Color.Black,
+        onPrimary = onPrimaryColor,
         primaryContainer = palette.surfaceVariant,
         onPrimaryContainer = palette.textPrimary,
         secondary = palette.accentPink,
-        onSecondary = Color.Black,
+        onSecondary = onSecondaryColor,
         background = palette.background,
         onBackground = palette.textPrimary,
         surface = palette.surface,

@@ -33,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.CircularProgressIndicator
 import androidx.wear.compose.material3.Icon
+import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.TimeText
@@ -47,6 +48,7 @@ private const val PLAYER = "player"
 private const val QUEUE = "queue"
 private const val MORE = "more"
 private const val OUTPUT = "output"
+private const val THEME = "theme"
 
 /** Player at the root; Up Next and More swipe away back to it, as every watch app does. */
 @Composable
@@ -99,12 +101,16 @@ fun WearApp(
                     np = np,
                     link = link,
                     onOpenOutput = { nav.navigate(OUTPUT) },
+                    onOpenTheme = { nav.navigate(THEME) },
                     onReplayOnboarding = onReplayOnboarding,
                 )
             }
             composable(OUTPUT) {
                 // Straight back to the player once a choice is made.
                 OutputScreen(link = link, onDone = { nav.popBackStack(PLAYER, inclusive = false) })
+            }
+            composable(THEME) {
+                WearThemeScreen()
             }
         }
         }
@@ -148,11 +154,11 @@ private fun PlayerRoute(link: PhoneLink, openQueue: () -> Unit, openMore: () -> 
 
 @Composable
 private fun Connecting() {
-    Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             CircularProgressIndicator(modifier = Modifier.size(32.dp))
             Spacer(Modifier.height(10.dp))
-            Text(stringResource(R.string.connecting), style = WearType.subtitle, color = Secondary)
+            Text(stringResource(R.string.connecting), style = WearType.subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -181,7 +187,7 @@ private fun NothingPlaying(onResume: () -> Unit) {
 
 @Composable
 private fun Message(title: String, body: String, action: String, onAction: () -> Unit, mesh: Boolean) {
-    Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
         if (mesh) MeshBackground(emptyList())
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -194,31 +200,31 @@ private fun Message(title: String, body: String, action: String, onAction: () ->
                 Icon(
                     painter = painterResource(R.drawable.ic_phone),
                     contentDescription = null,
-                    tint = Secondary,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(26.dp),
                 )
                 Spacer(Modifier.height(6.dp))
             }
-            Text(title, style = WearType.title, color = Color.White, textAlign = TextAlign.Center)
+            Text(title, style = WearType.title, color = MaterialTheme.colorScheme.onBackground, textAlign = TextAlign.Center)
             Spacer(Modifier.height(4.dp))
-            Text(body, style = WearType.rowSub, color = Color.White.copy(alpha = 0.7f), textAlign = TextAlign.Center)
+            Text(body, style = WearType.rowSub, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f), textAlign = TextAlign.Center)
             Spacer(Modifier.height(12.dp))
             Pill(text = action, onClick = onAction)
         }
     }
 }
 
-/** The phone app's primary button: white, black label, fully rounded. */
+/** Primary action pill: uses MaterialTheme primary/onPrimary tokens. */
 @Composable
 internal fun Pill(text: String, onClick: () -> Unit) {
     Box(
         Modifier
             .heightIn(min = 48.dp)
             .clip(CircleShape)
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.primary)
             .clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = 22.dp, vertical = 9.dp),
     ) {
-        Text(text, style = WearType.button, color = Color.Black)
+        Text(text, style = WearType.button, color = MaterialTheme.colorScheme.onPrimary)
     }
 }

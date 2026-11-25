@@ -2,65 +2,37 @@
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.theme
 
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.Typography
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.core.view.WindowCompat
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.nevanstudio.nevtuneplus.R
+import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.getValue
+import com.nevanstudio.nevtuneplus.R
 import com.nevanstudio.nevtuneplus.data.settings.AppFontChoice
 import com.nevanstudio.nevtuneplus.data.settings.AppSettings
+import com.nevanstudio.nevtuneplus.data.settings.ThemeColorSource
+import com.nevanstudio.nevtuneplus.data.settings.ThemeMode
 
-// Apple Music's signature red. No longer the primary accent, but kept for the
-// spots (Replay's rank badge) that want that specific red regardless of theme.
-val AccentRed = Color(0xFFFA2D48)
-
-private val DarkColors = darkColorScheme(
-    primary = Color.White,
-    onPrimary = Color.Black,
-    background = Color.Black,
-    onBackground = Color.White,
-    surface = Color(0xFF0D0D0F),
-    onSurface = Color.White,
-    surfaceVariant = Color(0xFF1C1C1E),
-    onSurfaceVariant = Color(0xFF8E8E93),
-    outline = Color(0xFF2C2C2E),
-)
-
-private val LightColors = lightColorScheme(
-    primary = Color.Black,
-    onPrimary = Color.White,
-    background = Color.White,
-    onBackground = Color.Black,
-    surface = Color(0xFFF7F7F9),
-    onSurface = Color.Black,
-    surfaceVariant = Color(0xFFF2F2F7),
-    onSurfaceVariant = Color(0xFF6E6E73),
-    outline = Color(0xFFE5E5EA),
-)
-
-/**
- * SF Pro Display, the face Apple Music itself is set in. Only the weights the
- * type scale actually asks for are bundled; Compose synthesises nothing, so a
- * missing weight would silently fall back to the nearest one shipped.
- */
 /**
  * Geom font family — the default primary typeface across the whole app for NevTune+.
  * Includes all weights from light to black.
@@ -83,7 +55,7 @@ val SFProDisplay = FontFamily(
     Font(R.font.sf_pro_display_heavy, FontWeight.W800),
 )
 
-// Heavy, tight typography — the backbone of the Apple Music look.
+// Heavy, tight typography — the backbone of the NevTune+ look.
 private val AudifyTypography = Typography(
     displayLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 34.sp, letterSpacing = (-0.8).sp),
     headlineLarge = TextStyle(fontWeight = FontWeight.W800, fontSize = 30.sp, letterSpacing = (-0.7).sp),
@@ -115,20 +87,89 @@ private fun Typography.withFamily(family: FontFamily) = Typography(
     labelSmall = labelSmall.copy(fontFamily = family),
 )
 
+/** Resolves whether dark mode is active for a given [ThemeMode]. */
+@Composable
+fun resolveDarkTheme(themeMode: ThemeMode): Boolean = when (themeMode) {
+    ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    ThemeMode.LIGHT -> false
+    ThemeMode.DARK -> true
+}
+
+/**
+ * Centralized Material 3 theme for NevTune+.
+ *
+ * Dynamically resolves color schemes from:
+ * 1. Playing track's album artwork ([ThemeColorSource.ALBUM_ART])
+ * 2. Android 12+ Material You wallpaper colors ([ThemeColorSource.MONET])
+ * 3. Curated presets or user-crafted RGB/HSL schemes ([ThemeColorSource.CUSTOM])
+ *
+ * Updates reactively without restarting the Activity.
+ */
 @Composable
 fun NevTunePlusTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    amoledTheme: Boolean? = null,
+    colorSource: ThemeColorSource? = null,
+    customColorScheme: String? = null,
+    useExactArtworkColors: Boolean? = null,
+    extractedAlbumSeedColor: Int? = null,
     windowWidth: Dp = 0.dp,
     content: @Composable () -> Unit,
 ) {
+    val context = LocalContext.current
     val baseDensity = LocalDensity.current
+
+    val settingsAmoled by AppSettings.amoledTheme.collectAsStateWithLifecycle()
+    val settingsSource by AppSettings.colorSource.collectAsStateWithLifecycle()
+    val settingsScheme by AppSettings.customColorScheme.collectAsStateWithLifecycle()
+    val settingsExactArt by AppSettings.useExactArtworkColors.collectAsStateWithLifecycle()
+    val settingsAlbumSeed by AppSettings.extractedAlbumSeedColor.collectAsStateWithLifecycle()
     val fontChoice by AppSettings.fontChoice.collectAsStateWithLifecycle()
+
+    val effectiveAmoled = amoledTheme ?: settingsAmoled
+    val effectiveSource = colorSource ?: settingsSource
+    val effectiveScheme = customColorScheme ?: settingsScheme
+    val effectiveExactArt = useExactArtworkColors ?: settingsExactArt
+    val effectiveAlbumSeed = extractedAlbumSeedColor ?: settingsAlbumSeed
+
+    val colorScheme: ColorScheme = remember(
+        context,
+        darkTheme,
+        effectiveAmoled,
+        effectiveSource,
+        effectiveScheme,
+        effectiveExactArt,
+        effectiveAlbumSeed,
+    ) {
+        val baseScheme = when {
+            effectiveSource == ThemeColorSource.ALBUM_ART && effectiveAlbumSeed != null -> {
+                ColorExtractor.albumArtColorScheme(
+                    seedArgb = effectiveAlbumSeed,
+                    darkTheme = darkTheme,
+                    useExactArtworkColors = effectiveExactArt,
+                )
+            }
+            effectiveSource == ThemeColorSource.MONET && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            }
+            else -> {
+                getCustomColorScheme(effectiveScheme, darkTheme)
+            }
+        }
+        if (effectiveAmoled && darkTheme) baseScheme.withAmoledBlack() else baseScheme
+    }
+
+    val extendedColors = remember(darkTheme, colorScheme.primary, colorScheme.onPrimary) {
+        extendedColorsFor(darkTheme, colorScheme.primary, colorScheme.onPrimary)
+    }
+
     val selectedFont = when (fontChoice) {
         AppFontChoice.AUDIFY -> GeomFont
         AppFontChoice.SF_PRO -> SFProDisplay
         AppFontChoice.SYSTEM -> FontFamily.Default
         AppFontChoice.SERIF -> FontFamily.Serif
     }
+
     val adaptiveFontScale = when {
         windowWidth >= 840.dp -> 1.24f
         windowWidth >= 600.dp -> 1.18f
@@ -136,15 +177,22 @@ fun NevTunePlusTheme(
         windowWidth >= 360.dp -> 1.06f
         else -> 1f
     }
+
+    val typography = remember(selectedFont) {
+        AudifyTypography.withFamily(selectedFont)
+    }
+
     CompositionLocalProvider(
+        LocalExtendedColors provides extendedColors,
         LocalDensity provides Density(
             density = baseDensity.density,
             fontScale = baseDensity.fontScale * adaptiveFontScale,
         ),
     ) {
         MaterialTheme(
-            colorScheme = if (darkTheme) DarkColors else LightColors,
-            typography = AudifyTypography.withFamily(selectedFont),
+            colorScheme = colorScheme,
+            typography = typography,
+            shapes = NevTuneShapes,
             content = content,
         )
     }
@@ -172,8 +220,6 @@ fun SystemBarIcons(dark: Boolean) {
         }
     }
 }
-
-
 
 @Composable
 fun NevTuneTheme(

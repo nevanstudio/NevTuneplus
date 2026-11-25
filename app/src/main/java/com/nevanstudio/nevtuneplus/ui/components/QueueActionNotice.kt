@@ -61,8 +61,8 @@ fun QueueActionNoticeHost(
     ) { current ->
         if (current != null) {
             Surface(
-                color = Color(0xFF282828),
-                contentColor = Color.White,
+                color = MaterialTheme.colorScheme.inverseSurface,
+                contentColor = MaterialTheme.colorScheme.inverseOnSurface,
                 shape = RoundedCornerShape(5.dp),
                 shadowElevation = 4.dp,
                 modifier = Modifier

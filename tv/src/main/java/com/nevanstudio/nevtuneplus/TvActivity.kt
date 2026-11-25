@@ -12,12 +12,20 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import com.nevanstudio.nevtuneplus.data.listentogether.JamInviteLink
+import com.nevanstudio.nevtuneplus.data.settings.AppSettings
+import com.nevanstudio.nevtuneplus.data.settings.TvSettings
 import com.nevanstudio.nevtuneplus.playback.MusicLink
 import com.nevanstudio.nevtuneplus.playback.PlayerDeepLink
 import com.nevanstudio.nevtuneplus.playback.rememberMediaController
 import com.nevanstudio.nevtuneplus.playback.rememberPlayerState
 import com.nevanstudio.nevtuneplus.ui.MainViewModel
+import com.nevanstudio.nevtuneplus.ui.components.rememberRemoteArtworkUrl
+import com.nevanstudio.nevtuneplus.ui.theme.ColorExtractor
 import com.nevanstudio.nevtuneplus.ui.theme.NevTunePlusTheme
 import com.nevanstudio.nevtuneplus.ui.tv.TvApp
 import com.nevanstudio.nevtuneplus.ui.tv.display.TvRefreshRateController
@@ -58,6 +66,21 @@ class TvActivity : ComponentActivity() {
                 NevTunePlusTheme(darkTheme = true) {
                     val mediaController = rememberMediaController()
                     val playerState = rememberPlayerState(mediaController)
+                    val tvAccentId by TvSettings.tvAccentPreset.collectAsState()
+                    val context = LocalContext.current
+                    val currentArtworkUrl = rememberRemoteArtworkUrl(playerState.song)
+
+                    LaunchedEffect(tvAccentId, playerState.song?.videoId, currentArtworkUrl) {
+                        if (tvAccentId == "album_art") {
+                            val url = currentArtworkUrl
+                            if (url != null) {
+                                val seed = ColorExtractor.extractSeedFromUrl(context, url)
+                                if (seed != null) {
+                                    AppSettings.setExtractedAlbumSeedColor(seed)
+                                }
+                            }
+                        }
+                    }
 
                     TvApp(
                         viewModel = viewModel,

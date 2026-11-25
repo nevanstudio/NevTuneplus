@@ -104,6 +104,13 @@ enum class ThemeMode(val label: String) {
     SYSTEM("System"), LIGHT("Light"), DARK("Dark")
 }
 
+/** Where NevTune+ derives its Material 3 dynamic palette from. */
+enum class ThemeColorSource(val label: String) {
+    CUSTOM("Custom Scheme"),
+    MONET("System Colors"),
+    ALBUM_ART("Album Art"),
+}
+
 /** App-wide typeface preference. AUDIFY keeps its bundled display face by default. */
 enum class AppFontChoice(val label: String) {
     AUDIFY("NevTune+"),
@@ -366,6 +373,13 @@ object AppSettings {
 
     val playbackSpeed = MutableStateFlow(1.0f)
     val themeMode = MutableStateFlow(ThemeMode.DARK)
+    val amoledTheme = MutableStateFlow(false)
+    val useDynamicColors = MutableStateFlow(false)
+    val colorSource = MutableStateFlow(ThemeColorSource.CUSTOM)
+    val customColorScheme = MutableStateFlow("Default")
+    val useExactArtworkColors = MutableStateFlow(false)
+    /** ARGB seed color extracted from the currently playing track's artwork, or null when unset. */
+    val extractedAlbumSeedColor = MutableStateFlow<Int?>(null)
     val fontChoice = MutableStateFlow(AppFontChoice.AUDIFY)
 
     /** Keep playing similar nevanstudio once the queue runs out. */
@@ -904,6 +918,21 @@ object AppSettings {
         themeMode.value = runCatching {
             ThemeMode.valueOf(prefs.getString(KEY_THEME, null) ?: "DARK")
         }.getOrDefault(ThemeMode.DARK)
+        amoledTheme.value = prefs.getBoolean(KEY_AMOLED_THEME, false)
+        useDynamicColors.value = prefs.getBoolean(KEY_USE_DYNAMIC_COLORS, false)
+        colorSource.value = runCatching {
+            ThemeColorSource.valueOf(
+                prefs.getString(KEY_COLOR_SOURCE, null)
+                    ?: if (useDynamicColors.value) ThemeColorSource.MONET.name else ThemeColorSource.CUSTOM.name,
+            )
+        }.getOrDefault(ThemeColorSource.CUSTOM)
+        customColorScheme.value = prefs.getString(KEY_CUSTOM_COLOR_SCHEME, "Default") ?: "Default"
+        useExactArtworkColors.value = prefs.getBoolean(KEY_USE_EXACT_ARTWORK_COLORS, false)
+        extractedAlbumSeedColor.value = if (prefs.contains(KEY_EXTRACTED_ALBUM_SEED_COLOR)) {
+            prefs.getInt(KEY_EXTRACTED_ALBUM_SEED_COLOR, 0)
+        } else {
+            null
+        }
         fontChoice.value = runCatching {
             AppFontChoice.valueOf(prefs.getString(KEY_FONT_CHOICE, null) ?: AppFontChoice.AUDIFY.name)
         }.getOrDefault(AppFontChoice.AUDIFY)
@@ -1300,6 +1329,56 @@ object AppSettings {
     fun setThemeMode(value: ThemeMode) {
         themeMode.value = value
         prefs.edit { putString(KEY_THEME, value.name) }
+    }
+
+    fun setAmoledTheme(value: Boolean) {
+        amoledTheme.value = value
+        prefs.edit { putBoolean(KEY_AMOLED_THEME, value) }
+    }
+
+    fun setUseDynamicColors(value: Boolean) {
+        useDynamicColors.value = value
+        val nextSource = if (value) {
+            ThemeColorSource.MONET
+        } else if (colorSource.value == ThemeColorSource.MONET) {
+            ThemeColorSource.CUSTOM
+        } else {
+            colorSource.value
+        }
+        colorSource.value = nextSource
+        prefs.edit {
+            putBoolean(KEY_USE_DYNAMIC_COLORS, value)
+            putString(KEY_COLOR_SOURCE, nextSource.name)
+        }
+    }
+
+    fun setColorSource(value: ThemeColorSource) {
+        colorSource.value = value
+        val dynamic = value == ThemeColorSource.MONET
+        useDynamicColors.value = dynamic
+        prefs.edit {
+            putString(KEY_COLOR_SOURCE, value.name)
+            putBoolean(KEY_USE_DYNAMIC_COLORS, dynamic)
+        }
+    }
+
+    fun setCustomColorScheme(value: String) {
+        customColorScheme.value = value
+        prefs.edit { putString(KEY_CUSTOM_COLOR_SCHEME, value) }
+    }
+
+    fun setUseExactArtworkColors(value: Boolean) {
+        useExactArtworkColors.value = value
+        prefs.edit { putBoolean(KEY_USE_EXACT_ARTWORK_COLORS, value) }
+    }
+
+    fun setExtractedAlbumSeedColor(value: Int?) {
+        if (extractedAlbumSeedColor.value == value) return
+        extractedAlbumSeedColor.value = value
+        prefs.edit {
+            if (value == null) remove(KEY_EXTRACTED_ALBUM_SEED_COLOR)
+            else putInt(KEY_EXTRACTED_ALBUM_SEED_COLOR, value)
+        }
     }
 
     fun setFontChoice(value: AppFontChoice) {
@@ -2089,6 +2168,7 @@ object AppSettings {
         KEY_LOCAL_MUSIC_FOLDER_URI,
         KEY_LAST_VERSION_CODE,
         KEY_ONBOARDING_COMPLETE,
+        KEY_EXTRACTED_ALBUM_SEED_COLOR,
     )
 
     const val DEFAULT_CACHE_LIMIT_BYTES = 512L * 1024 * 1024
@@ -2141,6 +2221,12 @@ object AppSettings {
     private const val KEY_EQ_BANDS = "equalizer_bands"
     private const val KEY_SPEED = "playback_speed"
     private const val KEY_THEME = "theme_mode"
+    private const val KEY_AMOLED_THEME = "amoled_theme"
+    private const val KEY_USE_DYNAMIC_COLORS = "use_dynamic_colors"
+    private const val KEY_COLOR_SOURCE = "color_source"
+    private const val KEY_CUSTOM_COLOR_SCHEME = "custom_color_scheme"
+    private const val KEY_USE_EXACT_ARTWORK_COLORS = "use_exact_artwork_colors"
+    private const val KEY_EXTRACTED_ALBUM_SEED_COLOR = "extracted_album_seed_color"
     private const val KEY_FONT_CHOICE = "font_choice"
     private const val KEY_AUTOPLAY = "autoplay"
     private const val KEY_SHUFFLE_ENABLED = "shuffle_enabled"

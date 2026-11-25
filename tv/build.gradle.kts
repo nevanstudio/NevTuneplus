@@ -332,6 +332,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-process:2.11.0")
     implementation("androidx.core:core-ktx:1.19.1")
     implementation("androidx.appcompat:appcompat:1.8.0")
+    implementation("com.google.android.material:material:1.14.0")
     // Phone-source downloads include the shared offline file-verification worker.
     implementation("androidx.work:work-runtime-ktx:2.12.0")
     // The TV variant compiles the shared phone source tree, including Room-backed local data.

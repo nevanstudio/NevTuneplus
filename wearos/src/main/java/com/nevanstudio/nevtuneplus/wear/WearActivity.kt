@@ -17,15 +17,18 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.core.content.edit
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.wear.ambient.AmbientLifecycleObserver
+import com.nevanstudio.nevtuneplus.wear.data.PhoneLink
+import com.nevanstudio.nevtuneplus.wear.data.WearSettings
 import com.nevanstudio.nevtuneplus.wear.ui.Ambient
 import com.nevanstudio.nevtuneplus.wear.ui.LocalAmbient
-import com.nevanstudio.nevtuneplus.wear.data.PhoneLink
 import com.nevanstudio.nevtuneplus.wear.ui.NevTunePlusWearTheme
 import com.nevanstudio.nevtuneplus.wear.ui.WearApp
 
@@ -73,6 +76,7 @@ class WearActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WearSettings.init(applicationContext)
         val onboardingPrefs = getSharedPreferences("audify_wear_setup", MODE_PRIVATE)
         onboardingComplete.value = onboardingPrefs.getBoolean("complete", false)
         lifecycle.addObserver(ambientObserver)
@@ -102,7 +106,8 @@ class WearActivity : ComponentActivity() {
             }
         }
         setContent {
-            NevTunePlusWearTheme {
+            val np by model.link.nowPlaying.collectAsStateWithLifecycle()
+            NevTunePlusWearTheme(nowPlayingColors = np?.colors.orEmpty()) {
                 CompositionLocalProvider(LocalAmbient provides ambient.value) {
                     WearApp(
                         link = model.link,

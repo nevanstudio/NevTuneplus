@@ -105,6 +105,7 @@ import com.nevanstudio.nevtuneplus.ui.tv.components.tvPlatter
 import com.nevanstudio.nevtuneplus.ui.tv.display.TvRefreshRateController
 import com.nevanstudio.nevtuneplus.ui.tv.display.TvRefreshRatePreference
 import com.nevanstudio.nevtuneplus.ui.tv.personalization.AppThemeOption
+import com.nevanstudio.nevtuneplus.ui.tv.theme.TvAccentOptions
 import com.nevanstudio.nevtuneplus.ui.tv.theme.TvGlass
 import com.nevanstudio.nevtuneplus.ui.tv.theme.TvType
 import kotlinx.coroutines.Dispatchers
@@ -1275,6 +1276,37 @@ fun TvThemeDialog(onDismiss: () -> Unit) {
                     modifier = if (theme == current) Modifier.tvInitialFocus() else Modifier,
                     onClick = {
                         TvSettings.setTvTheme(theme.id)
+                        onDismiss()
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TvAccentDialog(onDismiss: () -> Unit) {
+    val currentId by TvSettings.tvAccentPreset.collectAsState()
+
+    TvDialog(
+        title = "Accent Color",
+        message = "Applies immediately to highlights, active tracks, and play controls.",
+        width = 500.dp,
+        onDismissRequest = onDismiss,
+    ) {
+        LazyColumn(
+            modifier = Modifier.heightIn(max = 320.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            itemsIndexed(TvAccentOptions, key = { _, opt -> opt.id }) { _, option ->
+                val selected = option.id == currentId
+                TvListRow(
+                    title = option.label,
+                    subtitle = if (option.id == "album_art") "Adapts to the playing song's artwork" else null,
+                    trailingIcon = if (selected) Icons.Rounded.Check else null,
+                    modifier = if (selected) Modifier.tvInitialFocus() else Modifier,
+                    onClick = {
+                        TvSettings.setTvAccentPreset(option.id)
                         onDismiss()
                     },
                 )

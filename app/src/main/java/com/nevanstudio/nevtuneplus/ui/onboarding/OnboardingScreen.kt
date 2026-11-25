@@ -105,9 +105,6 @@ private const val TOTAL_PAGES      = 5
 
 private const val NAME_LIMIT = 40
 
-private val SpotifyGreen = Color(0xFF1DB954)
-private val AmoledBlack  = Color(0xFF000000)
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Root composable
 // ─────────────────────────────────────────────────────────────────────────────
@@ -141,7 +138,7 @@ fun OnboardingScreen(
     Box(
         modifier
             .fillMaxSize()
-            .background(AmoledBlack)
+            .background(MaterialTheme.colorScheme.background)
             .pointerInput(Unit) { detectTapGestures { focusManager.clearFocus() } },
     ) {
         // Static page content — no animated transitions
@@ -245,13 +242,14 @@ private fun OnboardingHeader(page: Int, onSkip: () -> Unit) {
                 Modifier
                     .size(28.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(SpotifyGreen),
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f), RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 Image(
                     painter = painterResource(Res.drawable.ic_logo),
                     contentDescription = null,
-                    modifier = Modifier.size(17.dp),
+                    modifier = Modifier.size(18.dp),
                 )
             }
             Text(
@@ -259,7 +257,7 @@ private fun OnboardingHeader(page: Int, onSkip: () -> Unit) {
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 2.4.sp,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
             )
         }
 
@@ -269,8 +267,8 @@ private fun OnboardingHeader(page: Int, onSkip: () -> Unit) {
                 Modifier
                     .height(34.dp)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.08f))
-                    .border(0.5.dp, SpotifyGreen.copy(alpha = 0.40f), CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .border(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.40f), CircleShape)
                     .clickable(role = Role.Button, onClick = onSkip)
                     .padding(horizontal = 14.dp),
                 contentAlignment = Alignment.Center,
@@ -279,7 +277,7 @@ private fun OnboardingHeader(page: Int, onSkip: () -> Unit) {
                     "Skip",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = SpotifyGreen,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -308,8 +306,8 @@ private fun OnboardingHeader(page: Int, onSkip: () -> Unit) {
                     .height(3.5.dp)
                     .clip(CircleShape)
                     .background(
-                        if (active) SpotifyGreen.copy(alpha = alpha)
-                        else Color.White.copy(alpha = 0.16f),
+                        if (active) MaterialTheme.colorScheme.primary.copy(alpha = alpha)
+                        else MaterialTheme.colorScheme.outlineVariant,
                     ),
             )
         }
@@ -336,7 +334,7 @@ private fun ColumnScope.WelcomePage(onNext: () -> Unit) {
             lineHeight = 48.sp,
             letterSpacing = (-1.8).sp,
         ),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.onBackground,
         fontWeight = FontWeight.ExtraBold,
         textAlign = TextAlign.Start,
         modifier = Modifier.fillMaxWidth(),
@@ -347,7 +345,7 @@ private fun ColumnScope.WelcomePage(onNext: () -> Unit) {
     Text(
         text = "Welcome to NevTune+. A sanctuary for high-resolution audio, bit-perfect local playback, and real-time synchronized music sharing.",
         style = MaterialTheme.typography.bodyLarge,
-        color = Color.White.copy(alpha = 0.76f),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         lineHeight = 24.sp,
         textAlign = TextAlign.Start,
         modifier = Modifier.fillMaxWidth(),
@@ -369,25 +367,26 @@ private fun WelcomeHeroVisual() {
             .height(210.dp),
         contentAlignment = Alignment.Center,
     ) {
-        // Static green circle aura
+        // Static ambient circle aura
         Box(
             Modifier
                 .size(170.dp)
                 .clip(CircleShape)
-                .background(SpotifyGreen.copy(alpha = 0.08f)),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)),
         )
         // Logo badge
         Box(
             Modifier
                 .size(100.dp)
                 .clip(CircleShape)
-                .background(SpotifyGreen),
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Image(
                 painter = painterResource(Res.drawable.ic_logo),
                 contentDescription = null,
-                modifier = Modifier.size(56.dp),
+                modifier = Modifier.size(62.dp),
             )
         }
         // Static music note icon — top-right accent
@@ -395,7 +394,7 @@ private fun WelcomeHeroVisual() {
             Modifier
                 .size(34.dp)
                 .clip(CircleShape)
-                .background(SpotifyGreen.copy(alpha = 0.18f))
+                .background(MaterialTheme.colorScheme.primaryContainer)
                 .align(Alignment.TopEnd)
                 .padding(end = 32.dp, top = 20.dp),
             contentAlignment = Alignment.Center,
@@ -403,7 +402,7 @@ private fun WelcomeHeroVisual() {
             Icon(
                 imageVector = Icons.Rounded.MusicNote,
                 contentDescription = null,
-                tint = SpotifyGreen,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(16.dp),
             )
         }
@@ -436,10 +435,10 @@ private fun ColumnScope.NamePage(
                 Modifier
                     .size(80.dp)
                     .clip(CircleShape)
-                    .background(if (name.isNotBlank()) SpotifyGreen else Color.White.copy(alpha = 0.08f))
+                    .background(if (name.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                     .border(
                         width = 2.dp,
-                        color = SpotifyGreen,
+                        color = MaterialTheme.colorScheme.primary,
                         shape = CircleShape,
                     ),
                 contentAlignment = Alignment.Center,
@@ -449,13 +448,13 @@ private fun ColumnScope.NamePage(
                         text = initial,
                         style = MaterialTheme.typography.displayMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (name.isNotBlank()) Color(0xFF041A12) else Color.White,
+                        color = if (name.isNotBlank()) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Rounded.Person,
                         contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.60f),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(36.dp),
                     )
                 }
@@ -475,7 +474,7 @@ private fun ColumnScope.NamePage(
     Text(
         text = "This name represents your profile during Listen Together sessions, party queues, and synchronized playlists.",
         style = MaterialTheme.typography.bodyLarge,
-        color = Color.White.copy(alpha = 0.72f),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         lineHeight = 23.sp,
     )
 
@@ -484,7 +483,7 @@ private fun ColumnScope.NamePage(
     Text(
         text = "Your Display Name",
         style = MaterialTheme.typography.titleSmall,
-        color = SpotifyGreen,
+        color = MaterialTheme.colorScheme.primary,
         fontWeight = FontWeight.SemiBold,
         modifier = Modifier.padding(start = 2.dp, bottom = 8.dp),
     )
@@ -495,7 +494,7 @@ private fun ColumnScope.NamePage(
     Text(
         text = "Visible to friends in active sessions. You can update this at any time in Settings.",
         style = MaterialTheme.typography.bodySmall,
-        color = Color.White.copy(alpha = 0.48f),
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
         modifier = Modifier.padding(horizontal = 4.dp),
     )
 
@@ -537,21 +536,21 @@ private fun ColumnScope.ConnectPage(
     Text(
         text = "Connect your YouTube Music account to blend cloud recommendations and curated playlists with your offline lossless collection. Local music stays completely private.",
         style = MaterialTheme.typography.bodyLarge,
-        color = Color.White.copy(alpha = 0.75f),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         lineHeight = 24.sp,
     )
 
     Spacer(Modifier.height(22.dp))
 
-    // Glass benefit card
+    // Benefit card
     Box(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(Color.White.copy(alpha = 0.05f))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .border(
                 1.dp,
-                SpotifyGreen.copy(alpha = 0.25f),
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
                 RoundedCornerShape(20.dp),
             )
             .padding(18.dp),
@@ -593,12 +592,11 @@ private fun ColumnScope.ConnectPage(
 @Composable
 private fun ConnectHeroVisual() {
     val cards = listOf(
-        Color(0xFF1A3024) to "High-Res Mix",
-        Color(0xFF142B1F) to "Master Releases",
-        Color(0xFF1C3528) to "Offline Vault",
-        Color(0xFF112518) to "Saved Library",
-        Color(0xFF18302A) to "Live Session",
-        Color(0xFF152C20) to "Audiophile FLAC",
+        MaterialTheme.colorScheme.primaryContainer to Pair(MaterialTheme.colorScheme.onPrimaryContainer, "High-Res Mix"),
+        MaterialTheme.colorScheme.secondaryContainer to Pair(MaterialTheme.colorScheme.onSecondaryContainer, "Master Releases"),
+        MaterialTheme.colorScheme.tertiaryContainer to Pair(MaterialTheme.colorScheme.onTertiaryContainer, "Offline Vault"),
+        MaterialTheme.colorScheme.surfaceContainerHigh to Pair(MaterialTheme.colorScheme.onSurface, "Saved Library"),
+        MaterialTheme.colorScheme.surfaceVariant to Pair(MaterialTheme.colorScheme.onSurfaceVariant, "Live Session"),
     )
 
     Box(
@@ -611,20 +609,21 @@ private fun ConnectHeroVisual() {
             modifier = Modifier.fillMaxSize(),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            cards.take(5).forEach { (color, label) ->
+            cards.forEach { (bgColor, labelPair) ->
+                val (fgColor, label) = labelPair
                 Box(
                     Modifier
                         .weight(1f)
                         .height(100.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(color)
-                        .border(0.5.dp, SpotifyGreen.copy(alpha = 0.25f), RoundedCornerShape(12.dp)),
+                        .background(bgColor)
+                        .border(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f), RoundedCornerShape(12.dp)),
                     contentAlignment = Alignment.BottomStart,
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.MusicNote,
                         contentDescription = null,
-                        tint = SpotifyGreen.copy(alpha = 0.30f),
+                        tint = fgColor.copy(alpha = 0.45f),
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(6.dp)
@@ -634,7 +633,7 @@ private fun ConnectHeroVisual() {
                         text = label,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White.copy(alpha = 0.90f),
+                        color = fgColor,
                         modifier = Modifier.padding(6.dp),
                         maxLines = 2,
                     )
@@ -658,13 +657,13 @@ private fun BenefitRow(
             Modifier
                 .size(28.dp)
                 .clip(CircleShape)
-                .background(SpotifyGreen.copy(alpha = 0.16f)),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = SpotifyGreen,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(16.dp),
             )
         }
@@ -673,13 +672,13 @@ private fun BenefitRow(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Spacer(Modifier.height(2.dp))
             Text(
                 text = desc,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.65f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 17.sp,
             )
         }
@@ -738,7 +737,7 @@ private fun ColumnScope.PermissionsPage(
     Text(
         text = "NevTune+ operates locally on your device. Grant access to index high-resolution music and maintain fluid background controls.",
         style = MaterialTheme.typography.bodyLarge,
-        color = Color.White.copy(alpha = 0.75f),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         lineHeight = 24.sp,
     )
 
@@ -789,16 +788,16 @@ private fun PermissionCard(
     isGranted: Boolean,
     onGrant: () -> Unit,
 ) {
-    val accentColor = if (isGranted) SpotifyGreen else Color.White.copy(alpha = 0.60f)
+    val accentColor = if (isGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
     Box(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp))
-            .background(Color.White.copy(alpha = 0.05f))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .border(
                 1.dp,
-                if (isGranted) SpotifyGreen.copy(alpha = 0.50f)
-                else Color.White.copy(alpha = 0.10f),
+                if (isGranted) MaterialTheme.colorScheme.primary.copy(alpha = 0.50f)
+                else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
                 RoundedCornerShape(20.dp),
             )
             .padding(16.dp),
@@ -812,7 +811,7 @@ private fun PermissionCard(
                 Modifier
                     .size(46.dp)
                     .clip(RoundedCornerShape(13.dp))
-                    .background(accentColor.copy(alpha = 0.12f)),
+                    .background(accentColor.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -836,7 +835,7 @@ private fun PermissionCard(
                         style = MaterialTheme.typography.titleMedium,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f, fill = false),
                     )
                     Text(
@@ -844,12 +843,12 @@ private fun PermissionCard(
                         style = MaterialTheme.typography.labelSmall,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = if (badge == "Essential") SpotifyGreen else Color.White.copy(alpha = 0.60f),
+                        color = if (badge == "Essential") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier
                             .clip(CircleShape)
                             .background(
-                                if (badge == "Essential") SpotifyGreen.copy(alpha = 0.15f)
-                                else Color.White.copy(alpha = 0.08f),
+                                if (badge == "Essential") MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                else MaterialTheme.colorScheme.surfaceVariant,
                             )
                             .padding(horizontal = 7.dp, vertical = 2.dp),
                     )
@@ -858,7 +857,7 @@ private fun PermissionCard(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
                     fontSize = 13.sp,
-                    color = Color.White.copy(alpha = 0.68f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 18.sp,
                 )
             }
@@ -867,8 +866,8 @@ private fun PermissionCard(
                 Modifier
                     .clip(RoundedCornerShape(10.dp))
                     .background(
-                        if (isGranted) SpotifyGreen.copy(alpha = 0.16f)
-                        else SpotifyGreen,
+                        if (isGranted) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
+                        else MaterialTheme.colorScheme.primary,
                     )
                     .clickable(enabled = !isGranted, onClick = onGrant)
                     .padding(horizontal = 14.dp, vertical = 9.dp),
@@ -879,7 +878,7 @@ private fun PermissionCard(
                     style = MaterialTheme.typography.labelMedium,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (isGranted) SpotifyGreen else Color(0xFF041A12),
+                    color = if (isGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary,
                 )
             }
         }
@@ -909,7 +908,7 @@ private fun ColumnScope.ReadyPage(onBack: () -> Unit, onFinish: () -> Unit) {
     Text(
         text = "Your listening environment is primed. Prepare for astonishing clarity, dynamic range, and boundless musical freedom.",
         style = MaterialTheme.typography.bodyLarge,
-        color = Color.White.copy(alpha = 0.78f),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         lineHeight = 24.sp,
     )
 
@@ -919,7 +918,7 @@ private fun ColumnScope.ReadyPage(onBack: () -> Unit, onFinish: () -> Unit) {
     Spacer(Modifier.height(24.dp))
 }
 
-// Static celebration mark — solid green circle with check icon
+// Static celebration mark — themed circle with check icon
 @Composable
 private fun ReadyCelebrationMark() {
     Box(
@@ -933,20 +932,20 @@ private fun ReadyCelebrationMark() {
             Modifier
                 .size(110.dp)
                 .clip(CircleShape)
-                .background(SpotifyGreen.copy(alpha = 0.10f)),
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
         )
         // Central check circle
         Box(
             Modifier
                 .size(76.dp)
                 .clip(CircleShape)
-                .background(SpotifyGreen),
+                .background(MaterialTheme.colorScheme.primary),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = Icons.Rounded.CheckCircle,
                 contentDescription = null,
-                tint = Color(0xFF041A12),
+                tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(42.dp),
             )
         }
@@ -965,7 +964,7 @@ private fun CategoryKicker(text: String) {
         fontSize = 11.sp,
         fontWeight = FontWeight.ExtraBold,
         letterSpacing = 2.sp,
-        color = SpotifyGreen,
+        color = MaterialTheme.colorScheme.primary,
     )
 }
 
@@ -978,13 +977,13 @@ private fun SectionTitle(text: String) {
             lineHeight  = 38.sp,
             letterSpacing = (-0.8).sp,
         ),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.onBackground,
         fontWeight = FontWeight.Bold,
     )
 }
 
 /**
- * Solid Spotify-green action button — no shimmer, no spring scale.
+ * Primary themed action button.
  */
 @Composable
 private fun PrimaryButton(
@@ -998,7 +997,10 @@ private fun PrimaryButton(
             .fillMaxWidth()
             .height(56.dp)
             .clip(RoundedCornerShape(18.dp))
-            .background(if (enabled) SpotifyGreen else SpotifyGreen.copy(alpha = 0.42f))
+            .background(
+                if (enabled) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.primary.copy(alpha = 0.42f),
+            )
             .clickable(
                 enabled = enabled,
                 role    = Role.Button,
@@ -1013,7 +1015,7 @@ private fun PrimaryButton(
             style      = MaterialTheme.typography.titleMedium,
             fontSize   = 16.sp,
             fontWeight = FontWeight.ExtraBold,
-            color      = Color(0xFF041A12),
+            color      = MaterialTheme.colorScheme.onPrimary,
             textAlign  = TextAlign.Center,
             maxLines   = 1,
         )
@@ -1030,8 +1032,8 @@ private fun SecondaryButton(label: String, onClick: () -> Unit) {
             .fillMaxWidth()
             .height(52.dp)
             .clip(RoundedCornerShape(18.dp))
-            .background(Color.White.copy(alpha = 0.06f))
-            .border(1.dp, SpotifyGreen.copy(alpha = 0.40f), RoundedCornerShape(18.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.40f), RoundedCornerShape(18.dp))
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -1039,7 +1041,7 @@ private fun SecondaryButton(label: String, onClick: () -> Unit) {
             text       = label,
             style      = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
-            color      = SpotifyGreen,
+            color      = MaterialTheme.colorScheme.primary,
             maxLines   = 1,
         )
     }
@@ -1054,15 +1056,15 @@ private fun BackButton(onClick: () -> Unit) {
         Modifier
             .size(42.dp)
             .clip(CircleShape)
-            .background(Color.White.copy(alpha = 0.08f))
-            .border(0.5.dp, SpotifyGreen.copy(alpha = 0.30f), CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .border(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.30f), CircleShape)
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             imageVector = NevTunePlusIcons.ChevronRight,
             contentDescription = stringResource(R.string.onboarding_back),
-            tint = Color.White,
+            tint = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
                 .size(16.dp)
                 .graphicsLayer { scaleX = -1f },
@@ -1071,7 +1073,7 @@ private fun BackButton(onClick: () -> Unit) {
 }
 
 /**
- * Name input field with Spotify green focus border.
+ * Name input field with themed focus border.
  */
 @Composable
 private fun NameInputField(
@@ -1084,31 +1086,31 @@ private fun NameInputField(
         fontSize      = 22.sp,
         lineHeight    = 28.sp,
         letterSpacing = (-0.5).sp,
-        color         = Color.White,
+        color         = MaterialTheme.colorScheme.onSurface,
     )
     Box(
         Modifier
             .fillMaxWidth()
             .height(60.dp)
             .clip(RoundedCornerShape(18.dp))
-            .background(Color.White.copy(alpha = 0.06f))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .border(
                 1.5.dp,
-                if (value.isNotBlank()) SpotifyGreen else Color.White.copy(alpha = 0.16f),
+                if (value.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                 RoundedCornerShape(18.dp),
             )
             .padding(horizontal = 18.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
         if (value.isEmpty()) {
-            Text(text = hint, style = style, color = Color.White.copy(alpha = 0.32f), maxLines = 1)
+            Text(text = hint, style = style, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f), maxLines = 1)
         }
         BasicTextField(
             value           = value,
             onValueChange   = onValueChange,
             singleLine      = true,
             textStyle       = style,
-            cursorBrush     = SolidColor(SpotifyGreen),
+            cursorBrush     = SolidColor(MaterialTheme.colorScheme.primary),
             keyboardOptions = KeyboardOptions(
                 capitalization   = KeyboardCapitalization.Words,
                 autoCorrectEnabled = false,

@@ -77,13 +77,16 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.wear.compose.foundation.requestFocusOnHierarchyActive
 import androidx.wear.compose.material3.Icon
+import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
 import com.nevanstudio.nevtuneplus.wear.R
 import com.nevanstudio.nevtuneplus.wear.data.NowPlaying
 import com.nevanstudio.nevtuneplus.wear.data.Volume
+import com.nevanstudio.nevtuneplus.wear.data.WearSettings
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -181,8 +184,13 @@ fun NowPlayingScreen(
     ) {
         val w = maxWidth
         val h = maxHeight
+        val meshEnabled by WearSettings.meshBackgroundEnabled.collectAsStateWithLifecycle()
 
-        MeshBackground(np.colors)
+        if (meshEnabled) {
+            MeshBackground(np.colors)
+        } else {
+            Spacer(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
+        }
 
         Column(
             Modifier.fillMaxSize(),
@@ -265,7 +273,7 @@ fun NowPlayingScreen(
                     description = stringResource(if (np.liked) R.string.loved else R.string.love),
                     size = chip,
                     iconSize = glyph,
-                    tint = if (np.liked) AccentRed else Color.White,
+                    tint = if (np.liked) LocalWearAccent.current else Color.White,
                     background = Color.White.copy(alpha = 0.14f),
                     onClick = actions.toggleLike,
                 )
@@ -337,6 +345,8 @@ private fun PlayDisc(
     val latestScrubbing by rememberUpdatedState(scrubbing)
     val latestDuration by rememberUpdatedState(np.durationMs)
     val toggleLabel = stringResource(if (np.playing) R.string.pause else R.string.play)
+    val wearAccent = LocalWearAccent.current
+    val ringColor = MaterialTheme.colorScheme.primary
 
     Box(
         modifier = Modifier
@@ -363,7 +373,7 @@ private fun PlayDisc(
                 }
                 if (turning != null) {
                     drawArc(
-                        color = Color.White,
+                        color = ringColor,
                         startAngle = turning - 90f,
                         sweepAngle = 70f,
                         useCenter = false,
@@ -373,7 +383,7 @@ private fun PlayDisc(
                     )
                 } else if (fraction * 360f > 0.5f) {
                     drawArc(
-                        color = if (scrubMs != null) AccentRed else Color.White,
+                        color = if (scrubMs != null) wearAccent else ringColor,
                         startAngle = -90f,
                         sweepAngle = 360f * fraction.coerceIn(0f, 1f),
                         useCenter = false,

@@ -802,9 +802,10 @@ fun TvSongRow(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
-    val primary = if (focused) TvGlass.OnPlatter else if (isCurrent) TvGlass.AppleRed else TvGlass.TextPrimary
+    val playingAccent = com.nevanstudio.nevtuneplus.ui.tv.theme.TvColors.PlayingAccent
+    val primary = if (focused) TvGlass.OnPlatter else if (isCurrent) playingAccent else TvGlass.TextPrimary
     val shape = RoundedCornerShape(12.dp)
-    val glowColor = if (isCurrent) TvGlass.AppleRed else Color(0x66FFFFFF)
+    val glowColor = if (isCurrent) playingAccent else Color(0x66FFFFFF)
     val secondary = if (focused) TvGlass.OnPlatterSecondary else TvGlass.TextSecondary
 
     Row(
@@ -812,12 +813,12 @@ fun TvSongRow(
             .fillMaxWidth()
             .height(if (showArtwork) 48.dp else 42.dp)
             .tvLift(interaction, shape, focusedScale = 1.035f, elevation = if (isCurrent) 20.dp else 12.dp, glowColor = glowColor)
-            .tvPlatter(interaction, resting = if (isCurrent) TvGlass.AppleRed.copy(alpha = 0.14f) else Color.Transparent)
+            .tvPlatter(interaction, resting = if (isCurrent) playingAccent.copy(alpha = 0.14f) else Color.Transparent)
             .then(
                 if (focused && isCurrent) {
                     Modifier.drawBehind {
                         drawRoundRect(
-                            color = TvGlass.AppleRed,
+                            color = playingAccent,
                             style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()),
                             cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()),
                         )
@@ -849,7 +850,7 @@ fun TvSongRow(
                 if (isCurrent) {
                     TvMiniEqualizer(
                         isPlaying = isPlaying,
-                        barColor = if (focused) TvGlass.OnPlatter else TvGlass.AppleRed,
+                        barColor = if (focused) TvGlass.OnPlatter else playingAccent,
                     )
                 } else if (number != null) {
                     Text(text = number.toString(), style = TvType.Callout, color = secondary)
@@ -860,7 +861,7 @@ fun TvSongRow(
             Text(
                 text = song.title,
                 style = TvType.Body.copy(fontSize = 13.sp),
-                color = if (isCurrent && !focused) TvGlass.AppleRed else primary,
+                color = if (isCurrent && !focused) playingAccent else primary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
