@@ -425,6 +425,7 @@ jobs:
         env:
           CUSTOM_NOTES: ${{ inputs.release_notes }}
           BANNER_URL: ${{ inputs.banner_url }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           NOTES_FILE="docs/releases/RELEASE_NOTES_${VERSION_NAME}.md"
@@ -453,14 +454,43 @@ jobs:
             } > "$NOTES_FILE"
           fi
 
+          # Resolve banner: prefer local file from repo (uploaded as release asset),
+          # then fall back to the explicit banner_url input.
+          LOCAL_BANNER=""
+          for candidate in \
+            "docs/assets/banners/banner_${VERSION_NAME}.png" \
+            "docs/assets/banners/banner_${VERSION_NAME}.jpg" \
+            "docs/assets/banners/banner_${VERSION_NAME}.webp"; do
+            if [ -s "$candidate" ]; then
+              LOCAL_BANNER="$candidate"
+              break
+            fi
+          done
+
           FINAL_NOTES="$RUNNER_TEMP/release_notes.md"
-          if [ -n "${BANNER_URL:-}" ]; then
+          if [ -n "$LOCAL_BANNER" ]; then
+            # Copy banner into dist so it gets uploaded as a release asset.
+            # We'll update the notes after the release is created with the CDN URL.
+            BANNER_EXT="${LOCAL_BANNER##*.}"
+            cp "$LOCAL_BANNER" "dist/banner.${BANNER_EXT}"
+            BANNER_ASSET_NAME="banner.${BANNER_EXT}"
+            # Placeholder; real URL inserted after upload below.
+            BANNER_USE_ASSET=true
+          elif [ -n "${BANNER_URL:-}" ]; then
+            # Caller supplied an explicit public URL — use it directly.
             {
               echo "![Release banner](${BANNER_URL})"
               echo ""
               cat "$NOTES_FILE"
             } > "$FINAL_NOTES"
+            BANNER_USE_ASSET=false
           else
+            cp "$NOTES_FILE" "$FINAL_NOTES"
+            BANNER_USE_ASSET=false
+          fi
+
+          # If using local banner, write notes without banner first (placeholder pass).
+          if [ "${BANNER_USE_ASSET:-false}" = "true" ]; then
             cp "$NOTES_FILE" "$FINAL_NOTES"
           fi
 
@@ -484,6 +514,20 @@ jobs:
 
           (cd dist && sha256sum *.apk > SHA256SUMS.txt)
           gh release upload "$TAG" dist/SHA256SUMS.txt
+
+          # Upload banner asset and patch notes with its GitHub CDN URL
+          if [ "${BANNER_USE_ASSET:-false}" = "true" ]; then
+            gh release upload "$TAG" "dist/${BANNER_ASSET_NAME}"
+            BANNER_CDN_URL="https://github.com/${REPO}/releases/download/${TAG}/${BANNER_ASSET_NAME}"
+            {
+              echo "![Release banner](${BANNER_CDN_URL})"
+              echo ""
+              cat "$NOTES_FILE"
+            } > "$FINAL_NOTES"
+            gh release edit "$TAG" --notes-file "$FINAL_NOTES"
+            echo "Banner uploaded and release notes patched with CDN URL: $BANNER_CDN_URL"
+          fi
+
           # Leave as draft — go to GitHub Releases and click "Publish release" when ready
           echo "✅ Draft release created: $(gh release view "$TAG" --json url -q .url)"
           echo "Review the APKs and changelog, then publish manually from GitHub."
