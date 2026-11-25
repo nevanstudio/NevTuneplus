@@ -93,7 +93,11 @@ object AppUpdateChecker {
         _checking.value = true
         try {
             runCatching {
-            val request = Request.Builder().url(LATEST_RELEASE_URL).build()
+            val request = Request.Builder()
+                .url(LATEST_RELEASE_URL)
+                .header("Accept", "application/vnd.github+json")
+                .header("X-GitHub-Api-Version", "2022-11-28")
+                .build()
             val body = Http.client.newCall(request).execute().use { response ->
                 check(response.isSuccessful) { "Update check failed: HTTP ${response.code}" }
                 response.body?.string() ?: error("Empty update response")
