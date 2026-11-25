@@ -161,19 +161,40 @@ object AppUpdateChecker {
      * [UpdateInfo.apkUrl] null and the UI falls back to opening the releases
      * page.
      */
+    private val TV_ASSET_REGEX = Regex(
+        """(^|[-_\s])tv([-_.\s]|$)|androidtv|nevtuneplustv|audifytv""",
+        RegexOption.IGNORE_CASE,
+    )
+    private val WEAR_ASSET_REGEX = Regex(
+        """(^|[-_\s])(wear|watch)([-_.\s]|$)|nevtunepluswear""",
+        RegexOption.IGNORE_CASE,
+    )
+
     internal fun apkAssetUrl(
         release: JsonObject,
         supportedAbis: List<String> = Build.SUPPORTED_ABIS.toList(),
+        apkPrefix: String = BuildConfig.UPDATE_APK_PREFIX,
     ): String? = runCatching {
+        val isTvApp = apkPrefix.contains("TV", ignoreCase = true)
         val apks = release["assets"]?.jsonArray
             ?.mapNotNull { it as? JsonObject }
             ?.mapNotNull { asset ->
                 val name = asset["name"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
                 val url = asset["browser_download_url"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
-                val ours = (name.startsWith(BuildConfig.UPDATE_APK_PREFIX, ignoreCase = true) || name.startsWith("NevTune+-", ignoreCase = true) || name.startsWith("NevTunePlus-", ignoreCase = true) || name.startsWith("Audify-", ignoreCase = true)) &&
+                val isNevTuneApk =
+                    name.startsWith(apkPrefix, ignoreCase = true) ||
+                        name.startsWith("NevTune+", ignoreCase = true) ||
+                        name.startsWith("NevTunePlus", ignoreCase = true) ||
+                        name.startsWith("Audify", ignoreCase = true)
+                val baseName = name.removeSuffix(".apk").removeSuffix(".APK")
+                val isTvAsset = TV_ASSET_REGEX.containsMatchIn(baseName)
+                val isWearAsset = WEAR_ASSET_REGEX.containsMatchIn(baseName)
+                val matchesTarget = if (isTvApp) isTvAsset && !isWearAsset else !isTvAsset && !isWearAsset
+                val ours = isNevTuneApk &&
+                    matchesTarget &&
                     name.endsWith(".apk", ignoreCase = true) &&
                     asset["state"]?.jsonPrimitive?.contentOrNull == "uploaded"
-                if (ours) name.removeSuffix(".apk").removeSuffix(".APK") to url else null
+                if (ours) baseName to url else null
             }
             .orEmpty()
         supportedAbis.firstNotNullOfOrNull { abi ->

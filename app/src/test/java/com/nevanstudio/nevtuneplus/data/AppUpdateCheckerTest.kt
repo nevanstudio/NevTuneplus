@@ -60,9 +60,40 @@ class AppUpdateCheckerTest {
     fun neverSelectsTheTvApk() {
         val release = release(
             "NevTunePlusTV-v1.8.3.apk" to "https://example.test/tv.apk",
+            "NevTune+ TV - 26.11.25.apk" to "https://example.test/tv-new.apk",
+            "NevTune+ Wear OS - 26.11.25.apk" to "https://example.test/wear.apk",
         )
 
         assertEquals(null, AppUpdateChecker.apkAssetUrl(release, listOf("arm64-v8a")))
+    }
+
+    @Test
+    fun selectsReadableMultiPlatformAndSinglePlatformApkNames() {
+        val multiRelease = release(
+            "NevTune+ Mobile - 26.11.25.apk" to "https://example.test/mobile.apk",
+            "NevTune+ TV - 26.11.25.apk" to "https://example.test/tv.apk",
+            "NevTune+ Wear OS - 26.11.25.apk" to "https://example.test/wear.apk",
+        )
+        assertEquals(
+            "https://example.test/mobile.apk",
+            AppUpdateChecker.apkAssetUrl(multiRelease, listOf("arm64-v8a"), apkPrefix = "NevTune+-"),
+        )
+        assertEquals(
+            "https://example.test/tv.apk",
+            AppUpdateChecker.apkAssetUrl(multiRelease, listOf("arm64-v8a"), apkPrefix = "NevTunePlusTV-"),
+        )
+
+        val singleMobileRelease = release(
+            "NevTune+ - 26.11.25.apk" to "https://example.test/single.apk",
+        )
+        assertEquals(
+            "https://example.test/single.apk",
+            AppUpdateChecker.apkAssetUrl(singleMobileRelease, listOf("arm64-v8a"), apkPrefix = "NevTune+-"),
+        )
+        assertEquals(
+            null,
+            AppUpdateChecker.apkAssetUrl(singleMobileRelease, listOf("arm64-v8a"), apkPrefix = "NevTunePlusTV-"),
+        )
     }
 
     @Test

@@ -282,20 +282,28 @@ jobs:
           }
 
           EXPECTED_COUNT=0
+          [ "$BUILD_MOBILE" = "true" ] && EXPECTED_COUNT=$((EXPECTED_COUNT + 1))
+          [ "$BUILD_TV" = "true" ] && EXPECTED_COUNT=$((EXPECTED_COUNT + 1))
+          [ "$BUILD_WEAR" = "true" ] && EXPECTED_COUNT=$((EXPECTED_COUNT + 1))
+
           if [ "$BUILD_MOBILE" = "true" ]; then
-            copy_one app/build/outputs/apk/prod/release 'app-prod-*universal-release.apk' "NevTunePlus-$VERSION_NAME.apk"
-            echo "1. NevTune+ Mobile — $VERSION_NAME"
-            EXPECTED_COUNT=$((EXPECTED_COUNT + 1))
+            if [ "$EXPECTED_COUNT" -eq 1 ]; then
+              MOBILE_APK="NevTune+ - $VERSION_NAME.apk"
+            else
+              MOBILE_APK="NevTune+ Mobile - $VERSION_NAME.apk"
+            fi
+            copy_one app/build/outputs/apk/prod/release 'app-prod-release.apk' "$MOBILE_APK"
+            echo "1. $MOBILE_APK"
           fi
           if [ "$BUILD_TV" = "true" ]; then
-            copy_one tv/build/outputs/apk/prod/release '*-universal-release.apk' "NevTunePlusTV-$VERSION_NAME.apk"
-            echo "2. NevTune+ TV — $VERSION_NAME"
-            EXPECTED_COUNT=$((EXPECTED_COUNT + 1))
+            TV_APK="NevTune+ TV - $VERSION_NAME.apk"
+            copy_one tv/build/outputs/apk/prod/release 'tv-prod-release.apk' "$TV_APK"
+            echo "2. $TV_APK"
           fi
           if [ "$BUILD_WEAR" = "true" ]; then
-            copy_one wearos/build/outputs/apk/prod/release '*-universal-release.apk' "NevTunePlusWear-$VERSION_NAME.apk"
-            echo "3. NevTune+ Watch OS — $VERSION_NAME"
-            EXPECTED_COUNT=$((EXPECTED_COUNT + 1))
+            WEAR_APK="NevTune+ Wear OS - $VERSION_NAME.apk"
+            copy_one wearos/build/outputs/apk/prod/release 'NevTunePlusWear-prod-release.apk' "$WEAR_APK"
+            echo "3. $WEAR_APK"
           fi
 
           test "$(find dist -maxdepth 1 -type f -name '*.apk' | wc -l)" -eq "$EXPECTED_COUNT"
@@ -311,7 +319,7 @@ jobs:
           for apk in dist/*.apk; do
             test -s "$apk"
             case "$apk" in
-              *NevTunePlusTV-*) expected_package="com.nevanstudio.nevtuneplus.tv" ;;
+              *" TV "*) expected_package="com.nevanstudio.nevtuneplus.tv" ;;
               *) expected_package="com.nevanstudio.nevtuneplus" ;;
             esac
             badging="$("$AAPT" dump badging "$apk" | head -n 1)"
@@ -346,8 +354,10 @@ jobs:
               fi
             done
           }
-          for apk in "dist/NevTunePlus-$VERSION_NAME.apk" "dist/NevTunePlusTV-$VERSION_NAME.apk"; do
-            [ -f "$apk" ] || continue
+          for apk in dist/*.apk; do
+            case "$apk" in
+              *Wear*) continue ;;
+            esac
             for abi in armeabi-v7a arm64-v8a x86_64; do
               require_native_payload "$apk" "$abi"
             done
