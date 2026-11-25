@@ -16,9 +16,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Call
@@ -59,6 +63,9 @@ object AppUpdateChecker {
 
     private const val LATEST_RELEASE_URL =
         "https://api.github.com/repos/nevanstudio/NevTuneplus/releases/latest"
+    private const val WEB_LATEST_RELEASE_URL =
+        "https://github.com/nevanstudio/NevTuneplus/releases/latest"
+    private const val WEB_REPO_PATH = "/nevanstudio/NevTuneplus"
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -93,21 +100,11 @@ object AppUpdateChecker {
         _checking.value = true
         try {
             runCatching {
-            val request = Request.Builder()
-                .url(LATEST_RELEASE_URL)
-                .header("Accept", "application/vnd.github+json")
-                .header("X-GitHub-Api-Version", "2022-11-28")
-                .build()
-            val body = Http.client.newCall(request).execute().use { response ->
-                check(response.isSuccessful) { "Update check failed: HTTP ${response.code}" }
-                response.body?.string() ?: error("Empty update response")
-            }
-            val release = json.parseToJsonElement(body) as? JsonObject
-                ?: error("Invalid update response")
+            val release = fetchLatestReleaseJson()
             val tag = release["tag_name"]?.jsonPrimitive?.contentOrNull
                 ?: error("Release tag missing")
             val url = release["html_url"]?.jsonPrimitive?.contentOrNull
-                ?: error("Release URL missing")
+                ?: "https://github.com$WEB_REPO_PATH/releases/tag/$tag"
             val apkUrl = apkAssetUrl(release)
             val notes = release["body"]?.jsonPrimitive?.contentOrNull
             val latest = tag.removePrefix("v")
@@ -141,6 +138,77 @@ object AppUpdateChecker {
     }
 
     /**
+     * Queries the GitHub REST API first and falls back to GitHub's web release
+     * endpoints when unauthenticated API requests are rate-limited (HTTP 403/429).
+     */
+    private fun fetchLatestReleaseJson(): JsonObject {
+        val apiRequest = Request.Builder()
+            .url(LATEST_RELEASE_URL)
+            .header("Accept", "application/vnd.github+json")
+            .header("X-GitHub-Api-Version", "2022-11-28")
+            .build()
+        val apiFailure = runCatching {
+            Http.client.newCall(apiRequest).execute().use { response ->
+                check(response.isSuccessful) { "Update check failed: HTTP ${response.code}" }
+                val body = response.body?.string() ?: error("Empty update response")
+                return json.parseToJsonElement(body) as? JsonObject
+                    ?: error("Invalid update response")
+            }
+        }.exceptionOrNull()
+
+        val webRequest = Request.Builder()
+            .url(WEB_LATEST_RELEASE_URL)
+            .header("Accept", "application/json")
+            .build()
+        val tag = Http.client.newCall(webRequest).execute().use { response ->
+            check(response.isSuccessful) {
+                apiFailure?.message ?: "Update check failed: HTTP ${response.code}"
+            }
+            val body = response.body?.string() ?: error("Empty release metadata")
+            val obj = json.parseToJsonElement(body) as? JsonObject
+                ?: error("Invalid release metadata")
+            obj["tag_name"]?.jsonPrimitive?.contentOrNull
+                ?: error("Release tag missing")
+        }
+
+        val assetsHtml = runCatching {
+            val eaRequest = Request.Builder()
+                .url("https://github.com$WEB_REPO_PATH/releases/expanded_assets/$tag")
+                .build()
+            Http.client.newCall(eaRequest).execute().use { response ->
+                if (response.isSuccessful) response.body?.string().orEmpty() else ""
+            }
+        }.getOrDefault("")
+
+        return parseExpandedAssetsJson(tag, assetsHtml)
+    }
+
+    internal fun parseExpandedAssetsJson(tag: String, html: String): JsonObject {
+        val pattern = Regex(
+            """href="(${Regex.escape(WEB_REPO_PATH)}/releases/download/${Regex.escape(tag)}/([^"]+))"""",
+            RegexOption.IGNORE_CASE,
+        )
+        val seen = HashSet<String>()
+        val assetsArray = buildJsonArray {
+            for (match in pattern.findAll(html)) {
+                val relPath = match.groupValues[1]
+                val name = match.groupValues[2]
+                if (!seen.add(name)) continue
+                addJsonObject {
+                    put("name", name)
+                    put("browser_download_url", "https://github.com$relPath")
+                    put("state", "uploaded")
+                }
+            }
+        }
+        return buildJsonObject {
+            put("tag_name", tag)
+            put("html_url", "https://github.com$WEB_REPO_PATH/releases/tag/$tag")
+            put("assets", assetsArray)
+        }
+    }
+
+    /**
      * Wipes any APK left over from a previous run. Called once at cold start
      * so a downloaded update is only ever "Install Now" for the session that
      * downloaded it — the next launch starts clean rather than trying to work
@@ -166,11 +234,11 @@ object AppUpdateChecker {
      * page.
      */
     private val TV_ASSET_REGEX = Regex(
-        """(^|[-_\s])tv([-_.\s]|$)|androidtv|nevtuneplustv|audifytv""",
+        """(^|[-_.\s])tv([-_.\s]|$)|androidtv|nevtuneplustv|audifytv""",
         RegexOption.IGNORE_CASE,
     )
     private val WEAR_ASSET_REGEX = Regex(
-        """(^|[-_\s])(wear|watch)([-_.\s]|$)|nevtunepluswear""",
+        """(^|[-_.\s])(wear|watch)([-_.\s]|$)|nevtunepluswear""",
         RegexOption.IGNORE_CASE,
     )
 

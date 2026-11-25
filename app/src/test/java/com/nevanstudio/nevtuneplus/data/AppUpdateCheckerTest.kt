@@ -94,6 +94,36 @@ class AppUpdateCheckerTest {
             null,
             AppUpdateChecker.apkAssetUrl(singleMobileRelease, listOf("arm64-v8a"), apkPrefix = "NevTunePlusTV-"),
         )
+
+        // GitHub replaces spaces with dots in uploaded release asset filenames.
+        val githubDotRelease = AppUpdateChecker.parseExpandedAssetsJson(
+            tag = "v26.11.25",
+            html = """
+                <a href="/nevanstudio/NevTuneplus/releases/download/v26.11.25/NevTune+.Mobile.-.26.11.25.apk">Mobile</a>
+                <a href="/nevanstudio/NevTuneplus/releases/download/v26.11.25/NevTune+.TV.-.26.11.25.apk">TV</a>
+                <a href="/nevanstudio/NevTuneplus/releases/download/v26.11.25/NevTune+.Wear.OS.-.26.11.25.apk">Wear</a>
+            """.trimIndent(),
+        )
+        assertEquals(
+            "https://github.com/nevanstudio/NevTuneplus/releases/download/v26.11.25/NevTune+.Mobile.-.26.11.25.apk",
+            AppUpdateChecker.apkAssetUrl(githubDotRelease, listOf("arm64-v8a"), apkPrefix = "NevTune+-"),
+        )
+        assertEquals(
+            "https://github.com/nevanstudio/NevTuneplus/releases/download/v26.11.25/NevTune+.TV.-.26.11.25.apk",
+            AppUpdateChecker.apkAssetUrl(githubDotRelease, listOf("arm64-v8a"), apkPrefix = "NevTunePlusTV-"),
+        )
+
+        val dotTvAndWearOnly = AppUpdateChecker.parseExpandedAssetsJson(
+            tag = "v26.11.25",
+            html = """
+                <a href="/nevanstudio/NevTuneplus/releases/download/v26.11.25/NevTune+.TV.-.26.11.25.apk">TV</a>
+                <a href="/nevanstudio/NevTuneplus/releases/download/v26.11.25/NevTune+.Wear.OS.-.26.11.25.apk">Wear</a>
+            """.trimIndent(),
+        )
+        assertEquals(
+            null,
+            AppUpdateChecker.apkAssetUrl(dotTvAndWearOnly, listOf("arm64-v8a"), apkPrefix = "NevTune+-"),
+        )
     }
 
     @Test
