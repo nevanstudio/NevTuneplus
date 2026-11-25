@@ -15,7 +15,7 @@ body:
     attributes:
       label: NevTune+ version
       description: Include the release version and whether it is stable or a prerelease.
-      placeholder: 1.8.6 stable
+      placeholder: 26.11.25 stable
     validations:
       required: true
   - type: input
@@ -40,7 +40,7 @@ body:
         - Install, update or onboarding
         - Search or discovery
         - Library or playlists
-        - Local nevanstudio
+        - Local audio
         - Playback or queue
         - Lyrics
         - Downloads or offline playback

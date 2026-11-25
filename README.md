@@ -1,313 +1,266 @@
 <p align="center">
-  <img src="./icon.png" alt="NevTune+ App Icon" width="130" />
+  <a href="https://nevtuneplus.vercel.app">
+    <img src="https://nevtuneplus.vercel.app/assets/icon.png" alt="NevTune+ Logo" width="112" />
+  </a>
 </p>
 
 <h1 align="center">NevTune+</h1>
 
 <p align="center">
-  <strong>Smart music discovery &nbsp;·&nbsp; Immersive playback &nbsp;·&nbsp; Every screen, one experience</strong>
+  <strong>Stream without ads. Keep your offline library. Listen across every screen.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-1.0.0-6366F1?style=for-the-badge&logoColor=white" alt="Version" />
-  <img src="https://img.shields.io/badge/Platform-Android%20%7C%20TV%20%7C%20Wear%20OS%20%7C%20Desktop-0EA5E9?style=for-the-badge" alt="Platforms" />
-  <img src="https://img.shields.io/badge/License-GPL--3.0-10B981?style=for-the-badge" alt="License" />
-  <img src="https://img.shields.io/badge/Build-Kotlin%20%2B%20Jetpack%20Compose-7C3AED?style=for-the-badge" alt="Build" />
-  <img src="https://img.shields.io/badge/Developer-NevanStudio-111827?style=for-the-badge" alt="Developer" />
-</p>
-
-<p align="center">
-  <a href="https://github.com/nevanstudio/NevTuneplus/releases/latest">
-    <img src="https://img.shields.io/badge/⬇️%20Download%20APK-Latest%20Release-F59E0B?style=flat-square" alt="Download" />
+  <a href="https://nevtuneplus.vercel.app">
+    <img src="https://img.shields.io/badge/Website-nevtuneplus.vercel.app-00C853?style=for-the-badge&logo=vercel&logoColor=white" alt="Official Website" />
   </a>
-  &nbsp;
-  <a href="https://github.com/nevanstudio/NevTuneplus/issues/new?template=bug_report.yml">
-    <img src="https://img.shields.io/badge/🐛%20Report%20a%20Bug-Issues-EF4444?style=flat-square" alt="Bug Report" />
+  <a href="https://github.com/nevanstudio/NevTuneplus/releases/latest">
+    <img src="https://img.shields.io/github/v/release/nevanstudio/NevTuneplus?style=for-the-badge&color=10B981&label=Release" alt="Latest Release" />
+  </a>
+  <a href="https://github.com/nevanstudio/NevTuneplus/releases">
+    <img src="https://img.shields.io/github/downloads/nevanstudio/NevTuneplus/total?style=for-the-badge&color=0EA5E9&label=Downloads" alt="Total Downloads" />
+  </a>
+  <a href="./LICENSE">
+    <img src="https://img.shields.io/badge/License-GPL--3.0-6366F1?style=for-the-badge" alt="GPL-3.0 License" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://nevtuneplus.vercel.app/download">
+    <img src="https://img.shields.io/badge/Download%20Builds-Mobile%20%C2%B7%20TV%20%C2%B7%20Wear%20OS-16A34A?style=flat-square" alt="Download Builds" />
   </a>
   &nbsp;
   <a href="https://github.com/nevanstudio/NevTuneplus/releases">
-    <img src="https://img.shields.io/badge/📋%20Release%20Notes-Changelog-64748B?style=flat-square" alt="Changelog" />
+    <img src="https://img.shields.io/badge/Changelogs-Releases-334155?style=flat-square" alt="Release Notes" />
+  </a>
+  &nbsp;
+  <a href="https://github.com/nevanstudio/NevTuneplus/issues/new?template=bug_report.yml">
+    <img src="https://img.shields.io/badge/Bug%20Report-Open%20Issue-DC2626?style=flat-square" alt="Report a Bug" />
+  </a>
+  &nbsp;
+  <a href="https://github.com/nevanstudio/NevTuneplus/commits/main">
+    <img src="https://img.shields.io/github/last-commit/nevanstudio/NevTuneplus?style=flat-square&color=475569" alt="Last Commit" />
   </a>
 </p>
 
 ---
 
-**NevTune+** is an open-source, premium music player and discovery app by **NevanStudio**. Find all your YouTube Music catalog including spotify playlist sync, JioSaavn catalog including sync and many more. Built for Android phones, Android TV, Wear OS, and Windows desktop. It brings together local library playback, streaming discovery, offline downloads, synchronized lyrics, smart playlists, and a polished multi-surface UI that feels at home on every screen.
+**NevTune+** is an open-source music player and streaming client by **NevanStudio**. It combines YouTube Music, Spotify playlist sync, and JioSaavn discovery with a full local audio player — built natively for Android phones, tablets, Android TV, Wear OS watches, and Windows desktop. No ads, no subscriptions, and zero analytics tracking.
+
+> 🌐 **Official Website & Direct Downloads:** [nevtuneplus.vercel.app](https://nevtuneplus.vercel.app)
 
 ---
 
-## 📸 Screenshots
-
-
-<div align="center">
-
-| Home Screen | Now Playing | Lyrics View |
-|:-----------:|:-----------:|:-----------:|
-| <img src="https://placehold.co/390x844/0F172A/E2E8F0?text=🏠+Home+Feed%0A%0ANevTune%2B" width="220" alt="Home Screen" /> | <img src="https://placehold.co/390x844/1E1B4B/E0E7FF?text=🎵+Now+Playing%0A%0ANevTune%2B" width="220" alt="Now Playing" /> | <img src="https://placehold.co/390x844/0C1A0C/DCFCE7?text=🎤+Lyrics+View%0A%0ANevTune%2B" width="220" alt="Lyrics View" /> |
-
-| Library & Downloads | Search & Explore |
-|:-------------------:|:----------------:|
-| <img src="https://placehold.co/390x844/1C1917/FEF9C3?text=📚+Library%0A%26+Downloads%0A%0ANevTune%2B" width="220" alt="Library" /> | <img src="https://placehold.co/390x844/0C0A09/FFEDD5?text=🔍+Search+%26%0AExplore%0A%0ANevTune%2B" width="220" alt="Search" /> |
-
-</div>
+## Screenshots
 
 <div align="center">
 
-**Android TV Experience**
+| Now Playing | Synced Lyrics | Music Library |
+|:-----------:|:-------------:|:-------------:|
+| <img src="https://nevtuneplus.vercel.app/assets/screenshots/now_playing_screen.png" width="240" alt="Now Playing screen" /> | <img src="https://nevtuneplus.vercel.app/assets/screenshots/half_lyrics_screen.png" width="240" alt="Synced lyrics view" /> | <img src="https://nevtuneplus.vercel.app/assets/screenshots/library_screen.png" width="240" alt="Library view" /> |
 
-<img src="https://placehold.co/1600x900/0B1120/CBD5E1?text=📺+NevTune%2B+for+Android+TV+%2F+Google+TV%0ABeautiful+10-foot+Experience" width="80%" alt="Android TV" />
+| Artist Page | Audio Hardware Profile | Sleep Timer |
+|:-----------:|:----------------------:|:-----------:|
+| <img src="https://nevtuneplus.vercel.app/assets/screenshots/full_artist_screen.png" width="240" alt="Artist screen" /> | <img src="https://nevtuneplus.vercel.app/assets/screenshots/device_capability_screen.png" width="240" alt="Device capabilities screen" /> | <img src="https://nevtuneplus.vercel.app/assets/screenshots/sleep_timer_screen.png" width="240" alt="Sleep timer screen" /> |
 
 </div>
 
 ---
 
-## ✨ Why NevTune+ Tho?
+## Highlights & Features
 
-NevTune+ is designed to make music listening effortless and beautiful — no matter on which device you're on. On top of that it brings you a seamless experience with no ads and able to play with device screen off.
-
-- 🎵 **Rich playback** — gapless, crossfade, background, session-restoring
-- 🔍 **Smart discovery** — continuous home feed, search, moods, radios, and more
-- 📥 **Offline-first** — download tracks, albums, and playlists for local playback
-- 🎤 **Synchronized lyrics** — real-time lyric-seeking across multiple providers
-- 📺 **Every screen** — phone, TV, Wear OS, and Windows desktop
-- 🎛️ **Power user controls** — equalizer, loudness normalization, sleep timer, speed control, silence skipping
-- 👥 **Listen Together** — party sync to listen in real-time with friends
-- 📊 **Listening stats** — personal insights and listening history
-
----
-
-## 🎯 Features
-
-### 🎧 Playback & Audio Engine
-
+### Playback & DSP Audio Engine
 | Feature | Details |
-|---------|---------|
-| Background playback | Persistent media session with notification controls |
-| Gapless & Crossfade | Smooth transitions with adjustable crossfade duration |
-| Equalizer | Custom EQ bands with per-output profiles |
-| Loudness normalization | Per-track gain correction |
-| Spatial audio | Processor-level spatial mixing |
-| Sleep timer | Auto-pause after a set duration |
-| Playback speed | 0.5× – 2.0× with pitch correction |
-| Silence skipping | Automatic silence detection and jump |
-| Audio quality | Stream quality selection per network type |
-| Format support | FLAC, ALAC, AAC, Opus, MP3, Dolby (via FFmpeg), DTS, HLS, DASH |
-| Output routing | Speaker, headphones, Bluetooth, Cast, and remote targets |
+|---|---|
+| **Playback Modes** | Gapless playback, adjustable crossfade, queue restore, and screen-off background sessions |
+| **Audio Processing** | 10-band EQ with presets, AutoEQ profiles, loudness normalization, and spatial mixing |
+| **Native Decoders** | Built-in FFmpeg (`librempeg`) + Media3/ExoPlayer — FLAC, ALAC, Opus, AAC, MP3, DSD, DTS, AC-3/E-AC-3, HLS & DASH |
+| **Smart Tools** | Playback speed (`0.5x – 2.0x`) with pitch lock, silence skipping, and sleep timer with fade-out |
+| **Hardware Routing** | Speaker, wired/Bluetooth audio, Google Cast, SMB2/3 (`SMBJ`), and WebDAV network shares |
 
-### 🔍 Discovery & Library
-
-- **Home feed** — personalized shelves with infinite continuation
-- **Search** — songs, albums, artists, playlists, podcasts, and profiles
-- **Explore** — moods, genres, trending, new releases, and curated mixes
-- **Radio** — artist radio and song-seeded stations
-- **Library** — local audio files, downloads, favorites, and playlists
-- **Smart Playlists** — auto-generated from history, favorites, and listening patterns
-- **Explicit content filter** — toggle `E`-labeled content visibility globally
-
-### 🎤 Lyrics
-
-- Synchronized (LRC) and timed lyrics from multiple providers
-- Lyric seeking — tap any line to jump to that moment
-- Providers: LRCLib, YouTube Music, Genius, Kugou, Unison, Apple, BiniLyrics, BetterLyrics, and more
-
-### 📱 Multi-Surface Experience
-
-| Surface | Description |
-|---------|-------------|
-| **Android Phone / Tablet** | Full-featured primary app — `minSdk 26`, `targetSdk 36` |
-| **Android TV / Google TV** | 10-foot leanback UI with D-pad navigation |
-| **Wear OS** | Companion app — delivered directly from the phone APK |
-| **Windows Desktop** | Native desktop client for PC listeners |
-
-### 🌐 Integrations
-
-| Integration | Features |
-|------------|---------|
-| **YouTube Music** | Stream, search, library sync via InnerTubeX |
-| **Spotify** | Playlist import, Canvas artwork, search |
-| **JioSaavn** | Catalogue and streaming support |
-| **Last.fm** | Scrobbling with API key configuration |
-| **Discord** | Rich Presence status updates |
-| **Google Cast** | Cast audio to Chromecast / Google Home |
-| **SMB / WebDAV** | Stream from local network shares |
+### Discovery, Lyrics & Social
+- **Unified Catalog** — Search and stream via YouTube Music (`InnerTube`), import Spotify playlists + Canvas motion artwork, or browse JioSaavn.
+- **Offline Library** — Download tracks, albums, and playlists locally with full metadata tagging (FLAC/MP4/WebM) alongside your existing device files.
+- **Multi-Provider Lyrics** — Synced LRC & word/line timing with tap-to-seek and translation across LRCLib, YouTube Music, Genius, Kugou, Apple, BetterLyrics, and more.
+- **Listen Together** — Host or join live synced listening rooms backed by the Go party server (`backend/`).
+- **Scrobbling & Presence** — Optional Last.fm scrobbling, ListenBrainz support, and Discord Rich Presence.
 
 ---
 
-## 🏗️ Project Structure
+## Multi-Platform Support
 
-```
-nevtune_plus1.0.0/
-├── app/              # Primary Android application
-│   ├── src/main/java/com/nevanstudio/nevtuneplus/
-│   │   ├── auth/         # Authentication & sessions (YT Music, Spotify, Discord)
-│   │   ├── data/         # Innertube, Spotify, Lyrics, Scrobbling, Stats
-│   │   ├── download/     # Offline downloads, FLAC/MP4/WebM tagging
-│   │   ├── playback/     # ExoPlayer pipeline, Cast, DSD, Smart playback
-│   │   └── ui/           # Compose screens, player, navigation, theming
-├── tv/               # Android TV / Google TV surface
-├── wearos/           # Wear OS companion app
-├── shared/           # Shared Kotlin Multiplatform business logic
-├── sharedUi/         # Shared Compose UI foundations & design system
-├── desktop/          # Windows desktop client
-├── web/              # Web workstream & InnerTube fixtures
-├── backend/          # Server-side sync infrastructure
-├── native/           # FFmpeg (librempeg) & native audio components
-├── docs/             # Design, architecture, and product documentation
-└── plans/            # Roadmap and planning documents
+| Surface | Module | Requirements | Package / Output |
+|---|---|---|---|
+| **Android Phone & Tablet** | `:app` | Android 8.0+ (`minSdk 26`, `targetSdk 36`) | `NevTune+ Mobile - <version>.apk` |
+| **Android TV / Google TV** | `:tv` | Android 8.0+ (`minSdk 26`, `targetSdk 36`) | `NevTune+ TV - <version>.apk` |
+| **Wear OS** | `:wearos` | Wear OS 3.0+ (`minSdk 30`, `targetSdk 36`) | `NevTune+ Wear OS - <version>.apk` |
+| **Desktop (Work in Progress)** | `desktop/` | Rust + Tauri/egui workspace | Native desktop binaries |
+
+> If a release is published with only Mobile selected, the APK is named `NevTune+ - <version>.apk`. All multi-platform builds include a `SHA256SUMS.txt` checksum manifest.
+
+---
+
+## Project Structure
+
+```text
+NevTuneplus/
+├── app/                         # Primary Android phone & tablet application
+│   └── src/main/java/com/nevanstudio/nevtuneplus/
+│       ├── auth/                # Sign-in flows & token handling (YT Music, Spotify, Discord)
+│       ├── data/                # API clients, update checker, lyrics, scrobblers, DB
+│       ├── download/            # Background downloader & container taggers
+│       ├── playback/            # Media3/ExoPlayer pipeline, DSP audio sink, Cast, SMB/WebDAV
+│       ├── ui/                  # Compose screens, MiniPlayer, theming, settings
+│       ├── wear/                # Phone-to-watch sync bridge
+│       └── widget/              # Home screen playback widgets
+├── tv/                          # Android TV / Google TV 10-foot D-pad experience
+│   └── src/main/java/com/nevanstudio/nevtuneplus/
+├── wearos/                      # Wear OS watch companion app
+│   └── src/main/java/com/nevanstudio/nevtuneplus/
+├── shared/                      # Kotlin Multiplatform (KMP) shared domain & network logic
+├── sharedUi/                    # Shared Compose Multiplatform UI components & theme system
+├── native/                      # Native C/C++ audio engine
+│   ├── analyzer/                # Signal analysis & DSP helpers
+│   └── ffmpeg/                  # Custom FFmpeg (librempeg) native bindings
+├── desktop/                     # Rust desktop client workspace (crates: music, ui, views, etc.)
+├── backend/                     # Go server for Listen Together rooms, presence & clock sync
+├── docs/
+│   ├── assets/banners/          # Release header banners (1280x640, banner_<version>.png)
+│   └── releases/                # Per-version release notes (RELEASE_NOTES_<version>.md)
+├── scripts/                     # Build, CalVer bump, and setup helpers
+│   ├── bump-version.ps1         # Stamps CalVer across Gradle, Cargo, lyrics UA & release notes
+│   ├── build-apks.bat / .sh     # Local release APK staging scripts
+│   └── setup.ps1 / .sh          # Dev environment bootstrap scripts
+└── .github/
+    ├── ISSUE_TEMPLATE/          # Bug report & tester feedback templates
+    └── workflows/               # CI checks (check.yml), signed releases (android.yml), backend deploy
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## Versioning & How Updates Work
 
-<div align="center">
+### Calendar Versioning (`CalVer`)
+NevTune+ uses **UTC Calendar Versioning** in the format **`YY.MM.DD`** (for example, `26.11.25`) instead of arbitrary semantic numbers:
 
-| Layer | Technology |
-|-------|-----------|
-| **Language** | Kotlin 2.4 |
-| **UI** | Jetpack Compose · Material 3 · Compose BOM 2026.09 |
-| **Architecture** | MVVM · Clean Architecture · Kotlin Coroutines & Flow |
-| **Multiplatform** | Kotlin Multiplatform (KMP) for shared modules |
-| **Media** | Media3 / ExoPlayer 1.11 · FFmpeg (librempeg) · HLS · DASH |
-| **Networking** | OkHttp · Ktor 3.6 · kotlinx.serialization |
-| **Images** | Coil 3 · Palette · SVG |
-| **Local Storage** | Room 2.8 · EncryptedSharedPreferences |
-| **Background Work** | WorkManager |
-| **Blur / Glass** | Haze (Telegram-style progressive blur) |
-| **Stream Extraction** | NewPipeExtractor v0.26.3 · InnerTubeX |
-| **JavaScript VM** | QuickJS for style/plugin sources · Rhino for YouTube JS |
-| **ML / AI** | ONNX Runtime 1.31 (Beat This! automix model) |
-| **Casting** | Google Cast SDK · MediaRouter |
-| **Network Shares** | SMBJ 0.15 (SMB2/3) |
-| **Wear** | Wearable Data Layer API · libadb-android |
-| **Build** | AGP 9.3 · Gradle Kotlin DSL · R8 / ProGuard |
+| Build Type | `versionName` | `versionCode` | Why |
+|---|---|---|---|
+| **Debug / Local Dev** | `1.0` | `1` | Pinned so midnight UTC rollovers don't invalidate Gradle's local build cache |
+| **Release Build** | `YY.MM.DD` (e.g. `26.11.25`) | `YYMMDD00` (e.g. `26112500`) | All three Android surfaces (`:app`, `:tv`, `:wearos`) lock to the exact same version |
+| **Desktop (`Cargo.toml`)** | `YY.M.D` (e.g. `26.1.5`) | — | Leading zeros stripped automatically by `scripts/bump-version.ps1` for Cargo SemVer compatibility |
 
-</div>
+To prepare a new version locally or inspect what will change:
 
----
+```powershell
+# Preview version bump + changelog generation without writing files
+./scripts/bump-version.ps1 -DryRun
 
-## 🚀 Getting Started
+# Stamp today's UTC CalVer (or pass an explicit date like 26.12.01)
+./scripts/bump-version.ps1
 
-### Prerequisites
+# Stamp, commit, and push a release tag (vYY.MM.DD)
+./scripts/bump-version.ps1 -Push
+```
 
-| Requirement | Version |
-|------------|---------|
-| Android Studio | Latest stable (Meerkat or newer) |
-| JDK | 21 |
-| Android SDK | Configured for API 26–37 |
-| CMake | 3.22.1 (for native FFmpeg module) |
-
-### Clone & Build
+You can also pass versions directly to Gradle at build time:
 
 ```bash
-# Clone the repository
-git clone https://github.com/nevanstudio/NevTuneplus.git
-cd nevtune_plus1.0.0
-
-# Debug build (phone)
-./gradlew assembleDevDebug
-
-# Release build (phone)
-./gradlew assembleProdRelease
-
-# Android TV
-./gradlew :tv:assembleProdRelease
-
-# Wear OS
-./gradlew :wearos:assembleProdRelease
+./gradlew :app:assembleProdRelease -Pnevtune.release=true -PnevtuneVersionName=26.11.25 -PnevtuneVersionCode=26112500
 ```
 
-### Optional: Local Secrets
+### Release Pipeline (`.github/workflows/android.yml`)
+1. Triggered manually via **Actions → NevTune+ Release → Run workflow** (with optional tag, notes, banner URL, dry-run flag, and Mobile/TV/Wear toggles) or by pushing a `v*` tag.
+2. Runs unit test gates and production lint across selected modules, then builds and signs universal APKs using the approved NevanStudio release keystore.
+3. Reads changelog notes from `docs/releases/RELEASE_NOTES_<version>.md` (falling back to recent git history if none exists) and automatically uploads `docs/assets/banners/banner_<version>.png` (`1280×640` recommended) as a release asset.
+4. Creates a **Draft release** on GitHub with verified APKs + `SHA256SUMS.txt` so every build can be inspected before clicking **Publish**.
 
-Create a `local.properties` file in the project root for optional integrations:
+### In-App & Website Updates
+- **Android & TV App (`AppUpdateChecker.kt`)**:
+  - Polls the latest non-draft GitHub release (`releases/latest`) once per launch (or on manual check in Settings) and compares versions numerically (`YY.MM.DD`).
+  - If unauthenticated REST API requests hit GitHub's hourly IP rate limit, `AppUpdateChecker` automatically falls back to `github.com/.../releases/latest` JSON metadata and `releases/expanded_assets/<tag>` so update checks keep working reliably.
+  - Selects the matching platform APK (avoiding cross-installing TV/Mobile/Wear builds), streams the download in-app into cache, and launches the Android package installer via `FileProvider`.
+  - Users migrating from legacy builds (`v1.8.7` and older, before the NevanStudio release certificate switch) are prompted to perform a one-time manual reinstall.
+- **Website ([nevtuneplus.vercel.app](https://nevtuneplus.vercel.app))**:
+  - Serves cached release data immediately for fast loads while running a lightweight background check on page open (`/api/releases/latest`) so download buttons, version tags, and changelogs always stay current.
+
+---
+
+## Tech Stack
+
+| Layer | Technologies |
+|---|---|
+| **Language** | Kotlin `2.4.21` · Rust (desktop) · Go (backend) · C/C++ (FFmpeg JNI) |
+| **Android UI** | Jetpack Compose · Material 3 · Compose BOM `2026.09.00` · Haze progressive blur |
+| **Multiplatform** | Kotlin Multiplatform (`:shared`, `:sharedUi`) · Compose Multiplatform `1.12.2` |
+| **Media & Extraction** | Media3 / ExoPlayer `1.11.1` · NewPipeExtractor `v0.26.3` · InnerTubeX · FFmpeg (`librempeg`) |
+| **Storage & Network** | Room · EncryptedSharedPreferences · OkHttp · Ktor · SMBJ |
+| **Audio / ML** | ONNX Runtime (automix beat analysis) · 32-bit float DSP pipeline |
+| **Build Tooling** | Android Gradle Plugin `9.3.1` · JDK `21` · CMake `3.22.1` |
+
+---
+
+## Building from Source
+
+### Prerequisites
+- **JDK 21**
+- **Android Studio** (latest stable) with Android SDK (`compileSdk 37`, `minSdk 26`, `targetSdk 36`)
+- **CMake 3.22.1** + Android NDK (installed via SDK Manager for `native/` builds)
+
+### Commands
+
+```bash
+git clone https://github.com/nevanstudio/NevTuneplus.git
+cd NevTuneplus
+
+# Run mobile debug build
+./gradlew :app:assembleDevDebug
+
+# Install debug build directly to a connected phone
+./gradlew :app:installDevDebug
+
+# Build production release APKs locally (unsigned unless keystore.properties is configured)
+./gradlew :app:assembleProdRelease :tv:assembleProdRelease :wearos:assembleProdRelease
+```
+
+<details>
+<summary>Optional: local.properties & signing setup</summary>
+
+Create a `local.properties` file in the root directory if you want to include optional service keys in your local build:
 
 ```properties
-# Last.fm scrobbling (optional)
 LASTFM_API_KEY=your_key_here
 LASTFM_SECRET=your_secret_here
-
-# Listen Together server (optional — defaults to public server)
 LISTEN_TOGETHER_SERVER=https://your-server.example.com
 ```
 
-### Run in Android Studio
+For local signed release builds, create `keystore.properties` (already gitignored):
 
-1. Open the project root in Android Studio
-2. Select a run configuration from the toolbar:
-   - **Phone / Tablet** → `app`
-   - **Android TV** → `tv`
-   - **Wear OS** → `wearos`
-3. Choose your emulator or connected device and press **▶ Run**
-
-> **Tip:** For faster debug installs, run `./gradlew installDevDebug` — the `verifyDevInstall` task auto-runs ART pre-verification, cutting cold-start time significantly.
-
----
-
-## 📦 Download
-
-| Platform | Download |
-|----------|---------|
-| Android Phone / Tablet (Universal) | `NevTune+-1.0.0.apk` |
-| Android Phone / Tablet (ARM64) | `NevTune+-1.0.0_arm64-v8a.apk` |
-| Android TV / Google TV | `NevTunePlusTV-1.0.0.apk` |
-| Wear OS | `NevTunePlusWear-prod-universal-release.apk` |
-| Windows x64 | `NevTune+-Setup.exe` |
-
-> All releases: [github.com/nevanstudio/NevTuneplus/releases](https://github.com/nevanstudio/NevTuneplus/releases)
-
----
-
-## 🗺️ Roadmap
-
-Planned improvements and features on the horizon:
-
-- [ ] Smarter listening recommendations powered by on-device ML
-- [ ] Advanced search filters (year, BPM, key, duration)
-- [ ] Deeper listening statistics dashboards
-- [ ] Podcast and audiobook workflows
-- [ ] Expanded local metadata intelligence
-- [ ] App-wide accessibility (TalkBack, large text, reduced motion)
-- [ ] macOS and Linux desktop builds
-- [ ] Additional lyric providers and karaoke mode
-
----
-
-## 🤝 Contributing
-
-Contributions, bug reports, and feature suggestions are welcome!
-
-- 🐛 **Bug report:** [Open an issue](https://github.com/nevanstudio/NevTuneplus/issues/new?template=bug_report.yml)
-- 💬 **Feedback:** [General tester feedback](https://github.com/nevanstudio/NevTuneplus/issues/new?template=tester-feedback.yml)
-- 📖 **Documentation:** See [`docs/`](./docs/) and [`plans/`](./plans/) for architecture and design notes
-
-Please read the [Code of Conduct](./CODE_OF_CONDUCT.md) before contributing.
-
----
-
-## 📄 License
-
-NevTune+ is open-source software licensed under the **GNU General Public License v3.0**.
-
-```
-Copyright © 2026 NevanStudio. All rights reserved.
-
-This program is free software: you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the
-Free Software Foundation, either version 3 of the License, or (at your
-option) any later version.
+```properties
+storeFile=path/to/keystore.jks
+storePassword=your_store_password
+keyAlias=your_alias
+keyPassword=your_key_password
 ```
 
-See the full [LICENSE](./LICENSE) file for details.
+</details>
 
 ---
 
-## 👨‍💻 Developer
+## Contributing & Community
+
+Bug reports, tester feedback, and pull requests are welcome:
+- **Official Website:** [nevtuneplus.vercel.app](https://nevtuneplus.vercel.app)
+- **Report a Bug:** [Bug Report Template](https://github.com/nevanstudio/NevTuneplus/issues/new?template=bug_report.yml)
+- **Tester Feedback:** [Feedback Form](https://github.com/nevanstudio/NevTuneplus/issues/new?template=tester-feedback.yml)
+- **Guidelines:** See [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)
+
+---
+
+## License
+
+NevTune+ is free, open-source software licensed under the **GNU General Public License v3.0 (GPL-3.0)**.  
+See [LICENSE](./LICENSE) for the full terms.
 
 <p align="center">
-  <strong>NevTune+ is designed and developed by <a href="https://github.com/nevanstudio">NevanStudio</a></strong><br/>
-  <em>Built for music lovers. Designed to feel at home on every screen.</em>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Made%20with%20❤️%20by-NevanStudio-6366F1?style=for-the-badge" alt="Made by NevanStudio" />
+  Built by <a href="https://github.com/nevanstudio">NevanStudio</a>
 </p>

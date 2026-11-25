@@ -12,8 +12,8 @@ body:
     id: app-version
     attributes:
       label: NevTune+ version
-      description: Include the release tag (for example, 1.8.2) and whether it was stable or prerelease.
-      placeholder: 1.8.2 stable
+      description: Include the release tag (for example, 26.11.25) and whether it was stable or prerelease.
+      placeholder: 26.11.25 stable
     validations:
       required: true
   - type: input
@@ -38,7 +38,7 @@ body:
         - Install or onboarding
         - Search or discovery
         - Library or playlists
-        - Local nevanstudio
+        - Local audio
         - Playback or queue
         - Lyrics
         - Downloads or offline playback
