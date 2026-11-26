@@ -1300,4 +1300,19 @@ Project: NevTune+
     <string name="auto_empty_albums_subtitle">Проверьте подключение и повторите попытку</string>
     <string name="hide_explicit_content">Скрывать контент с пометкой 18+</string>
     <string name="hide_explicit_content_subtitle">Исключать из рекомендаций и поиска песни и альбомы, помеченные каталогом как содержащие откровенный контент. Элементы без пометки остаются видимыми.</string>
+    <string name="performance_profile">Профиль производительности</string>
+    <string name="performance_profile_auto">Авто</string>
+    <string name="performance_profile_lite">Лёгкий</string>
+    <string name="performance_profile_balanced">Сбалансированный</string>
+    <string name="performance_profile_high_quality">Высокое качество</string>
+    <string name="performance_profile_active_summary">Активен: %1$s · %2$s</string>
+    <string name="performance_profile_downgraded_summary">Активен: %1$s (адаптировано из-за %2$s) · %3$s</string>
+    <string name="performance_profile_lite_description">Минимум анимаций, без размытия в реальном времени и низкий расход памяти</string>
+    <string name="performance_profile_balanced_description">Умеренные эффекты с автоматической защитой памяти и плавности</string>
+    <string name="performance_profile_high_description">Полные эффекты, увеличенный кэш обложек и высокая частота обновления</string>
+    <string name="performance_hardware_detected">Оборудование устройства</string>
+    <string name="performance_override_warning_title">Включить профиль «%1$s»?</string>
+    <string name="performance_override_warning_message">Устройство (%1$s) рассчитано на режим %2$s. Выбор профиля %3$s может повысить расход батареи, нагрузку на память и вызвать пропуски кадров.</string>
+    <string name="performance_override_apply">Выбрать %1$s</string>
+    <string name="performance_keep_recommended">Оставить %1$s</string>
 </resources>

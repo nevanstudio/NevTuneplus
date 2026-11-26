@@ -228,6 +228,10 @@ private val seedCache = object : LinkedHashMap<String, Seed>(0, 0.75f, true) {
     override fun removeEldestEntry(eldest: Map.Entry<String, Seed>) = size > SEED_CACHE_ENTRIES
 }
 
+fun clearArtworkPaletteCaches() {
+    seedCache.clear()
+}
+
 /** Deep enough to cover a session's browsing without holding a screenful of colours. */
 private const val SEED_CACHE_ENTRIES = 128
 

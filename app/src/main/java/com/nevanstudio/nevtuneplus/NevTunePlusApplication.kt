@@ -15,10 +15,15 @@ import coil3.SingletonImageLoader
 import coil3.disk.DiskCache
 import coil3.disk.directory
 import coil3.memory.MemoryCache
+import coil3.request.allowRgb565
 import coil3.request.crossfade
 import coil3.svg.SvgDecoder
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import okhttp3.OkHttpClient
+import com.nevanstudio.nevtuneplus.ui.performance.AdaptivePerformanceConfig
+import com.nevanstudio.nevtuneplus.ui.performance.AdaptivePerformanceEngine
+import com.nevanstudio.nevtuneplus.ui.player.clearArtworkBackdropCaches
+import com.nevanstudio.nevtuneplus.ui.theme.clearArtworkPaletteCaches
 import com.nevanstudio.nevtuneplus.auth.AuthStore
 import com.nevanstudio.nevtuneplus.data.DebugLog
 import com.nevanstudio.nevtuneplus.data.Http
@@ -55,6 +60,12 @@ internal const val LOW_RAM_IMAGE_MEMORY_CACHE_HEAP_FRACTION = 0.15
 
 internal fun imageMemoryCacheHeapFraction(isLowRamDevice: Boolean): Double =
     if (isLowRamDevice) LOW_RAM_IMAGE_MEMORY_CACHE_HEAP_FRACTION else IMAGE_MEMORY_CACHE_HEAP_FRACTION
+
+internal fun imageMemoryCacheHeapFraction(config: AdaptivePerformanceConfig): Double =
+    config.imageMemoryCacheFraction
+
+internal fun imageDiskCacheMaxBytes(config: AdaptivePerformanceConfig): Long =
+    config.imageDiskCacheMb * 1024L * 1024L
 
 open class NevTunePlusApplication : Application(), SingletonImageLoader.Factory {
 
@@ -229,8 +240,9 @@ open class NevTunePlusApplication : Application(), SingletonImageLoader.Factory 
      * Naming a directory alongside it keeps that cache somewhere identifiable
      * rather than in the process's temp dir.
      */
-    override fun newImageLoader(context: PlatformContext): ImageLoader =
-        ImageLoader.Builder(context)
+    override fun newImageLoader(context: PlatformContext): ImageLoader {
+        val perfConfig = AdaptivePerformanceEngine.config.value
+        val builder = ImageLoader.Builder(context)
             // Covers on the WebDAV server need the credential or every one
             // of them 401s — which reads as "this track has no artwork".
             // Coil's own transport never sees Http.client's interceptor, so
@@ -250,28 +262,32 @@ open class NevTunePlusApplication : Application(), SingletonImageLoader.Factory 
                 MemoryCache.Builder()
                     .maxSizePercent(
                         context,
-                        imageMemoryCacheHeapFraction(
-                            context.getSystemService(ActivityManager::class.java)?.isLowRamDevice == true,
-                        ),
+                        imageMemoryCacheHeapFraction(perfConfig),
                     )
                     .build()
             }
             .diskCache {
                 DiskCache.Builder()
                     .directory(cacheDir.resolve("image_cache"))
-                    .maxSizeBytes(100L * 1024 * 1024)
+                    .maxSizeBytes(imageDiskCacheMaxBytes(perfConfig))
                     .build()
             }
-            // Covers arriving with a hard cut read as the list flickering as
-            // it scrolls; a short fade reads as them developing.
-            .crossfade(MotionTokens.ARTWORK_CROSSFADE_MS)
-            .build()
+            .allowRgb565(perfConfig.useRgb565Artwork)
+        return if (perfConfig.imageCrossfadeMs > 0) {
+            builder.crossfade(perfConfig.imageCrossfadeMs).build()
+        } else {
+            builder.crossfade(false).build()
+        }
+    }
 
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
         com.nevanstudio.nevtuneplus.data.CrashReporter.recordLowMemory(level)
+        AdaptivePerformanceEngine.onTrimMemory(level)
         @Suppress("DEPRECATION")
         if (level >= TRIM_MEMORY_RUNNING_LOW || level >= TRIM_MEMORY_BACKGROUND) {
+            clearArtworkBackdropCaches()
+            clearArtworkPaletteCaches()
             runCatching {
                 val cache = SingletonImageLoader.get(this).memoryCache ?: return@runCatching
                 @Suppress("DEPRECATION")
@@ -287,6 +303,10 @@ open class NevTunePlusApplication : Application(), SingletonImageLoader.Factory 
     override fun onLowMemory() {
         super.onLowMemory()
         com.nevanstudio.nevtuneplus.data.CrashReporter.recordLowMemory(999)
+        @Suppress("DEPRECATION")
+        AdaptivePerformanceEngine.onTrimMemory(TRIM_MEMORY_COMPLETE)
+        clearArtworkBackdropCaches()
+        clearArtworkPaletteCaches()
         runCatching {
             SingletonImageLoader.get(this).memoryCache?.clear()
         }

@@ -1269,4 +1269,19 @@ Project: NevTune+
     <string name="smart_playlists">智慧播放清單</string>
     <string name="auto_empty_albums_title">沒有可用的專輯</string>
     <string name="auto_empty_albums_subtitle">請檢查網路連線後重試</string>
+    <string name="performance_profile">效能模式</string>
+    <string name="performance_profile_auto">自動</string>
+    <string name="performance_profile_lite">輕量</string>
+    <string name="performance_profile_balanced">均衡</string>
+    <string name="performance_profile_high_quality">高畫質</string>
+    <string name="performance_profile_active_summary">目前：%1$s · %2$s</string>
+    <string name="performance_profile_downgraded_summary">目前：%1$s（因%2$s已調整）· %3$s</string>
+    <string name="performance_profile_lite_description">精簡動畫、關閉即時模糊並降低封面記憶體佔用</string>
+    <string name="performance_profile_balanced_description">適度特效，並自動提供記憶體與幀率保護</string>
+    <string name="performance_profile_high_description">完整視覺特效、更大封面快取與高更新率支援</string>
+    <string name="performance_hardware_detected">裝置硬體</string>
+    <string name="performance_override_warning_title">要使用 %1$s 模式嗎？</string>
+    <string name="performance_override_warning_message">此裝置（%1$s）較適合 %2$s 模式。選擇 %3$s 可能會增加耗電、記憶體壓力或掉幀。</string>
+    <string name="performance_override_apply">仍要使用 %1$s</string>
+    <string name="performance_keep_recommended">保持 %1$s</string>
 </resources>

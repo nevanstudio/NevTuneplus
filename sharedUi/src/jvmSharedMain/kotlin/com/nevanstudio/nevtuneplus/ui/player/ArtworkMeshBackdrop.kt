@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.nevanstudio.nevtuneplus.ui.graphics.ColorUtils
+import com.nevanstudio.nevtuneplus.ui.performance.LocalAdaptivePerformance
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.SingletonImageLoader
 import coil3.request.ImageRequest
@@ -100,10 +101,11 @@ fun rememberFullArtworkBlurImage(
     prepare: Boolean = true,
 ): ImageBitmap? {
     val context = LocalPlatformContext.current
+    val perf = LocalAdaptivePerformance.current
     var image by remember(imageUrl) { mutableStateOf(imageUrl?.let(fullBlurCache::get)) }
 
-    LaunchedEffect(imageUrl, artPx, prepare) {
-        if (!prepare || imageUrl == null || image != null) return@LaunchedEffect
+    LaunchedEffect(imageUrl, artPx, prepare, perf.disableBlurAndGlass) {
+        if (!prepare || perf.disableBlurAndGlass || imageUrl == null || image != null) return@LaunchedEffect
         val request = ImageRequest.Builder(context)
             // Same URL as the player's 1200px sleeve, so this is a small decode
             // from Coil's shared fetch/disk result rather than another download.
@@ -321,9 +323,10 @@ fun ArtworkMeshBackdrop(
 ) {
     val reduceAnimation by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
     val reduceDynamicBlur by PlayerSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
+    val perf = LocalAdaptivePerformance.current
     // RenderEffect only; below API 31 `blur` is a no-op. It is not missed here —
     // the CPU-side interpolation is what carries the smoothness.
-    val canBlur = !reduceDynamicBlur && renderEffectBlurSupported
+    val canBlur = !reduceDynamicBlur && !perf.disableBlurAndGlass && !perf.disableMeshGradientBlur && renderEffectBlurSupported
 
     // The mesh on screen, and the one fading in over it. Two states rather than
     // one animated value because what crossfades here is a pair of bitmaps, not
@@ -439,6 +442,11 @@ private const val FULL_BLUR_PASSES = 3
 /** A handful of recent covers; each entry is only 64 KiB at 128x128 ARGB. */
 private val fullBlurCache = object : LinkedHashMap<String, ImageBitmap>(0, 0.75f, true) {
     override fun removeEldestEntry(eldest: Map.Entry<String, ImageBitmap>) = size > 8
+}
+
+fun clearArtworkBackdropCaches() {
+    meshCache.clear()
+    fullBlurCache.clear()
 }
 
 /** Three small box passes approximate a broad Gaussian blur at thumbnail scale. */

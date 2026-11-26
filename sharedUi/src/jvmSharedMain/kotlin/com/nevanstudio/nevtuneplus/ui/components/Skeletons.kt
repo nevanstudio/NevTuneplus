@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.nevanstudio.nevtuneplus.ui.performance.LocalAdaptivePerformance
 import com.nevanstudio.nevtuneplus.ui.player.PlayerSettings
 
 /**
@@ -67,7 +68,8 @@ private val SubtitleWidths = listOf(0.34f, 0.44f, 0.27f, 0.38f, 0.31f)
 fun ShimmerBox(modifier: Modifier = Modifier, shape: Shape = BlockShape) {
     val base = MaterialTheme.colorScheme.surfaceVariant
     val reduceAnimation by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
-    if (reduceAnimation) {
+    val perf = LocalAdaptivePerformance.current
+    if (reduceAnimation || perf.reduceAnimations || perf.disableContinuousMotion) {
         Box(modifier.clip(shape).background(base))
         return
     }
@@ -184,10 +186,10 @@ private fun HeroShelfSkeleton() {
     }
 }
 
-/** Reserved at the top of Play while Recents loads, matching its saved layout. */
+/** Reserved at the top of Home while Recents loads, matching its compact layout. */
 fun LazyListScope.recentlyPlayedSkeleton(listLayout: Boolean) {
     item(key = "skeleton:recently-played") {
-        Column(Modifier.padding(bottom = 26.dp)) {
+        Column(Modifier.padding(bottom = 18.dp)) {
             RecentsHeaderSkeleton()
             if (listLayout) {
                 BoxWithConstraints {
@@ -199,24 +201,27 @@ fun LazyListScope.recentlyPlayedSkeleton(listLayout: Boolean) {
                     ) {
                         item(key = "skeleton:track-column") {
                             Column(Modifier.width(columnWidth)) {
-                                repeat(4) { index -> CompactSongRowSkeleton(index) }
+                                repeat(3) { index -> CompactSongRowSkeleton(index) }
                             }
                         }
                     }
                 }
             } else {
-                BoxWithConstraints {
-                    val cardWidth = heroCardWidth(maxWidth)
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
-                        userScrollEnabled = false,
-                    ) {
-                        items(2, key = { "skeleton-slot:$it" }) {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    userScrollEnabled = false,
+                ) {
+                    items(4, key = { "skeleton-slot:$it" }) { card ->
+                        Column(Modifier.width(122.dp)) {
                             ShimmerBox(
-                                modifier = Modifier.width(cardWidth).aspectRatio(HERO_CARD_RATIO),
-                                shape = RoundedCornerShape(18.dp),
+                                modifier = Modifier.width(122.dp).aspectRatio(1f),
+                                shape = RoundedCornerShape(10.dp),
                             )
+                            Spacer(Modifier.height(6.dp))
+                            SkeletonLine(fraction = TitleWidths[card % TitleWidths.size], height = 12.dp)
+                            Spacer(Modifier.height(5.dp))
+                            SkeletonLine(fraction = SubtitleWidths[card % SubtitleWidths.size], height = 10.dp)
                         }
                     }
                 }
@@ -242,40 +247,56 @@ private fun RecentsHeaderSkeleton() {
     }
 }
 
-/** The compact carousel of square cards used by every shelf below the first. */
+/** The compact carousel of square cards used by shelves. */
 @Composable
-fun ShelfSkeleton(index: Int = 0, cardWidth: Dp = SHELF_CARD_WIDTH, cardCorner: Dp = 12.dp) {
-    Column(Modifier.padding(bottom = 26.dp)) {
+fun ShelfSkeleton(index: Int = 0, cardWidth: Dp = 122.dp, cardCorner: Dp = 10.dp) {
+    Column(Modifier.padding(bottom = 18.dp)) {
         SectionHeaderSkeleton(index = index)
         LazyRow(
             contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
             userScrollEnabled = false,
         ) {
-            items(3, key = { "skeleton-card:$it" }) { card ->
+            items(4, key = { "skeleton-card:$it" }) { card ->
                 Column(Modifier.width(cardWidth)) {
                     ShimmerBox(
                         modifier = Modifier.width(cardWidth).aspectRatio(1f),
                         shape = RoundedCornerShape(cardCorner),
                     )
-                    Spacer(Modifier.height(12.dp))
-                    SkeletonLine(fraction = TitleWidths[card % TitleWidths.size], height = 13.dp)
                     Spacer(Modifier.height(6.dp))
-                    SkeletonLine(fraction = SubtitleWidths[card % SubtitleWidths.size], height = 11.dp)
+                    SkeletonLine(fraction = TitleWidths[card % TitleWidths.size], height = 12.dp)
+                    Spacer(Modifier.height(5.dp))
+                    SkeletonLine(fraction = SubtitleWidths[card % SubtitleWidths.size], height = 10.dp)
                 }
             }
         }
     }
 }
 
-/** Home and Explore while the first page of shelves is still loading. */
-fun LazyListScope.feedSkeleton(shelves: Int = 3, firstIsHero: Boolean = true) {
+/** Home while the first page of shelves is still loading. */
+fun LazyListScope.feedSkeleton(shelves: Int = 3, firstIsHero: Boolean = false) {
     if (firstIsHero) {
         item(key = "skeleton:hero") { HeroShelfSkeleton() }
         items(shelves - 1, key = { "skeleton:shelf:$it" }) { index ->
             ShelfSkeleton(index = index + 1)
         }
     } else {
+        item(key = "skeleton:quick-access") {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = PAGE_GUTTER)
+                    .padding(top = 4.dp, bottom = 18.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                repeat(3) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ShimmerBox(Modifier.weight(1f).height(50.dp), RoundedCornerShape(10.dp))
+                        ShimmerBox(Modifier.weight(1f).height(50.dp), RoundedCornerShape(10.dp))
+                    }
+                }
+            }
+        }
         items(shelves, key = { "skeleton:shelf:$it" }) { index ->
             ShelfSkeleton(index = index)
         }

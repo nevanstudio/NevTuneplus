@@ -3,6 +3,10 @@
 package com.nevanstudio.nevtuneplus.ui.screens
 
 import com.nevanstudio.nevtuneplus.data.settings.ThemeColorSource
+import com.nevanstudio.nevtuneplus.ui.performance.AdaptivePerformanceEngine
+import com.nevanstudio.nevtuneplus.ui.performance.PerformanceProfileMode
+import com.nevanstudio.nevtuneplus.ui.performance.PerformanceTier
+import com.nevanstudio.nevtuneplus.ui.performance.isProfileDemandingForHardware
 import com.nevanstudio.nevtuneplus.ui.theme.NevTuneColors
 
 import com.nevanstudio.nevtuneplus.data.CrashReporter
@@ -324,6 +328,9 @@ fun SettingsScreen(
     val filterNonMusicAudio by AppSettings.filterNonMusicAudio.collectAsStateWithLifecycle()
     val hideExplicitContent by AppSettings.hideExplicitContent.collectAsStateWithLifecycle()
     val localMusicFolderUri by AppSettings.localMusicFolderUri.collectAsStateWithLifecycle()
+    val performanceProfileMode by AppSettings.performanceProfileMode.collectAsStateWithLifecycle()
+    val adaptivePerf by AppSettings.adaptivePerformance.collectAsStateWithLifecycle()
+    val hardwareSnapshot by AdaptivePerformanceEngine.hardwareSnapshot.collectAsStateWithLifecycle()
     val highPerformanceMode by AppSettings.highPerformanceMode.collectAsStateWithLifecycle()
     val performanceRefreshRate by AppSettings.performanceRefreshRate.collectAsStateWithLifecycle()
     val currentDisplay = LocalView.current.display
@@ -396,6 +403,7 @@ fun SettingsScreen(
     var confirmClearListeningData by remember { mutableStateOf(false) }
     var showPerformanceWarning by remember { mutableStateOf(false) }
     var showPerformanceConfirmation by remember { mutableStateOf(false) }
+    var pendingDemandingProfile by remember { mutableStateOf<PerformanceProfileMode?>(null) }
     val backupScope = rememberCoroutineScope()
 
     val batterySettingsLauncher = rememberLauncherForActivityResult(
@@ -583,73 +591,75 @@ fun SettingsScreen(
         // above lists that as the module's own row now. Lossless itself is no
         // longer a setting at all — see
         // [SourceResolver.requestForNow][com.nevanstudio.nevtuneplus.data.sources.SourceResolver.requestForNow].
-        SearchableSettingsGroup(search, header = stringResource(R.string.audio_quality)) {
-            val sourceTitle = stringResource(R.string.source)
-            val sourceSubtitle = stringResource(R.string.sources_subtitle)
-            row(sourceTitle, sourceSubtitle, "addon", "lossless") {
-                SettingsRow(
-                    icon = Icons.Rounded.Extension,
-                    title = sourceTitle,
-                    subtitle = sourceSubtitle,
-                    onClick = onSources,
-                )
-            }
-            val onWifiTitle = stringResource(R.string.on_wifi)
-            row(onWifiTitle, "wi-fi", "streaming quality") {
-                SettingsRow(
-                    icon = Icons.Rounded.Wifi,
-                    title = onWifiTitle,
-                    badge = stringResource(R.string.in_use).takeIf { metered == false },
-                    value = wifiQuality.localizedLabel(),
-                    onClick = { picking = QualityTarget.WIFI },
-                )
-            }
-            val onMobileDataTitle = stringResource(R.string.on_mobile_data)
-            row(onMobileDataTitle, "cellular", "streaming quality") {
-                SettingsRow(
-                    icon = Icons.Rounded.SignalCellularAlt,
-                    title = onMobileDataTitle,
-                    badge = stringResource(R.string.in_use).takeIf { metered == true },
-                    value = cellularQuality.localizedLabel(),
-                    onClick = { picking = QualityTarget.CELLULAR },
-                )
-            }
-            // Sits with the quality ceilings rather than with Playback: it
-            // decides which version of a track gets fetched, the same question
-            // the two rows above answer, and not how one is played back.
-            //
-            // Greyed rather than hidden where the device can't decode E-AC-3.
-            // A missing row reads as a feature the app doesn't have; a disabled
-            // one with a reason under it is the difference between "Audify
-            // has no Atmos" and "this phone has no Dolby decoder", and only the
-            // second is true. The stored preference is left untouched either
-            // way — see [AppSettings.dolbyAtmos].
-            val dolbyAtmosTitle = stringResource(R.string.dolby_atmos)
-            row(dolbyAtmosTitle, "surround", "e-ac-3") {
-                SettingsRow(
-                    iconPainter = painterResource(R.drawable.ic_dolby_atmos),
-                    title = dolbyAtmosTitle,
-                    subtitle = stringResource(
-                        if (dolbyAtmosSupported) {
-                            R.string.dolby_atmos_subtitle
-                        } else {
-                            R.string.dolby_atmos_unavailable
+        val audioQualityGroup = @Composable {
+            SearchableSettingsGroup(search, header = stringResource(R.string.audio_quality)) {
+                val sourceTitle = stringResource(R.string.source)
+                val sourceSubtitle = stringResource(R.string.sources_subtitle)
+                row(sourceTitle, sourceSubtitle, "addon", "lossless") {
+                    SettingsRow(
+                        icon = Icons.Rounded.Extension,
+                        title = sourceTitle,
+                        subtitle = sourceSubtitle,
+                        onClick = onSources,
+                    )
+                }
+                val onWifiTitle = stringResource(R.string.on_wifi)
+                row(onWifiTitle, "wi-fi", "streaming quality") {
+                    SettingsRow(
+                        icon = Icons.Rounded.Wifi,
+                        title = onWifiTitle,
+                        badge = stringResource(R.string.in_use).takeIf { metered == false },
+                        value = wifiQuality.localizedLabel(),
+                        onClick = { picking = QualityTarget.WIFI },
+                    )
+                }
+                val onMobileDataTitle = stringResource(R.string.on_mobile_data)
+                row(onMobileDataTitle, "cellular", "streaming quality") {
+                    SettingsRow(
+                        icon = Icons.Rounded.SignalCellularAlt,
+                        title = onMobileDataTitle,
+                        badge = stringResource(R.string.in_use).takeIf { metered == true },
+                        value = cellularQuality.localizedLabel(),
+                        onClick = { picking = QualityTarget.CELLULAR },
+                    )
+                }
+                // Sits with the quality ceilings rather than with Playback: it
+                // decides which version of a track gets fetched, the same question
+                // the two rows above answer, and not how one is played back.
+                //
+                // Greyed rather than hidden where the device can't decode E-AC-3.
+                // A missing row reads as a feature the app doesn't have; a disabled
+                // one with a reason under it is the difference between "Audify
+                // has no Atmos" and "this phone has no Dolby decoder", and only the
+                // second is true. The stored preference is left untouched either
+                // way — see [AppSettings.dolbyAtmos].
+                val dolbyAtmosTitle = stringResource(R.string.dolby_atmos)
+                row(dolbyAtmosTitle, "surround", "e-ac-3") {
+                    SettingsRow(
+                        iconPainter = painterResource(R.drawable.ic_dolby_atmos),
+                        title = dolbyAtmosTitle,
+                        subtitle = stringResource(
+                            if (dolbyAtmosSupported) {
+                                R.string.dolby_atmos_subtitle
+                            } else {
+                                R.string.dolby_atmos_unavailable
+                            },
+                        ),
+                        enabled = dolbyAtmosSupported,
+                        trailing = {
+                            Switch(
+                                checked = dolbyAtmos && dolbyAtmosSupported,
+                                onCheckedChange = AppSettings::setDolbyAtmos,
+                                enabled = dolbyAtmosSupported,
+                                colors = SwitchDefaults.colors(
+                                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                    checkedBorderColor = MaterialTheme.colorScheme.primary,
+                                ),
+                            )
                         },
-                    ),
-                    enabled = dolbyAtmosSupported,
-                    trailing = {
-                        Switch(
-                            checked = dolbyAtmos && dolbyAtmosSupported,
-                            onCheckedChange = AppSettings::setDolbyAtmos,
-                            enabled = dolbyAtmosSupported,
-                            colors = SwitchDefaults.colors(
-                                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                                checkedBorderColor = MaterialTheme.colorScheme.primary,
-                            ),
-                        )
-                    },
-                    onClick = { AppSettings.setDolbyAtmos(!dolbyAtmos) },
-                )
+                        onClick = { AppSettings.setDolbyAtmos(!dolbyAtmos) },
+                    )
+                }
             }
         }
 
@@ -783,6 +793,8 @@ fun SettingsScreen(
                 onClick = { selectedCategory = catYourData },
             )
 
+            audioQualityGroup()
+
             SettingsSectionHeader("General & About")
             SettingsCategoryCard(
                 title = catLanguage,
@@ -810,6 +822,10 @@ fun SettingsScreen(
                 onClick = { selectedCategory = "About" },
             )
             Spacer(Modifier.height(16.dp))
+        }
+
+        if (!categoryIndex) {
+            audioQualityGroup()
         }
 
         SearchableSettingsGroup(search, header = "About") {
@@ -1556,39 +1572,78 @@ fun SettingsScreen(
         }
 
         SearchableSettingsGroup(search, header = stringResource(R.string.performance)) {
-            val highPerformanceModeTitle = stringResource(R.string.high_performance_mode)
-            row(highPerformanceModeTitle, "frame rate", "refresh rate", "hz", "battery", "smooth") {
+            val profileTitle = stringResource(R.string.performance_profile)
+            val profileLabels = listOf(
+                stringResource(R.string.performance_profile_auto),
+                stringResource(R.string.performance_profile_lite),
+                stringResource(R.string.performance_profile_balanced),
+                stringResource(R.string.performance_profile_high_quality),
+            )
+            val activeTierDescription = when (adaptivePerf.tier) {
+                PerformanceTier.LOW_END -> stringResource(R.string.performance_profile_lite_description)
+                PerformanceTier.MID_RANGE -> stringResource(R.string.performance_profile_balanced_description)
+                PerformanceTier.HIGH_END -> stringResource(R.string.performance_profile_high_description)
+            }
+            val activeProfileSubtitle = if (adaptivePerf.runtimeDowngraded && adaptivePerf.downgradeReason != null) {
+                stringResource(
+                    R.string.performance_profile_downgraded_summary,
+                    adaptivePerf.tier.label,
+                    adaptivePerf.downgradeReason!!,
+                    activeTierDescription,
+                )
+            } else {
+                stringResource(
+                    R.string.performance_profile_active_summary,
+                    adaptivePerf.tier.label,
+                    activeTierDescription,
+                )
+            }
+            row(profileTitle, "auto", "lite", "balanced", "high quality", "performance", "ram", "fps", "battery") {
                 SettingsRow(
                     icon = NevTunePlusIcons.Performance,
-                    title = highPerformanceModeTitle,
-                    subtitle = if (highPerformanceMode) {
-                        stringResource(R.string.high_performance_active, selectedPerformanceRefreshRate)
-                    } else {
-                        stringResource(R.string.high_performance_subtitle)
-                    },
-                    trailing = {
-                        Switch(
-                            checked = highPerformanceMode,
-                            onCheckedChange = { enabled ->
-                                if (enabled) {
-                                    showPerformanceWarning = true
-                                } else {
-                                    AppSettings.setHighPerformanceMode(false)
-                                }
-                            },
-                            colors = SwitchDefaults.colors(
-                                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                                checkedBorderColor = MaterialTheme.colorScheme.primary,
-                            ),
-                        )
-                    },
-                    onClick = {
-                        if (highPerformanceMode) {
-                            AppSettings.setHighPerformanceMode(false)
-                        } else {
-                            showPerformanceWarning = true
+                    title = profileTitle,
+                    subtitle = activeProfileSubtitle,
+                )
+                SegmentedControl(
+                    options = profileLabels,
+                    selectedIndex = PerformanceProfileMode.entries.indexOf(performanceProfileMode).coerceAtLeast(0),
+                    onSelect = { index ->
+                        val selected = PerformanceProfileMode.entries[index]
+                        if (selected == performanceProfileMode) return@SegmentedControl
+                        when {
+                            isProfileDemandingForHardware(selected, adaptivePerf.hardwareTier) -> {
+                                pendingDemandingProfile = selected
+                            }
+                            selected == PerformanceProfileMode.HIGH_QUALITY -> {
+                                showPerformanceWarning = true
+                            }
+                            else -> {
+                                AppSettings.setPerformanceProfileMode(selected)
+                            }
                         }
                     },
+                    modifier = Modifier.padding(
+                        start = TEXT_INSET,
+                        end = ROW_INSET,
+                        bottom = 12.dp,
+                    ),
+                )
+            }
+            val hardwareTitle = stringResource(R.string.performance_hardware_detected)
+            val hardwareSubtitle = buildString {
+                hardwareSnapshot?.let { append(it.summaryLabel()).append(" · ") }
+                append("Recommended: ")
+                append(adaptivePerf.hardwareTier.label)
+                if (adaptivePerf.tier == PerformanceTier.HIGH_END && highPerformanceMode) {
+                    append(" · ")
+                    append(stringResource(R.string.high_performance_active, selectedPerformanceRefreshRate))
+                }
+            }
+            row(hardwareTitle, "hardware", "cpu", "ram", "device", "tier") {
+                SettingsRow(
+                    icon = Icons.Rounded.Apps,
+                    title = hardwareTitle,
+                    subtitle = hardwareSubtitle,
                 )
             }
             if (highPerformanceMode) {
@@ -2384,7 +2439,7 @@ fun SettingsScreen(
                 TextButton(
                     onClick = {
                         showPerformanceConfirmation = false
-                        AppSettings.setHighPerformanceMode(true)
+                        AppSettings.setPerformanceProfileMode(PerformanceProfileMode.HIGH_QUALITY)
                     },
                 ) {
                     Text(stringResource(R.string.enable))
@@ -2393,6 +2448,46 @@ fun SettingsScreen(
             dismissButton = {
                 TextButton(onClick = { showPerformanceConfirmation = false }) {
                     Text(stringResource(R.string.not_yet))
+                }
+            },
+        )
+    }
+
+    pendingDemandingProfile?.let { demandingMode ->
+        val hardwareSummary = hardwareSnapshot?.summaryLabel() ?: adaptivePerf.hardwareTier.label
+        AlertDialog(
+            onDismissRequest = { pendingDemandingProfile = null },
+            title = {
+                Text(stringResource(R.string.performance_override_warning_title, demandingMode.label))
+            },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.performance_override_warning_message,
+                        hardwareSummary,
+                        adaptivePerf.hardwareTier.label,
+                        demandingMode.label,
+                    ),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingDemandingProfile = null
+                        AppSettings.setPerformanceProfileMode(demandingMode)
+                    },
+                ) {
+                    Text(stringResource(R.string.performance_override_apply, demandingMode.label))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        pendingDemandingProfile = null
+                        AppSettings.setPerformanceProfileMode(PerformanceProfileMode.AUTO)
+                    },
+                ) {
+                    Text(stringResource(R.string.performance_keep_recommended, adaptivePerf.hardwareTier.label))
                 }
             },
         )

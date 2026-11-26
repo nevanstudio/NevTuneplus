@@ -36,6 +36,7 @@ import com.nevanstudio.nevtuneplus.ui.graphics.toImageBitmap
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.nevanstudio.nevtuneplus.ui.graphics.ColorUtils
+import com.nevanstudio.nevtuneplus.ui.performance.LocalAdaptivePerformance
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.SingletonImageLoader
 import coil3.request.ImageRequest
@@ -114,7 +115,11 @@ fun MeshGradientBackground(
      */
     colorFadeMillis: Int = 1400,
 ) {
-    val reduceAnimation by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
+    val reduceAnimationSetting by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
+    val perf = LocalAdaptivePerformance.current
+    val reduceAnimation = reduceAnimationSetting || perf.reduceAnimations
+    val effectiveContinuous = continuous && !perf.disableContinuousMotion && !reduceAnimation
+    val effectiveBlur = if (perf.disableMeshGradientBlur || perf.disableBlurAndGlass) 0.dp else blurRadius
 
     val tuned = (palette.colors.ifEmpty { FallbackColors } + FallbackColors)
         .take(4)
@@ -131,14 +136,14 @@ fun MeshGradientBackground(
     // Read in the draw lambda, not here: an Animatable read during draw
     // invalidates only the drawing, leaving composition out of the loop.
     val phase = remember { Animatable(0f) }
-    LaunchedEffect(trackKey, reduceAnimation, continuous, animated) {
+    LaunchedEffect(trackKey, reduceAnimation, effectiveContinuous, animated) {
         when {
             !animated || reduceAnimation -> phase.snapTo(0f)
             // A full turn at a time, restarted rather than looped with an
             // infinite spec: the blobs' speeds are irrational multiples of each
             // other, so the pattern never repeats, and a linear phase keeps the
             // orbit even instead of easing to a halt each lap.
-            continuous -> while (isActive) {
+            effectiveContinuous -> while (isActive) {
                 phase.animateTo(
                     targetValue = phase.value + (2 * PI).toFloat(),
                     animationSpec = tween(driftMillis * 4, easing = LinearEasing),
@@ -174,7 +179,7 @@ fun MeshGradientBackground(
                 scaleY = 1.3f
             }
             .background(baseColor)
-            .blur(blurRadius),
+            .let { if (effectiveBlur > 0.dp) it.blur(effectiveBlur) else it },
     ) {
         val anchors = listOf(
             Offset(0.20f, 0.25f),

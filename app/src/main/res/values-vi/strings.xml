@@ -1225,4 +1225,19 @@ Project: NevTune+
     <string name="auto_empty_albums_subtitle">Kiểm tra kết nối rồi thử lại</string>
     <string name="hide_explicit_content">Ẩn nội dung nhạy cảm</string>
     <string name="hide_explicit_content_subtitle">Loại các bài hát và album được danh mục đánh dấu là có nội dung nhạy cảm khỏi mục khám phá và đề xuất. Các mục không có nhãn vẫn hiển thị.</string>
+    <string name="performance_profile">Hồ sơ hiệu năng</string>
+    <string name="performance_profile_auto">Tự động</string>
+    <string name="performance_profile_lite">Nhẹ</string>
+    <string name="performance_profile_balanced">Cân bằng</string>
+    <string name="performance_profile_high_quality">Chất lượng cao</string>
+    <string name="performance_profile_active_summary">Đang bật: %1$s · %2$s</string>
+    <string name="performance_profile_downgraded_summary">Đang bật: %1$s (điều chỉnh do %2$s) · %3$s</string>
+    <string name="performance_profile_lite_description">Giảm tối đa hoạt ảnh, tắt làm mờ thời gian thực và tiết kiệm RAM</string>
+    <string name="performance_profile_balanced_description">Hiệu ứng cân bằng với bảo vệ bộ nhớ và tốc độ khung hình tự động</string>
+    <string name="performance_profile_high_description">Đầy đủ hiệu ứng, bộ nhớ đệm ảnh bìa lớn và tần số quét cao</string>
+    <string name="performance_hardware_detected">Phần cứng thiết bị</string>
+    <string name="performance_override_warning_title">Dùng hồ sơ %1$s?</string>
+    <string name="performance_override_warning_message">Thiết bị này (%1$s) phù hợp với chế độ %2$s. Chọn %3$s có thể gây hao pin, tốn RAM hoặc tụt khung hình.</string>
+    <string name="performance_override_apply">Dùng %1$s</string>
+    <string name="performance_keep_recommended">Giữ %1$s</string>
 </resources>

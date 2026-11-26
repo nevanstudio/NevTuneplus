@@ -2,19 +2,24 @@
 // Project: NevTune+
 package com.nevanstudio.nevtuneplus.ui.screens
 
-import com.nevanstudio.nevtuneplus.ui.components.contextClick
-import com.nevanstudio.nevtuneplus.ui.AppUi
-import com.nevanstudio.nevtuneplus.sharedui.resources.*
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.resources.DrawableResource
+import androidx.compose.animation.animateColorAsState
+import com.nevanstudio.nevtuneplus.ui.performance.LocalAdaptivePerformance
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
-import org.jetbrains.compose.resources.stringResource
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import com.nevanstudio.nevtuneplus.ui.components.longPressMenuClickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -23,116 +28,138 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import com.nevanstudio.nevtuneplus.ui.components.ShelfRow
-import com.nevanstudio.nevtuneplus.ui.components.ExplicitBadge
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.pulltorefresh.PullToRefreshState
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.produceState
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.Bluetooth
 import androidx.compose.material.icons.rounded.Cached
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.GroupAdd
+import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.rounded.LibraryMusic
-import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.AccountCircle
-import androidx.compose.material.icons.rounded.Bluetooth
-import com.nevanstudio.nevtuneplus.ui.icons.NevTunePlusIcons
+import androidx.compose.material.icons.rounded.Storage
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.nevanstudio.nevtuneplus.data.model.CARD_ART_PX
-import com.nevanstudio.nevtuneplus.data.model.HEADER_ART_PX
 import com.nevanstudio.nevtuneplus.data.model.HomeShelf
 import com.nevanstudio.nevtuneplus.data.model.ROW_ART_PX
 import com.nevanstudio.nevtuneplus.data.model.ShelfItem
-import com.nevanstudio.nevtuneplus.data.model.stableShelfComposeKeys
+import com.nevanstudio.nevtuneplus.data.model.ShelfLayout
 import com.nevanstudio.nevtuneplus.data.model.Song
 import com.nevanstudio.nevtuneplus.data.model.UiState
-import java.util.Locale
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
-import java.time.LocalTime
-import kotlinx.coroutines.delay
 import com.nevanstudio.nevtuneplus.data.model.artworkAt
+import com.nevanstudio.nevtuneplus.data.model.stableShelfComposeKeys
 import com.nevanstudio.nevtuneplus.data.settings.LibraryViewType
+import com.nevanstudio.nevtuneplus.sharedui.resources.*
+import com.nevanstudio.nevtuneplus.ui.AppUi
+import com.nevanstudio.nevtuneplus.ui.components.ExplicitBadge
 import com.nevanstudio.nevtuneplus.ui.components.MessageState
 import com.nevanstudio.nevtuneplus.ui.components.PAGE_GUTTER
-import com.nevanstudio.nevtuneplus.ui.components.RowMoreButton
 import com.nevanstudio.nevtuneplus.ui.components.PlayingAccent
 import com.nevanstudio.nevtuneplus.ui.components.PullToRefresh
+import com.nevanstudio.nevtuneplus.ui.components.RowMoreButton
 import com.nevanstudio.nevtuneplus.ui.components.SHELF_CARD_WIDTH
 import com.nevanstudio.nevtuneplus.ui.components.SearchPlayingBars
+import com.nevanstudio.nevtuneplus.ui.components.ShelfRow
 import com.nevanstudio.nevtuneplus.ui.components.SignInBanner
+import com.nevanstudio.nevtuneplus.ui.components.contextClick
 import com.nevanstudio.nevtuneplus.ui.components.feedMoreSkeleton
-import com.nevanstudio.nevtuneplus.ui.player.PlayerSettings
 import com.nevanstudio.nevtuneplus.ui.components.feedSkeleton
+import com.nevanstudio.nevtuneplus.ui.components.longPressMenuClickable
 import com.nevanstudio.nevtuneplus.ui.components.recentlyPlayedSkeleton
-import com.nevanstudio.nevtuneplus.ui.components.heroCardWidth
 import com.nevanstudio.nevtuneplus.ui.components.thumbnailBorder
 import com.nevanstudio.nevtuneplus.ui.components.trackColumnWidth
+import com.nevanstudio.nevtuneplus.ui.icons.NevTunePlusIcons
+import com.nevanstudio.nevtuneplus.ui.motion.MotionTokens
+import com.nevanstudio.nevtuneplus.ui.player.AudioOutputSheet
 import com.nevanstudio.nevtuneplus.ui.player.MeshGradientBackground
 import com.nevanstudio.nevtuneplus.ui.player.MeshPalette
-import com.nevanstudio.nevtuneplus.ui.player.AudioOutputSheet
+import com.nevanstudio.nevtuneplus.ui.player.PlayerSettings
 import com.nevanstudio.nevtuneplus.ui.player.rememberOutputPicker
 import dev.chrisbanes.haze.HazeState
+import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import java.time.LocalTime
+import java.util.Locale
 
 /** How far the Listen now heading and feed sit above the shared top inset. */
 private val HOME_TITLE_LIFT = 64.dp
 
 private const val RECENTS_TITLE = "Recents"
-private const val RECENT_TRACKS_PER_COLUMN = 4
+private const val RECENT_TRACKS_PER_COLUMN = 3
+
+/** Compact Spotify-inspired dimensions for the redesigned Home feed. */
+internal val HOME_COMPACT_CARD_WIDTH = 122.dp
+internal val HOME_TONAL_CARD_WIDTH = 124.dp
+internal val HOME_ARTIST_CIRCLE_SIZE = 104.dp
+internal val HOME_VIDEO_CARD_WIDTH = 164.dp
+private val HOME_SECTION_SPACING = 18.dp
+private val HOME_CARD_SPACING = 10.dp
+private val HOME_SHORTCUT_HEIGHT = 50.dp
+private val HOME_SHORTCUT_SPACING = 8.dp
+private val HOME_TRACK_ART_SIZE = 46.dp
 
 /** Minimum useful width for one Quick Picks column before another is added. */
 private val QUICK_PICK_MIN_COLUMN_WIDTH = 208.dp
@@ -168,10 +195,148 @@ data class WeeklyRecapCardData(
     val topArtist: String?,
 )
 
+/** Filter categories shown in the compact Home header chip strip. */
+internal enum class HomeContentFilter(val label: String) {
+    ALL("All"),
+    SONGS("Songs"),
+    PLAYLISTS("Playlists"),
+    ALBUMS("Albums"),
+    ARTISTS("Artists"),
+}
+
+/** Presentation treatments that add visual rhythm across Home shelves without bloat. */
+internal enum class ShelfPresentationStyle {
+    ARTIST_CIRCLES,
+    VIDEO_CARDS,
+    TONAL_CARDS,
+    COMPACT_CARDS,
+}
+
+internal data class QuickAccessShortcut(
+    val item: ShelfItem,
+    val sourceTitle: String,
+)
+
+internal fun ShelfItem.isArtistItem(): Boolean {
+    if (videoId != null || browseId == null) return false
+    val id = browseId.orEmpty()
+    val sub = subtitle.trim().lowercase(Locale.ROOT)
+    return id.startsWith("UC") || sub == "artist" || sub.startsWith("artist •") || sub.contains("monthly")
+}
+
+internal fun ShelfItem.isAlbumItem(): Boolean {
+    if (videoId != null || browseId == null) return false
+    val id = browseId.orEmpty()
+    val sub = subtitle.trim().lowercase(Locale.ROOT)
+    return id.startsWith("MPREb") ||
+        id.startsWith("OLAK") ||
+        sub.contains("album") ||
+        sub.contains("single") ||
+        sub == "ep" ||
+        sub.startsWith("ep •")
+}
+
+internal fun ShelfItem.isPlaylistItem(): Boolean =
+    videoId == null && browseId != null && !isArtistItem() && !isAlbumItem()
+
+internal fun ShelfItem.matchesHomeFilter(filter: HomeContentFilter): Boolean = when (filter) {
+    HomeContentFilter.ALL -> true
+    HomeContentFilter.SONGS -> videoId != null
+    HomeContentFilter.ARTISTS -> isArtistItem()
+    HomeContentFilter.ALBUMS -> isAlbumItem()
+    HomeContentFilter.PLAYLISTS -> isPlaylistItem()
+}
+
+internal fun availableHomeFilters(
+    shelves: List<HomeShelf>,
+    timeAwareShelf: HomeShelf?,
+): List<HomeContentFilter> {
+    val allItems = shelves.flatMap { it.items } + timeAwareShelf?.items.orEmpty()
+    if (allItems.isEmpty()) return listOf(HomeContentFilter.ALL)
+    return buildList {
+        add(HomeContentFilter.ALL)
+        if (allItems.any { it.matchesHomeFilter(HomeContentFilter.SONGS) }) add(HomeContentFilter.SONGS)
+        if (allItems.any { it.matchesHomeFilter(HomeContentFilter.PLAYLISTS) }) add(HomeContentFilter.PLAYLISTS)
+        if (allItems.any { it.matchesHomeFilter(HomeContentFilter.ALBUMS) }) add(HomeContentFilter.ALBUMS)
+        if (allItems.any { it.matchesHomeFilter(HomeContentFilter.ARTISTS) }) add(HomeContentFilter.ARTISTS)
+    }
+}
+
+internal fun filterHomeShelves(
+    shelves: List<HomeShelf>,
+    filter: HomeContentFilter,
+): List<HomeShelf> {
+    if (filter == HomeContentFilter.ALL) return shelves
+    return shelves.mapNotNull { shelf ->
+        val filtered = shelf.items.filter { it.matchesHomeFilter(filter) }
+        filtered.takeIf { it.isNotEmpty() }?.let { shelf.copy(items = it) }
+    }
+}
+
+/**
+ * Selects up to [maxItems] compact Spotify-style quick-access tiles from real feed data,
+ * blending recent listening items and browsable mixes/albums so the top grid stays varied.
+ */
+internal fun selectQuickAccessShortcuts(
+    shelves: List<HomeShelf>,
+    timeAwareShelf: HomeShelf?,
+    maxItems: Int = 6,
+): List<QuickAccessShortcut> {
+    if (maxItems <= 0) return emptyList()
+    val recents = shelves.firstOrNull { isHistoryShelfTitle(it.title) }
+    val collections = shelves
+        .filterNot { isHistoryShelfTitle(it.title) }
+        .flatMap { shelf -> shelf.items.filter { it.browseId != null }.map { QuickAccessShortcut(it, shelf.title) } }
+    val timePicks = timeAwareShelf?.items.orEmpty().map { QuickAccessShortcut(it, timeAwareShelf?.title.orEmpty()) }
+    val recentShortcuts = recents?.items.orEmpty().map { QuickAccessShortcut(it, recents?.title.orEmpty()) }
+    val fallbackTracks = shelves
+        .filterNot { isHistoryShelfTitle(it.title) }
+        .flatMap { shelf -> shelf.items.map { QuickAccessShortcut(it, shelf.title) } }
+
+    val picked = ArrayList<QuickAccessShortcut>(maxItems)
+    val seenKeys = HashSet<String>()
+    fun tryAdd(shortcut: QuickAccessShortcut) {
+        if (picked.size >= maxItems) return
+        val key = shortcut.item.videoId ?: shortcut.item.browseId ?: shortcut.item.title
+        if (seenKeys.add(key)) picked += shortcut
+    }
+
+    // Interleave recent items and discovery collections for a balanced 2x3 quick-access grid.
+    val recentTake = recentShortcuts.take(3)
+    val collectionTake = (collections + timePicks).take(4)
+    val maxPair = maxOf(recentTake.size, collectionTake.size)
+    for (i in 0 until maxPair) {
+        recentTake.getOrNull(i)?.let(::tryAdd)
+        collectionTake.getOrNull(i)?.let(::tryAdd)
+    }
+    (recentShortcuts + collections + timePicks + fallbackTracks).forEach(::tryAdd)
+    return picked
+}
+
+internal fun shelfPresentationStyle(shelf: HomeShelf): ShelfPresentationStyle {
+    val lowerTitle = shelf.title.trim().lowercase(Locale.ROOT)
+    val items = shelf.items
+    if (shelf.layout == ShelfLayout.VIDEO ||
+        (items.isNotEmpty() && items.count(ShelfItem::isVideo) * 2 > items.size)
+    ) {
+        return ShelfPresentationStyle.VIDEO_CARDS
+    }
+    if (lowerTitle.contains("artist") ||
+        (items.isNotEmpty() && items.count { it.isArtistItem() } * 2 >= items.size)
+    ) {
+        return ShelfPresentationStyle.ARTIST_CIRCLES
+    }
+    if (lowerTitle in setOf("listen again", "keep listening", "mixed for you", "made for you", "for you", "featured playlists for you")) {
+        return ShelfPresentationStyle.TONAL_CARDS
+    }
+    return ShelfPresentationStyle.COMPACT_CARDS
+}
+
+private fun isHistoryShelfTitle(title: String): Boolean =
+    title.trim().lowercase(Locale.ROOT) in setOf("recents", "recently played")
+
 private fun List<ShelfItem>.playingItemMatcher(song: Song?): (ShelfItem) -> Boolean {
     song ?: return { false }
-    // The card that was played, when the shelf holds it, and only that one —
-    // see [com.nevanstudio.nevtuneplus.data.model.playingRowMatcher], which rows use.
     if (any { it.videoId == song.videoId }) return { it.videoId == song.videoId }
     val byName = firstOrNull { it.videoId != null && it.title == song.title && it.subtitle == song.artist }
         ?: return { false }
@@ -195,22 +360,10 @@ fun HomeScreen(
     title: String?,
     signedIn: Boolean = true,
     onSignIn: (() -> Unit)? = null,
-    /**
-     * Holding a card rather than tapping it. Every card on the feed answers,
-     * whichever kind it is: the caller reads the item the same way it does for
-     * a tap, so a track card opens the track menu and a card that points at a
-     * collection opens the album / playlist one.
-     */
     onItemLongPress: ((ShelfItem) -> Unit)? = null,
-    // Explore doesn't page — only Home has a continuation worth following.
     onLoadMore: (() -> Unit)? = null,
     loadingMore: Boolean = false,
     recentlyPlayedLoading: Boolean = false,
-    /**
-     * Whether the feed's first shelf gets the big full-bleed cards. The phone
-     * leads with them; on a window as wide as a desktop's they are posters, so
-     * there every shelf is the ordinary row.
-     */
     leadHero: Boolean = true,
     currentSong: Song? = null,
     isPlaying: Boolean = false,
@@ -234,11 +387,33 @@ fun HomeScreen(
     var showAudioOutput by remember { mutableStateOf(false) }
     val outputHaze = remember { HazeState() }
     val openAudioOutput = rememberOutputPicker { showAudioOutput = true }
+    var activeFilter by rememberSaveable { mutableStateOf(HomeContentFilter.ALL) }
+
+    val loadedShelves = (state as? UiState.Success)?.data.orEmpty()
+    val availableFilters = remember(loadedShelves, timeAwareShelf) {
+        availableHomeFilters(loadedShelves, timeAwareShelf)
+    }
+    LaunchedEffect(availableFilters) {
+        if (activeFilter !in availableFilters) {
+            activeFilter = HomeContentFilter.ALL
+        }
+    }
+
+    val quickAccessShortcuts = remember(loadedShelves, timeAwareShelf, activeFilter) {
+        if (activeFilter != HomeContentFilter.ALL) emptyList()
+        else selectQuickAccessShortcuts(loadedShelves, timeAwareShelf, maxItems = 6)
+    }
+
     val featuredItemIds = remember(timeAwareShelf) {
         timeAwareShelf?.items.orEmpty().mapNotNull { it.videoId ?: it.browseId }.toSet()
     }
-    val isChronologicalHistoryShelf: (HomeShelf) -> Boolean = { shelf ->
-        shelf.title.trim().lowercase(Locale.ROOT) in setOf("recents", "recently played")
+
+    val filteredTimeAware = remember(timeAwareShelf, activeFilter) {
+        if (timeAwareShelf == null) null
+        else if (activeFilter == HomeContentFilter.ALL) timeAwareShelf
+        else timeAwareShelf.items.filter { it.matchesHomeFilter(activeFilter) }
+            .takeIf { it.isNotEmpty() }
+            ?.let { timeAwareShelf.copy(items = it) }
     }
 
     PullToRefresh(
@@ -250,8 +425,6 @@ fun HomeScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            // The heading sits higher than the other tabs' first row: pull the
-            // whole feed up by [HOME_TITLE_LIFT] with it.
             contentPadding = if (title != null) {
                 PaddingValues(
                     top = (contentPadding.calculateTopPadding() - HOME_TITLE_LIFT).coerceAtLeast(0.dp),
@@ -275,23 +448,43 @@ fun HomeScreen(
                     )
                 }
             }
+            if (state is UiState.Success && availableFilters.size > 1) {
+                item(key = "home-filter-chips") {
+                    HomeFilterChipRow(
+                        filters = availableFilters,
+                        selected = activeFilter,
+                        onSelect = { activeFilter = it },
+                    )
+                }
+            }
             if (!signedIn && onSignIn != null) {
                 item(key = "home:sign-in") {
                     SignInBanner(onSignIn = onSignIn, modifier = Modifier.padding(bottom = 8.dp))
                 }
             }
-            if (timeAwareShelf != null) {
+            if (state is UiState.Success && quickAccessShortcuts.isNotEmpty()) {
+                item(key = "home-quick-access-grid") {
+                    QuickAccessGrid(
+                        shortcuts = quickAccessShortcuts,
+                        currentSong = currentSong,
+                        isPlaying = isPlaying,
+                        onItemClick = onItemClick,
+                        onItemLongPress = onItemLongPress,
+                    )
+                }
+            }
+            if (filteredTimeAware != null) {
                 item(key = "time-aware-discovery-shelf") {
-                    Shelf(
-                        shelf = timeAwareShelf,
-                        onItemClick = { item -> onItemClick(item, timeAwareShelf.title) },
+                    TimeAwareDiscoverySection(
+                        shelf = filteredTimeAware,
+                        onItemClick = { item -> onItemClick(item, filteredTimeAware.title) },
                         onItemLongPress = onItemLongPress,
                         currentSong = currentSong,
                         isPlaying = isPlaying,
                     )
                 }
             }
-            if (weeklyRecap != null && onWeeklyRecapClick != null) {
+            if (activeFilter == HomeContentFilter.ALL && weeklyRecap != null && onWeeklyRecapClick != null) {
                 item(key = "weekly-listening-recap") {
                     WeeklyRecapCard(
                         recap = weeklyRecap,
@@ -304,12 +497,9 @@ fun HomeScreen(
                 is UiState.Loading -> {
                     if (recentlyPlayedLoading) {
                         recentlyPlayedSkeleton(listLayout = recentsViewType == LibraryViewType.LIST)
-                        // Recents owns the leading layout while its request is
-                        // pending, so the feed behind it starts with ordinary
-                        // shelf placeholders rather than another hero card.
                         feedSkeleton(firstIsHero = false)
                     } else {
-                        feedSkeleton(firstIsHero = leadHero)
+                        feedSkeleton(firstIsHero = false)
                     }
                 }
                 is UiState.Error -> item(key = "home:error") {
@@ -319,25 +509,25 @@ fun HomeScreen(
                     if (recentlyPlayedLoading) {
                         recentlyPlayedSkeleton(listLayout = recentsViewType == LibraryViewType.LIST)
                     }
-                    // The loading skeleton already owns the hero slot. Until
-                    // Recently Played lands, every real shelf must retain its
-                    // compact-card layout instead of briefly becoming a hero.
-                    itemsIndexedShelves(
-                        // The time-aware lead is selected from this same feed;
-                        // keep its cards from appearing a second time below.
-                        shelves = if (featuredItemIds.isEmpty()) state.data else state.data.mapNotNull { shelf ->
-                            if (isChronologicalHistoryShelf(shelf)) return@mapNotNull shelf
+                    val deduplicated = if (featuredItemIds.isEmpty()) {
+                        state.data
+                    } else {
+                        state.data.mapNotNull { shelf ->
+                            if (isHistoryShelfTitle(shelf.title)) return@mapNotNull shelf
                             val remaining = shelf.items.filterNot { (it.videoId ?: it.browseId) in featuredItemIds }
                             remaining.takeIf { it.isNotEmpty() }?.let { shelf.copy(items = it) }
-                        },
+                        }
+                    }
+                    val displayShelves = filterHomeShelves(deduplicated, activeFilter)
+                    itemsIndexedShelves(
+                        shelves = displayShelves,
                         onItemClick = onItemClick,
                         onItemLongPress = onItemLongPress,
                         onPlayAllQuickPicks = onPlayAllQuickPicks,
                         currentSong = currentSong,
                         isPlaying = isPlaying,
-                        onMoodClick = onMoodClick,
-                        onListenTogetherClick = onListenTogetherClick,
-                        firstIsHero = leadHero && !recentlyPlayedLoading,
+                        onMoodClick = onMoodClick.takeIf { activeFilter == HomeContentFilter.ALL },
+                        onListenTogetherClick = onListenTogetherClick.takeIf { activeFilter == HomeContentFilter.ALL },
                         recentsViewType = recentsViewType,
                         onRecentsViewTypeToggle = {
                             AppUi.host.setHomeRecentsViewType(
@@ -357,13 +547,6 @@ fun HomeScreen(
 
     if (onLoadMore != null && state is UiState.Success) {
         val loadMore by rememberUpdatedState(onLoadMore)
-        // Re-checked on every layout change, rather than on the rising edge of
-        // "the tail is in view". A page that appends only a shelf or two leaves
-        // the list still near its end, so an edge-triggered effect would never
-        // fire a second time: the feed dead-ended at the bottom with no
-        // skeleton and no request in flight to explain it. Restarting on
-        // [loadingMore] re-checks the moment a page settles, so the next one is
-        // asked for while the tail is still on screen to show it loading.
         LaunchedEffect(listState, loadingMore) {
             snapshotFlow {
                 val layout = listState.layoutInfo
@@ -386,6 +569,247 @@ fun HomeScreen(
 }
 
 @Composable
+private fun HomeFilterChipRow(
+    filters: List<HomeContentFilter>,
+    selected: HomeContentFilter,
+    onSelect: (HomeContentFilter) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = PAGE_GUTTER)
+            .padding(top = 4.dp, bottom = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        filters.forEach { filter ->
+            val isSelected = filter == selected
+            val container by animateColorAsState(
+                targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh,
+                animationSpec = tween(MotionTokens.CONTENT_TRANSITION_MS),
+                label = "homeFilterBg",
+            )
+            val content by animateColorAsState(
+                targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                animationSpec = tween(MotionTokens.CONTENT_TRANSITION_MS),
+                label = "homeFilterFg",
+            )
+            Surface(
+                shape = CircleShape,
+                color = container,
+                border = if (isSelected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .clickable(role = Role.Tab) { onSelect(filter) },
+            ) {
+                Text(
+                    text = filter.label,
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    ),
+                    color = content,
+                    maxLines = 1,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun QuickAccessGrid(
+    shortcuts: List<QuickAccessShortcut>,
+    currentSong: Song?,
+    isPlaying: Boolean,
+    onItemClick: (ShelfItem, String) -> Unit,
+    onItemLongPress: ((ShelfItem) -> Unit)?,
+) {
+    val isCurrentItem = shortcuts.map { it.item }.playingItemMatcher(currentSong)
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = PAGE_GUTTER)
+            .padding(bottom = HOME_SECTION_SPACING),
+    ) {
+        val columns = if (maxWidth >= 600.dp) 3 else 2
+        val rows = shortcuts.chunked(columns)
+        Column(verticalArrangement = Arrangement.spacedBy(HOME_SHORTCUT_SPACING)) {
+            rows.forEach { rowItems ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(HOME_SHORTCUT_SPACING),
+                ) {
+                    rowItems.forEach { shortcut ->
+                        val active = isCurrentItem(shortcut.item)
+                        QuickAccessTile(
+                            item = shortcut.item,
+                            isCurrent = active,
+                            isPlaying = active && isPlaying,
+                            onClick = { onItemClick(shortcut.item, shortcut.sourceTitle) },
+                            onLongPress = onItemLongPress?.let { { it(shortcut.item) } },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    repeat(columns - rowItems.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun QuickAccessTile(
+    item: ShelfItem,
+    isCurrent: Boolean,
+    isPlaying: Boolean,
+    onClick: () -> Unit,
+    onLongPress: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    val tileShape = RoundedCornerShape(10.dp)
+    val containerColor = if (isCurrent) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerHigh
+    }
+    val titleColor = if (isCurrent) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+    Surface(
+        shape = tileShape,
+        color = containerColor,
+        border = BorderStroke(
+            width = if (isCurrent) 1.dp else 0.5.dp,
+            color = if (isCurrent) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+            } else {
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+            },
+        ),
+        modifier = modifier
+            .height(HOME_SHORTCUT_HEIGHT)
+            .clip(tileShape)
+            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+            .contextClick(onLongPress),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(Modifier.size(HOME_SHORTCUT_HEIGHT)) {
+                AsyncImage(
+                    model = item.thumbnailUrl.artworkAt(ROW_ART_PX),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                )
+                if (isCurrent && isPlaying) {
+                    SearchPlayingBars(Modifier.align(Alignment.Center))
+                }
+            }
+            Text(
+                text = item.title,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontSize = 12.5.sp,
+                    lineHeight = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                ),
+                color = titleColor,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 9.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun TimeAwareDiscoverySection(
+    shelf: HomeShelf,
+    onItemClick: (ShelfItem) -> Unit,
+    onItemLongPress: ((ShelfItem) -> Unit)?,
+    currentSong: Song?,
+    isPlaying: Boolean,
+) {
+    Column(Modifier.fillMaxWidth().padding(bottom = HOME_SECTION_SPACING)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = PAGE_GUTTER, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = localizeShelfTitle(shelf.title),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (shelf.subtitle.isNotBlank()) {
+                    Text(
+                        text = localizeShelfSubtitle(shelf.subtitle),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.AutoAwesome,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(12.dp),
+                    )
+                    Text(
+                        text = "For now",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
+            }
+        }
+        val isCurrentItem = shelf.items.playingItemMatcher(currentSong)
+        val itemKeys = remember(shelf.items) { shelf.items.stableShelfComposeKeys() }
+        ShelfRow(
+            contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+            horizontalArrangement = Arrangement.spacedBy(HOME_CARD_SPACING),
+        ) {
+            itemsIndexed(shelf.items, key = { index, _ -> itemKeys[index] }) { _, item ->
+                CompactDiscoveryCard(
+                    item = item,
+                    onClick = { onItemClick(item) },
+                    onLongPress = onItemLongPress?.let { { it(item) } },
+                    width = HOME_TONAL_CARD_WIDTH,
+                    tonalContainer = true,
+                    isCurrent = isCurrentItem(item),
+                    isPlaying = isCurrentItem(item) && isPlaying,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun WeeklyRecapCard(
     recap: WeeklyRecapCardData,
     onClick: () -> Unit,
@@ -395,53 +819,87 @@ private fun WeeklyRecapCard(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = PAGE_GUTTER, vertical = 8.dp),
-        shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+            .padding(horizontal = PAGE_GUTTER)
+            .padding(bottom = HOME_SECTION_SPACING),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        ),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(start = 18.dp, top = 16.dp, end = 8.dp, bottom = 16.dp),
-            verticalAlignment = Alignment.Top,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 14.dp, top = 12.dp, end = 6.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.GraphicEq,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(
                     text = stringResource(Res.string.weekly_recap_title),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(4.dp))
                 Text(
                     text = stringResource(Res.string.weekly_recap_summary, recap.minutes, recap.plays),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                recap.topSong?.let {
-                    Spacer(Modifier.height(8.dp))
-                    Text(stringResource(Res.string.weekly_recap_top_song, it), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                val highlight = recap.topSong ?: recap.topArtist
+                if (highlight != null) {
+                    Text(
+                        text = if (recap.topSong != null) {
+                            stringResource(Res.string.weekly_recap_top_song, recap.topSong)
+                        } else {
+                            stringResource(Res.string.weekly_recap_top_artist, highlight)
+                        },
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
                 }
-                recap.topArtist?.let {
-                    Text(stringResource(Res.string.weekly_recap_top_artist, it), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = stringResource(Res.string.weekly_recap_open),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
             }
             if (onDismiss != null) {
-                Box(Modifier.size(36.dp).clip(CircleShape).clickable(onClick = onDismiss), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Rounded.Close, contentDescription = stringResource(Res.string.weekly_recap_dismiss), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                Box(
+                    Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .clickable(onClick = onDismiss),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Rounded.Close,
+                        contentDescription = stringResource(Res.string.weekly_recap_dismiss),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp),
+                    )
                 }
             }
         }
     }
 }
 
-/**
- * Recents mirrors the artist page's top-tracks pager. Any other lead shelf keeps
- * Apple's full-bleed treatment, while the remaining shelves use square cards.
- */
 private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
     shelves: List<HomeShelf>,
     onItemClick: (ShelfItem, String) -> Unit,
@@ -451,14 +909,14 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
     isPlaying: Boolean,
     onMoodClick: ((String) -> Unit)?,
     onListenTogetherClick: (() -> Unit)?,
-    firstIsHero: Boolean = true,
     recentsViewType: LibraryViewType,
     onRecentsViewTypeToggle: () -> Unit,
 ) {
+    var moodAndSocialInserted = false
     shelves.forEachIndexed { index, shelf ->
-        item(key = shelf.title + index) {
+        item(key = "${shelf.title}:$index") {
             val openItem: (ShelfItem) -> Unit = { item -> onItemClick(item, shelf.title) }
-            if (index == 0 && shelf.title.equals(RECENTS_TITLE, ignoreCase = true)) {
+            if (isHistoryShelfTitle(shelf.title)) {
                 RecentShelf(
                     shelf = shelf,
                     onItemClick = openItem,
@@ -467,14 +925,6 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
                     isPlaying = isPlaying,
                     viewType = recentsViewType,
                     onViewTypeToggle = onRecentsViewTypeToggle,
-                )
-            } else if (index == 0 && firstIsHero) {
-                HeroShelf(
-                    shelf = shelf,
-                    onItemClick = openItem,
-                    onItemLongPress = onItemLongPress,
-                    currentSong = currentSong,
-                    isPlaying = isPlaying,
                 )
             } else {
                 Shelf(
@@ -487,20 +937,28 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
                 )
             }
         }
-        if (shelf.title.equals("Quick picks", ignoreCase = true)) {
-            item(key = "home-find-your-mood") { FindYourMood(onMoodClick) }
-            item(key = "home-listen-together") {
-                ListenTogetherShelf(shelf.items.take(2).map { it.thumbnailUrl }, onListenTogetherClick)
+        if (shelf.title.equals("Quick picks", ignoreCase = true) && !moodAndSocialInserted) {
+            moodAndSocialInserted = true
+            if (onMoodClick != null) {
+                item(key = "home-find-your-mood") { FindYourMood(onMoodClick) }
+            }
+            if (onListenTogetherClick != null) {
+                item(key = "home-listen-together") {
+                    ListenTogetherShelf(shelf.items.take(2).map { it.thumbnailUrl }, onListenTogetherClick)
+                }
             }
         }
     }
-    if (shelves.none { it.title.equals("Quick picks", ignoreCase = true) }) {
-        item(key = "home-find-your-mood") { FindYourMood(onMoodClick) }
-        item(key = "home-listen-together") { ListenTogetherShelf(emptyList(), onListenTogetherClick) }
+    if (!moodAndSocialInserted) {
+        if (onMoodClick != null) {
+            item(key = "home-find-your-mood") { FindYourMood(onMoodClick) }
+        }
+        if (onListenTogetherClick != null) {
+            item(key = "home-listen-together") { ListenTogetherShelf(emptyList(), onListenTogetherClick) }
+        }
     }
 }
 
-/** The same four-rows-per-page treatment used by an artist's Top songs. */
 @Composable
 private fun RecentShelf(
     shelf: HomeShelf,
@@ -511,7 +969,7 @@ private fun RecentShelf(
     viewType: LibraryViewType,
     onViewTypeToggle: () -> Unit,
 ) {
-    Column(Modifier.padding(bottom = 28.dp)) {
+    Column(Modifier.padding(bottom = HOME_SECTION_SPACING)) {
         RecentSectionHeader(
             title = shelf.title,
             subtitle = shelf.subtitle,
@@ -522,54 +980,57 @@ private fun RecentShelf(
         val itemKeys = remember(shelf.items) { shelf.items.stableShelfComposeKeys() }
         if (viewType == LibraryViewType.LIST) {
             BoxWithConstraints {
-                // The docked player leaves a tablet's Home pane narrower than
-                // the full window. Keep the rows readable, but use that pane
-                // efficiently: the phone-sized 400dp cap otherwise leaves only
-                // one full column and a sliver of the next on most tablets.
                 val columnWidth = if (maxWidth >= 480.dp) {
-                    minOf(maxWidth * 0.42f, 300.dp)
+                    minOf(maxWidth * 0.44f, 290.dp)
                 } else {
                     trackColumnWidth(maxWidth)
                 }
                 ShelfRow(
                     contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(
                         shelf.items.chunked(RECENT_TRACKS_PER_COLUMN),
                         key = { column -> column.joinToString("|") { it.videoId ?: it.browseId ?: it.title } },
                     ) { column ->
-                        Column(Modifier.width(columnWidth)) {
-                            column.forEach { item ->
-                                RecentTrackRow(
-                                    item = item,
-                                    onClick = { onItemClick(item) },
-                                    onLongPress = onItemLongPress?.let { { it(item) } },
-                                    isCurrent = isCurrentItem(item),
-                                    isPlaying = isCurrentItem(item) && isPlaying,
-                                )
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerLow,
+                            modifier = Modifier.width(columnWidth),
+                        ) {
+                            Column(Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
+                                column.forEach { item ->
+                                    CompactTrackRow(
+                                        title = item.title,
+                                        subtitle = item.subtitle,
+                                        thumbnailUrl = item.thumbnailUrl,
+                                        onClick = { onItemClick(item) },
+                                        onLongPress = onItemLongPress?.let { { it(item) } },
+                                        isCurrent = isCurrentItem(item),
+                                        isPlaying = isCurrentItem(item) && isPlaying,
+                                        isExplicit = item.isExplicit,
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         } else {
-            BoxWithConstraints {
-                val cardWidth = heroCardWidth(maxWidth)
-                ShelfRow(
-                    contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    itemsIndexed(shelf.items, key = { index, _ -> itemKeys[index] }) { _, item ->
-                        HeroCard(
-                            item = item,
-                            onClick = { onItemClick(item) },
-                            onLongPress = onItemLongPress?.let { { it(item) } },
-                            modifier = Modifier.width(cardWidth),
-                            isCurrent = isCurrentItem(item),
-                            isPlaying = isCurrentItem(item) && isPlaying,
-                        )
-                    }
+            ShelfRow(
+                contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+                horizontalArrangement = Arrangement.spacedBy(HOME_CARD_SPACING),
+            ) {
+                itemsIndexed(shelf.items, key = { index, _ -> itemKeys[index] }) { _, item ->
+                    CompactDiscoveryCard(
+                        item = item,
+                        onClick = { onItemClick(item) },
+                        onLongPress = onItemLongPress?.let { { it(item) } },
+                        width = HOME_COMPACT_CARD_WIDTH,
+                        tonalContainer = false,
+                        isCurrent = isCurrentItem(item),
+                        isPlaying = isCurrentItem(item) && isPlaying,
+                    )
                 }
             }
         }
@@ -585,22 +1046,22 @@ private fun RecentSectionHeader(
 ) {
     Row(
         modifier = Modifier
-            .padding(horizontal = PAGE_GUTTER, vertical = 10.dp)
+            .padding(horizontal = PAGE_GUTTER, vertical = 6.dp)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
             Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+                text = localizeShelfTitle(title),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             if (subtitle.isNotBlank()) {
                 Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = localizeShelfSubtitle(subtitle),
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -608,55 +1069,38 @@ private fun RecentSectionHeader(
             }
         }
         Spacer(Modifier.width(8.dp))
-        Box(
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
             modifier = Modifier
-                .size(48.dp)
+                .size(34.dp)
                 .clip(CircleShape)
                 .clickable(role = Role.Button, onClick = onViewTypeToggle),
-            contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                imageVector = if (viewType == LibraryViewType.LIST) {
-                    NevTunePlusIcons.GridView
-                } else {
-                    NevTunePlusIcons.ListView
-                },
-                contentDescription = stringResource(
-                    if (viewType == LibraryViewType.LIST) {
-                        Res.string.switch_to_grid_view
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = if (viewType == LibraryViewType.LIST) {
+                        NevTunePlusIcons.GridView
                     } else {
-                        Res.string.switch_to_list_view
+                        NevTunePlusIcons.ListView
                     },
-                ),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(19.dp),
-            )
+                    contentDescription = stringResource(
+                        if (viewType == LibraryViewType.LIST) {
+                            Res.string.switch_to_grid_view
+                        } else {
+                            Res.string.switch_to_list_view
+                        },
+                    ),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(17.dp),
+                )
+            }
         }
     }
 }
 
-@Composable
-private fun RecentTrackRow(
-    item: ShelfItem,
-    onClick: () -> Unit,
-    onLongPress: (() -> Unit)?,
-    isCurrent: Boolean,
-    isPlaying: Boolean,
-) {
-    CompactTrackRow(
-        title = item.title,
-        subtitle = item.subtitle,
-        thumbnailUrl = item.thumbnailUrl,
-        onClick = onClick,
-        onLongPress = onLongPress,
-        isCurrent = isCurrent,
-        isPlaying = isPlaying,
-    )
-}
-
 /**
- * One row of Recents' four-to-a-column pager. Public so the desktop artist page
- * can list its top songs the same way.
+ * Compact track row used by Recents, Quick Picks, and desktop Top Songs.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -668,58 +1112,66 @@ fun CompactTrackRow(
     onLongPress: (() -> Unit)?,
     isCurrent: Boolean = false,
     isPlaying: Boolean = false,
+    isExplicit: Boolean? = null,
 ) {
+    val rowShape = RoundedCornerShape(10.dp)
+    val rowBg = if (isCurrent) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+    } else {
+        Color.Transparent
+    }
+    val titleColor = if (isCurrent) PlayingAccent else MaterialTheme.colorScheme.onSurface
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(rowShape)
+            .background(rowBg)
             .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
             .contextClick(onLongPress)
-            .padding(vertical = 4.dp),
+            .padding(horizontal = 4.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(54.dp)) {
+        Box(Modifier.size(HOME_TRACK_ART_SIZE)) {
             AsyncImage(
                 model = thumbnailUrl.artworkAt(ROW_ART_PX),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(54.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                    .size(HOME_TRACK_ART_SIZE)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
             )
             if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
         }
-        Spacer(Modifier.width(14.dp))
+        Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (isExplicit == true) {
+                    ExplicitBadge(titleColor)
+                    Spacer(Modifier.width(5.dp))
+                }
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                    color = titleColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = if (isCurrent) PlayingAccent else MaterialTheme.colorScheme.onBackground,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
+                text = localizeCardSubtitle(subtitle),
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }
         if (onLongPress != null) {
-            RowMoreButton(onClick = onLongPress)
+            RowMoreButton(onClick = onLongPress, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
-/**
- * Listen now's large heading, with the wordmark stacked above it.
- *
- * Only the home tab carries it — the top bar no longer shows the logo, so this
- * is where the app's mark lives. Its height is taken from the heading's own
- * font size rather than a fixed dp, so the two keep their proportion under the
- * system font scale.
- */
 @Composable
 private fun HomeTitle(
     onSearchClick: (() -> Unit)?,
@@ -741,22 +1193,23 @@ private fun HomeTitle(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = PAGE_GUTTER, end = 8.dp, top = 6.dp, bottom = 4.dp),
+            .padding(start = PAGE_GUTTER, end = 12.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             painter = painterResource(Res.drawable.ic_logo),
             contentDescription = "NevTune+",
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.width(40.dp).height(27.dp),
+            modifier = Modifier.width(34.dp).height(23.dp),
         )
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
             Text(
                 text = greeting,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             if (!userName.isNullOrBlank()) {
                 Text(
@@ -768,22 +1221,38 @@ private fun HomeTitle(
                 )
             }
         }
-        HomeHeaderAction(Icons.Rounded.Search, "Search", onSearchClick)
-        HomeHeaderAction(Icons.Rounded.Bluetooth, "Bluetooth audio output", onBluetoothClick)
-        Box(
-            modifier = Modifier.size(48.dp).clip(CircleShape)
-                .clickable(enabled = onProfileClick != null, role = Role.Button) { onProfileClick?.invoke() },
-            contentAlignment = Alignment.Center,
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (!profileThumbnailUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = profileThumbnailUrl,
-                    contentDescription = "Profile",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(34.dp).clip(CircleShape),
-                )
-            } else {
-                Icon(Icons.Rounded.AccountCircle, contentDescription = "Profile", tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(26.dp))
+            HomeHeaderAction(Icons.Rounded.Search, "Search", onSearchClick)
+            HomeHeaderAction(Icons.Rounded.Bluetooth, "Bluetooth audio output", onBluetoothClick)
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)),
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .clickable(enabled = onProfileClick != null, role = Role.Button) { onProfileClick?.invoke() },
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    if (!profileThumbnailUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = profileThumbnailUrl,
+                            contentDescription = "Profile",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    } else {
+                        Icon(
+                            Icons.Rounded.AccountCircle,
+                            contentDescription = "Profile",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
+                }
             }
         }
     }
@@ -798,14 +1267,22 @@ private fun homeGreeting(morning: String, afternoon: String, evening: String): S
 
 @Composable
 private fun HomeHeaderAction(icon: ImageVector, description: String, onClick: (() -> Unit)?) {
-    Box(
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
         modifier = Modifier
-            .size(48.dp)
+            .size(36.dp)
             .clip(CircleShape)
-            .clickable(enabled = onClick != null, onClick = { onClick?.invoke() }),
-        contentAlignment = Alignment.Center,
+            .clickable(enabled = onClick != null, role = Role.Button) { onClick?.invoke() },
     ) {
-        Icon(icon, contentDescription = description, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(22.dp))
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                icon,
+                contentDescription = description,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(19.dp),
+            )
+        }
     }
 }
 
@@ -823,21 +1300,22 @@ private val HOME_MOOD_CARDS = listOf(
 
 @Composable
 private fun FindYourMood(onMoodClick: ((String) -> Unit)?) {
-    Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
-        SectionHeader("Find Your Mood", emphasized = true)
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val cardWidth = if (maxWidth >= 720.dp) 164.dp else 208.dp
-            ShelfRow(
-                contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                items(HOME_MOOD_CARDS, key = HomeMoodCard::title) { mood ->
-                    MoodArtCard(
-                        mood = mood,
-                        onClick = { onMoodClick?.invoke(mood.title) },
-                        modifier = Modifier.width(cardWidth),
-                        enabled = onMoodClick != null,
-                    )
+    val moodPairs = remember { HOME_MOOD_CARDS.chunked(2) }
+    Column(Modifier.fillMaxWidth().padding(bottom = HOME_SECTION_SPACING)) {
+        SectionHeader("Find Your Mood", emphasized = false)
+        ShelfRow(
+            contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(moodPairs, key = { pair -> pair.joinToString("|") { it.title } }) { pair ->
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    pair.forEach { mood ->
+                        CompactMoodTile(
+                            mood = mood,
+                            onClick = { onMoodClick?.invoke(mood.title) },
+                            enabled = onMoodClick != null,
+                        )
+                    }
                 }
             }
         }
@@ -845,23 +1323,22 @@ private fun FindYourMood(onMoodClick: ((String) -> Unit)?) {
 }
 
 @Composable
-private fun MoodArtCard(
+private fun CompactMoodTile(
     mood: HomeMoodCard,
     onClick: () -> Unit,
-    modifier: Modifier,
     enabled: Boolean,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val reduceAnimation by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
+    val reduceAnimationSetting by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
+    val perf = LocalAdaptivePerformance.current
+    val reduceAnimation = reduceAnimationSetting || perf.reduceAnimations
     val motion by animateFloatAsState(
-        targetValue = if (pressed) 1f else 0f,
-        animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing),
+        targetValue = if (pressed && !reduceAnimation) 1f else 0f,
+        animationSpec = tween(durationMillis = if (reduceAnimation) 0 else 180, easing = FastOutSlowInEasing),
         label = "${mood.title}-line-art-press",
     )
-    // One quiet breathing cycle per composed card. LazyRow disposes distant
-    // cards, so off-screen artwork does not keep an animation clock running.
-    val ambient = if (reduceAnimation) {
+    val ambient = if (reduceAnimation || perf.disableContinuousMotion) {
         0f
     } else {
         rememberInfiniteTransition(label = "${mood.title}-ambient").animateFloat(
@@ -874,56 +1351,53 @@ private fun MoodArtCard(
             label = "${mood.title}-breath",
         ).value
     }
-    Column(
-        modifier = modifier.clickable(
-            enabled = enabled,
-            role = Role.Button,
-            interactionSource = interaction,
-            onClick = onClick,
-        ),
+    val tileShape = RoundedCornerShape(12.dp)
+    Surface(
+        shape = tileShape,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+        modifier = Modifier
+            .width(156.dp)
+            .height(50.dp)
+            .clip(tileShape)
+            .clickable(
+                enabled = enabled,
+                role = Role.Button,
+                interactionSource = interaction,
+                onClick = onClick,
+            ),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Brush.linearGradient(mood.colors)),
+        Row(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // A restrained highlight makes the card feel tactile without
-            // introducing a costly blur or a permanent animated shadow.
             Box(
-                Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.12f + ambient * 0.05f),
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.08f),
-                            ),
-                        ),
-                    ),
-            )
-            MoodLineArt(
-                mood = mood.title,
-                progress = motion,
-                phase = ambient,
-                modifier = Modifier.fillMaxSize().graphicsLayer {
-                    val scale = 1f + motion * 0.045f + ambient * 0.012f
-                    scaleX = scale
-                    scaleY = scale
-                    rotationZ = motion * (if (mood.title == "Feeling Blue") -2f else 2f)
-                },
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Brush.linearGradient(mood.colors)),
+            ) {
+                MoodLineArt(
+                    mood = mood.title,
+                    progress = motion,
+                    phase = ambient,
+                    modifier = Modifier.fillMaxSize().graphicsLayer {
+                        val scale = 1f + motion * 0.05f + ambient * 0.015f
+                        scaleX = scale
+                        scaleY = scale
+                    },
+                )
+            }
+            Text(
+                text = mood.title,
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
             )
         }
-        Text(
-            text = mood.title,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 8.dp),
-        )
     }
 }
 
@@ -934,11 +1408,11 @@ private fun MoodLineArt(mood: String, progress: Float, phase: Float, modifier: M
         val w = size.width
         val h = size.height
         val unit = minOf(w, h)
-        val cx = w * 0.62f
-        val cy = h * 0.40f
-        val base = Color.White.copy(alpha = 0.76f + progress * 0.18f + phase * 0.06f)
-        val faint = Color.White.copy(alpha = 0.30f + progress * 0.18f + phase * 0.10f)
-        val stroke = (unit * 0.009f).coerceAtLeast(1.5f)
+        val cx = w * 0.56f
+        val cy = h * 0.44f
+        val base = Color.White.copy(alpha = 0.80f + progress * 0.16f + phase * 0.04f)
+        val faint = Color.White.copy(alpha = 0.34f + progress * 0.16f + phase * 0.08f)
+        val stroke = (unit * 0.032f).coerceAtLeast(1.4f)
         val lineStyle = Stroke(width = stroke, cap = StrokeCap.Round)
         withTransform({
             rotate(degrees = progress * 5f + phase * 0.8f, pivot = Offset(cx, cy))
@@ -947,54 +1421,26 @@ private fun MoodLineArt(mood: String, progress: Float, phase: Float, modifier: M
             when (mood) {
                 "Energy" -> {
                     val bolt = Path().apply {
-                        moveTo(w * .60f, h * .12f)
-                        lineTo(w * .35f, h * .53f)
+                        moveTo(w * .60f, h * .14f)
+                        lineTo(w * .34f, h * .53f)
                         lineTo(w * .52f, h * .53f)
                         lineTo(w * .42f, h * .86f)
                         lineTo(w * .72f, h * .42f)
                         lineTo(w * .55f, h * .42f)
                         close()
                     }
-                    drawPath(bolt, faint.copy(alpha = .22f + phase * .12f))
-                    drawPath(bolt, base, style = Stroke(stroke * 1.45f, join = androidx.compose.ui.graphics.StrokeJoin.Round))
-                    drawLine(faint, Offset(w * .18f, h * .32f), Offset(w * .30f, h * .32f), stroke, StrokeCap.Round)
-                    drawLine(faint, Offset(w * .70f, h * .72f), Offset(w * .84f, h * .72f), stroke, StrokeCap.Round)
-                }
-                "Energize" -> {
-                    val pulse = Path().apply {
-                        moveTo(w * .28f, h * .42f)
-                        lineTo(w * .43f, h * .42f)
-                        lineTo(w * .51f, h * .22f)
-                        lineTo(w * .60f, h * .62f)
-                        lineTo(w * .70f, h * .34f)
-                        lineTo(w * .77f, h * .42f)
-                        lineTo(w * .92f, h * .42f)
-                    }
-                    drawPath(pulse, base, style = Stroke(stroke * 1.5f, cap = StrokeCap.Round))
-                    repeat(3) { i -> drawCircle(faint, radius = unit * (.13f + i * .085f), center = Offset(cx, cy), style = lineStyle) }
-                }
-                "Workout" -> {
-                    val bolt = Path().apply {
-                        moveTo(w * .63f, h * .12f); lineTo(w * .43f, h * .49f)
-                        lineTo(w * .59f, h * .49f); lineTo(w * .47f, h * .78f)
-                        lineTo(w * .78f, h * .37f); lineTo(w * .62f, h * .37f); close()
-                    }
-                    drawPath(bolt, base, style = lineStyle)
-                    drawLine(faint, Offset(w * .22f, h * .25f), Offset(w * .34f, h * .25f), stroke, StrokeCap.Round)
-                    drawLine(faint, Offset(w * .18f, h * .34f), Offset(w * .30f, h * .34f), stroke, StrokeCap.Round)
-                    drawLine(faint, Offset(w * .72f, h * .76f), Offset(w * .86f, h * .76f), stroke, StrokeCap.Round)
+                    drawPath(bolt, faint.copy(alpha = .24f + phase * .12f))
+                    drawPath(bolt, base, style = Stroke(stroke * 1.3f, join = StrokeJoin.Round))
                 }
                 "Relax" -> {
                     repeat(3) { i ->
                         val width = unit * (.48f + i * .10f)
-                        val height = unit * (.14f + i * .018f)
-                        val left = cx - width / 2f
-                        val top = cy - height / 2f + (i - 1) * unit * .12f
+                        val height = unit * (.15f + i * .02f)
                         drawOval(
                             color = if (i == 1) base else faint,
-                            topLeft = Offset(left, top),
+                            topLeft = Offset(cx - width / 2f, cy - height / 2f + (i - 1) * unit * .14f),
                             size = androidx.compose.ui.geometry.Size(width, height),
-                            style = Stroke(stroke * 1.15f, cap = StrokeCap.Round),
+                            style = lineStyle,
                         )
                     }
                 }
@@ -1005,10 +1451,8 @@ private fun MoodLineArt(mood: String, progress: Float, phase: Float, modifier: M
                         cubicTo(cx + radius, cy - radius, cx - radius, cy - radius, cx - radius, cy)
                         cubicTo(cx - radius, cy + radius, cx + radius, cy + radius, cx + radius * .56f, cy)
                         cubicTo(cx + radius * .56f, cy - radius * .56f, cx - radius * .42f, cy - radius * .42f, cx - radius * .42f, cy)
-                        cubicTo(cx - radius * .42f, cy + radius * .42f, cx + radius * .22f, cy + radius * .42f, cx + radius * .22f, cy)
-                        cubicTo(cx + radius * .22f, cy - radius * .22f, cx - radius * .08f, cy - radius * .22f, cx - radius * .08f, cy)
                     }
-                    drawPath(spiral, base, style = Stroke(stroke * 1.25f, cap = StrokeCap.Round))
+                    drawPath(spiral, base, style = lineStyle)
                 }
                 "Feel Good" -> {
                     val sparkle = Path().apply {
@@ -1019,65 +1463,35 @@ private fun MoodLineArt(mood: String, progress: Float, phase: Float, modifier: M
                         cubicTo(cx - unit * .08f, cy - unit * .08f, cx - unit * .08f, cy - unit * .08f, cx, cy - unit * .34f)
                         close()
                     }
-                    drawPath(sparkle, faint.copy(alpha = .20f + phase * .10f))
-                    drawPath(sparkle, base, style = Stroke(stroke * 1.3f, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+                    drawPath(sparkle, faint.copy(alpha = .24f + phase * .10f))
+                    drawPath(sparkle, base, style = Stroke(stroke * 1.2f, join = StrokeJoin.Round))
                 }
                 "Heartbreak" -> {
                     val heart = Path().apply {
-                        moveTo(w * .62f, h * .78f)
-                        cubicTo(w * .05f, h * .43f, w * .30f, h * .12f, w * .50f, h * .34f)
-                        cubicTo(w * .70f, h * .12f, w * .95f, h * .43f, w * .62f, h * .78f)
+                        moveTo(w * .58f, h * .78f)
+                        cubicTo(w * .08f, h * .44f, w * .30f, h * .14f, w * .50f, h * .34f)
+                        cubicTo(w * .70f, h * .14f, w * .92f, h * .44f, w * .58f, h * .78f)
                     }
                     drawPath(heart, base, style = lineStyle)
-                    drawLine(faint, Offset(w * .53f, h * .31f), Offset(w * .43f, h * .52f), stroke, StrokeCap.Round)
-                    drawLine(faint, Offset(w * .43f, h * .52f), Offset(w * .56f, h * .58f), stroke, StrokeCap.Round)
+                    drawLine(faint, Offset(w * .52f, h * .32f), Offset(w * .44f, h * .54f), stroke, StrokeCap.Round)
                 }
                 "Love" -> {
                     val heart = Path().apply {
                         moveTo(cx, h * .78f)
-                        cubicTo(w * .08f, h * .38f, w * .34f, h * .10f, cx, h * .34f)
-                        cubicTo(w * .86f, h * .10f, w * .92f, h * .38f, cx, h * .78f)
+                        cubicTo(w * .10f, h * .40f, w * .34f, h * .14f, cx, h * .34f)
+                        cubicTo(w * .84f, h * .14f, w * .90f, h * .40f, cx, h * .78f)
                     }
                     drawPath(heart, base, style = lineStyle)
-                    drawCircle(faint, unit * (.34f + phase * .012f), Offset(cx, cy), style = lineStyle)
+                    drawCircle(faint, unit * (.36f + phase * .012f), Offset(cx, cy), style = lineStyle)
                 }
                 "Focus" -> {
-                    repeat(4) { i ->
-                        drawCircle(if (i == 0) base else faint, radius = unit * (.07f + i * .09f), center = Offset(cx, cy), style = lineStyle)
-                    }
-                    drawLine(base, Offset(cx - unit * .34f, cy), Offset(cx - unit * .20f, cy), stroke, StrokeCap.Round)
-                    drawLine(base, Offset(cx + unit * .20f, cy), Offset(cx + unit * .34f, cy), stroke, StrokeCap.Round)
-                    drawLine(base, Offset(cx, cy - unit * .34f), Offset(cx, cy - unit * .20f), stroke, StrokeCap.Round)
-                    drawLine(base, Offset(cx, cy + unit * .20f), Offset(cx, cy + unit * .34f), stroke, StrokeCap.Round)
-                }
-                "Commute" -> {
-                    val road = Path().apply {
-                        moveTo(w * .12f, h * .86f); lineTo(w * .48f, h * .24f)
-                        moveTo(w * .88f, h * .86f); lineTo(w * .48f, h * .24f)
-                    }
-                    drawPath(road, base, style = lineStyle)
                     repeat(3) { i ->
-                        val y = h * (.55f + i * .12f)
-                        val half = unit * (.025f + i * .025f)
-                        drawLine(faint, Offset(w * .48f - half, y), Offset(w * .48f + half, y), stroke, StrokeCap.Round)
+                        drawCircle(if (i == 0) base else faint, radius = unit * (.10f + i * .11f), center = Offset(cx, cy), style = lineStyle)
                     }
-                    drawCircle(faint, unit * .045f, Offset(w * .78f, h * .22f), style = lineStyle)
                 }
                 else -> {
-                    repeat(12) { i ->
-                        val angle = (i * 30f + progress * 12f) * (kotlin.math.PI.toFloat() / 180f)
-                        val inner = unit * .12f
-                        val outer = unit * (.23f + if (i % 2 == 0) .10f else .035f)
-                        drawLine(
-                            if (i % 2 == 0) base else faint,
-                            Offset(cx + kotlin.math.cos(angle) * inner, cy + kotlin.math.sin(angle) * inner),
-                            Offset(cx + kotlin.math.cos(angle) * outer, cy + kotlin.math.sin(angle) * outer),
-                            stroke,
-                            StrokeCap.Round,
-                        )
-                    }
-                    drawCircle(base, unit * (.09f + progress * .015f), Offset(cx, cy), style = lineStyle)
-                    drawCircle(faint, unit * .39f, Offset(cx, cy), style = lineStyle)
+                    drawCircle(base, unit * .22f, Offset(cx, cy), style = lineStyle)
+                    drawCircle(faint, unit * .36f, Offset(cx, cy), style = lineStyle)
                 }
             }
         }
@@ -1086,31 +1500,90 @@ private fun MoodLineArt(mood: String, progress: Float, phase: Float, modifier: M
 
 @Composable
 private fun ListenTogetherShelf(artworks: List<String?>, onClick: (() -> Unit)?) {
-    Column(Modifier.fillMaxWidth().padding(bottom = 24.dp)) {
-        SectionHeader("Listen together", emphasized = true)
+    Column(Modifier.fillMaxWidth().padding(bottom = HOME_SECTION_SPACING)) {
+        SectionHeader("Listen together", emphasized = false)
+        val items = remember {
+            listOf(
+                Triple("Start a session", "Host a live party", Icons.Rounded.Groups),
+                Triple("Join a session", "Enter an invite code", Icons.Rounded.GroupAdd),
+            )
+        }
         ShelfRow(
             contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            items(listOf("Start a session", "Join a session").withIndex().toList(), key = { it.value }) { (index, label) ->
-                Box(
-                    modifier = Modifier.width(300.dp).height(142.dp)
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            items(items.withIndex().toList(), key = { it.value.first }) { (index, entry) ->
+                val (label, subtitle, icon) = entry
+                val isPrimary = index == 0
+                val cardShape = RoundedCornerShape(14.dp)
+                Surface(
+                    shape = cardShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                    modifier = Modifier
+                        .width(216.dp)
+                        .height(72.dp)
+                        .clip(cardShape)
                         .clickable(enabled = onClick != null, role = Role.Button) { onClick?.invoke() },
                 ) {
-                    val cardArtwork = artworks.getOrNull(index)
-                    if (!cardArtwork.isNullOrBlank()) {
-                        AsyncImage(model = cardArtwork, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-                    }
-                    Box(
-                        Modifier.fillMaxSize().background(
-                            Brush.horizontalGradient(listOf(Color.Black.copy(alpha = .86f), Color.Black.copy(alpha = .28f))),
-                        ),
-                    )
-                    Column(Modifier.align(Alignment.CenterStart).padding(18.dp)) {
-                        Text("Listen together", style = MaterialTheme.typography.labelLarge, color = Color.White.copy(alpha = .78f))
-                        Text(label, style = MaterialTheme.typography.titleLarge, color = Color.White)
+                    Row(
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        val cardArtwork = artworks.getOrNull(index)
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(
+                                    if (isPrimary) MaterialTheme.colorScheme.primaryContainer
+                                    else MaterialTheme.colorScheme.secondaryContainer,
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (!cardArtwork.isNullOrBlank()) {
+                                AsyncImage(
+                                    model = cardArtwork.artworkAt(ROW_ART_PX),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                                Box(
+                                    Modifier
+                                        .fillMaxSize()
+                                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.38f)),
+                                )
+                            }
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = if (!cardArtwork.isNullOrBlank()) {
+                                    Color.White
+                                } else if (isPrimary) {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSecondaryContainer
+                                },
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = subtitle,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                 }
             }
@@ -1120,10 +1593,6 @@ private fun ListenTogetherShelf(artworks: List<String?>, onClick: (() -> Unit)?)
 
 /**
  * Shared by the home feed, Explore and Library so headings line up across tabs.
- *
- * [onShowAll] is only ever set on Library, whose rows stop at five cards
- * rather than running the shelf's whole length — see [LibraryGridShelf].
- * Home and Explore never pass it, so their heading is unchanged.
  */
 @Composable
 internal fun SectionHeader(
@@ -1132,28 +1601,32 @@ internal fun SectionHeader(
     onShowAll: (() -> Unit)? = null,
     actionLabel: String? = null,
     emphasized: Boolean = false,
-    horizontalInset: androidx.compose.ui.unit.Dp = PAGE_GUTTER,
+    horizontalInset: Dp = PAGE_GUTTER,
 ) {
     val displayTitle = localizeShelfTitle(title)
     val displaySubtitle = localizeShelfSubtitle(subtitle)
     Row(
         modifier = Modifier
-            .padding(horizontal = horizontalInset, vertical = if (emphasized) 8.dp else 10.dp)
+            .padding(horizontal = horizontalInset, vertical = 6.dp)
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
             Text(
                 text = displayTitle,
-                style = if (emphasized) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+                style = if (emphasized) {
+                    MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                } else {
+                    MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                },
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             if (displaySubtitle.isNotBlank()) {
                 Text(
                     text = displaySubtitle,
-                    style = if (emphasized) MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -1161,22 +1634,30 @@ internal fun SectionHeader(
             }
         }
         if (onShowAll != null) {
-            Box(
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.72f),
                 modifier = Modifier
-                    .defaultMinSize(minHeight = 48.dp)
-                    .clickable(role = Role.Button, onClick = onShowAll)
-                    .padding(start = 12.dp),
-                contentAlignment = Alignment.Center,
+                    .padding(start = 10.dp)
+                    .defaultMinSize(minHeight = 32.dp)
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClick = onShowAll),
             ) {
-                Text(
-                    text = actionLabel ?: stringResource(Res.string.show_all),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                ) {
+                    Text(
+                        text = actionLabel ?: stringResource(Res.string.show_all),
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                }
             }
         }
     }
 }
+
 @Composable
 internal fun localizeShelfTitle(title: String): String {
     val trimmed = title.trim()
@@ -1284,6 +1765,7 @@ internal fun localizeShelfTitle(title: String): String {
         else -> title
     }
 }
+
 @Composable
 internal fun localizeShelfSubtitle(subtitle: String): String {
     val trimmed = subtitle.trim()
@@ -1347,121 +1829,6 @@ internal fun localizeCardSubtitle(subtitle: String): String {
     return localizedParts.joinToString(delimiter)
 }
 
-@Composable
-private fun HeroShelf(
-    shelf: HomeShelf,
-    onItemClick: (ShelfItem) -> Unit,
-    onItemLongPress: ((ShelfItem) -> Unit)? = null,
-    currentSong: Song? = null,
-    isPlaying: Boolean = false,
-) {
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .padding(bottom = 28.dp),
-    ) {
-        SectionHeader(shelf.title, shelf.subtitle, emphasized = true)
-        val isCurrentItem = shelf.items.playingItemMatcher(currentSong)
-        val itemKeys = remember(shelf.items) { shelf.items.stableShelfComposeKeys() }
-        // Measured rather than taken as a share of the parent, because the card
-        // has a ceiling as well as a fraction — see [heroCardWidth]. A fixed
-        // width is also the only one of the two the aspect ratio below can turn
-        // into a height, so the card keeps its shape however it was arrived at.
-        BoxWithConstraints {
-            val cardWidth = heroCardWidth(maxWidth)
-            ShelfRow(
-                state = rememberLazyListState(),
-                contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                itemsIndexed(shelf.items, key = { index, _ -> itemKeys[index] }) { _, item ->
-                    HeroCard(
-                        item = item,
-                        onClick = { onItemClick(item) },
-                        onLongPress = onItemLongPress?.let { { it(item) } },
-                        modifier = Modifier.width(cardWidth),
-                        isCurrent = isCurrentItem(item),
-                        isPlaying = isCurrentItem(item) && isPlaying,
-                    )
-                }
-            }
-        }
-    }
-}
-
-/** Big card: artwork with the caption laid over a scrim, as on Listen Now. */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun HeroCard(
-    item: ShelfItem,
-    onClick: () -> Unit,
-    onLongPress: (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
-    isCurrent: Boolean = false,
-    isPlaying: Boolean = false,
-) {
-    Box(
-        modifier = modifier
-            .aspectRatio(1.12f)
-            .clip(RoundedCornerShape(18.dp))
-            .then(
-                if (item.videoId == null) Modifier.thumbnailBorder(RoundedCornerShape(18.dp))
-                else Modifier,
-            )
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
-            .contextClick(onLongPress),
-    ) {
-        AsyncImage(
-            model = item.thumbnailUrl.artworkAt(HEADER_ART_PX),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-        )
-        if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomStart)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.78f)),
-                    ),
-                )
-                .padding(start = 14.dp, end = 14.dp, top = 28.dp, bottom = 12.dp),
-        ) {
-            val scrimAccent = if (MaterialTheme.colorScheme.primary.luminance() >= 0.25f) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.inversePrimary.takeIf { it.luminance() >= 0.25f } ?: Color.White
-            }
-            ShelfItemTitle(
-                item = item,
-                style = MaterialTheme.typography.titleMedium,
-                color = if (isCurrent) scrimAccent else Color.White,
-                maxLines = 1,
-            )
-            if (item.subtitle.isNotBlank()) {
-                val displaySubtitle = localizeCardSubtitle(item.subtitle)
-                Text(
-                    text = displaySubtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.72f),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-    }
-}
-
-/**
- * [leadingCard] rides at the head of the row, ahead of the content — the
- * Library tab's "New playlist" tile, which belongs among the playlists rather
- * than in a bar somewhere above them. [onItemLongPress] opens the album /
- * playlist menu, and is null only where a card points at something with no
- * track list behind it to act on.
- */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun Shelf(
@@ -1473,7 +1840,7 @@ internal fun Shelf(
     currentSong: Song? = null,
     isPlaying: Boolean = false,
 ) {
-    Column(Modifier.padding(bottom = 26.dp)) {
+    Column(Modifier.padding(bottom = HOME_SECTION_SPACING)) {
         val isCurrentItem = shelf.items.playingItemMatcher(currentSong)
         when {
             shelf.title.equals("Quick picks", ignoreCase = true) -> {
@@ -1482,81 +1849,112 @@ internal fun Shelf(
                     subtitle = shelf.subtitle,
                     onShowAll = onPlayAllQuickPicks?.let { { it(shelf) } },
                     actionLabel = stringResource(Res.string.play_all),
-                    emphasized = true,
+                    emphasized = false,
                 )
                 BoxWithConstraints(Modifier.fillMaxWidth()) {
                     val columns = quickPickColumns(maxWidth)
                     val rows = shelf.items.take(if (columns >= 3) columns * 4 else 4).chunked(columns)
-                    Column(Modifier.fillMaxWidth().padding(horizontal = PAGE_GUTTER)) {
-                        rows.forEach { rowItems ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(18.dp),
-                            ) {
-                                rowItems.forEach { item ->
-                                    Column(Modifier.weight(1f)) {
-                                        QuickPickTrackRow(
-                                            item = item,
-                                            onClick = { onItemClick(item) },
-                                            onLongPress = onItemLongPress?.let { { it(item) } },
-                                            isCurrent = isCurrentItem(item),
-                                            isPlaying = isCurrentItem(item) && isPlaying,
-                                        )
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = PAGE_GUTTER),
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                        ) {
+                            rows.forEach { rowItems ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    rowItems.forEach { item ->
+                                        Column(Modifier.weight(1f)) {
+                                            CompactTrackRow(
+                                                title = item.title,
+                                                subtitle = item.subtitle,
+                                                thumbnailUrl = item.thumbnailUrl,
+                                                onClick = { onItemClick(item) },
+                                                onLongPress = onItemLongPress?.let { { it(item) } },
+                                                isCurrent = isCurrentItem(item),
+                                                isPlaying = isCurrentItem(item) && isPlaying,
+                                                isExplicit = item.isExplicit,
+                                            )
+                                        }
                                     }
+                                    repeat(columns - rowItems.size) { Spacer(Modifier.weight(1f)) }
                                 }
-                                repeat(columns - rowItems.size) { Spacer(Modifier.weight(1f)) }
                             }
                         }
                     }
                 }
             }
-            shelf.title.equals("Listen again", ignoreCase = true) ||
-                shelf.title.equals("Keep listening", ignoreCase = true) -> {
-                SectionHeader("Keep listening", shelf.subtitle, emphasized = true)
-                val itemKeys = remember(shelf.items) { shelf.items.stableShelfComposeKeys() }
-                ShelfRow(
-                    contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    itemsIndexed(shelf.items, key = { index, _ -> itemKeys[index] }) { _, item ->
-                        val cardShape = remember(item.videoId ?: item.browseId ?: item.title) {
-                            getMaterial3CardShape(item.videoId ?: item.browseId ?: item.title)
-                        }
-                        ShelfCard(
-                            item = item,
-                            onClick = { onItemClick(item) },
-                            onLongPress = onItemLongPress?.let { { it(item) } },
-                            modifier = Modifier.width(160.dp),
-                            isCurrent = isCurrentItem(item),
-                            isPlaying = isCurrentItem(item) && isPlaying,
-                            titleMaxLines = 2,
-                            subtitleMaxLines = 1,
-                            shape = cardShape,
-                        )
-                    }
-                }
-            }
             else -> {
                 val homeTitle = when {
+                    shelf.title.equals("Listen again", ignoreCase = true) -> "Keep listening"
                     shelf.title.equals("New releases", ignoreCase = true) -> "Fresh finds"
                     shelf.title.equals("Forgotten favorites", ignoreCase = true) -> "Old favorites"
                     else -> shelf.title
+                }
+                val style = remember(shelf.title, shelf.layout, shelf.items) {
+                    shelfPresentationStyle(shelf)
                 }
                 SectionHeader(homeTitle, shelf.subtitle)
                 val itemKeys = remember(shelf.items) { shelf.items.stableShelfComposeKeys() }
                 ShelfRow(
                     contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(HOME_CARD_SPACING),
                 ) {
                     leadingCard?.let { card -> item(key = "leading") { card() } }
                     itemsIndexed(shelf.items, key = { index, _ -> itemKeys[index] }) { _, item ->
-                        ShelfCard(
-                            item = item,
-                            onClick = { onItemClick(item) },
-                            onLongPress = onItemLongPress?.let { { it(item) } },
-                            isCurrent = isCurrentItem(item),
-                            isPlaying = isCurrentItem(item) && isPlaying,
-                        )
+                        when (style) {
+                            ShelfPresentationStyle.ARTIST_CIRCLES -> {
+                                CompactArtistCard(
+                                    item = item,
+                                    onClick = { onItemClick(item) },
+                                    onLongPress = onItemLongPress?.let { { it(item) } },
+                                    isCurrent = isCurrentItem(item),
+                                    isPlaying = isCurrentItem(item) && isPlaying,
+                                )
+                            }
+                            ShelfPresentationStyle.VIDEO_CARDS -> {
+                                CompactDiscoveryCard(
+                                    item = item,
+                                    onClick = { onItemClick(item) },
+                                    onLongPress = onItemLongPress?.let { { it(item) } },
+                                    width = HOME_VIDEO_CARD_WIDTH,
+                                    aspectRatio = 16f / 9f,
+                                    tonalContainer = false,
+                                    isCurrent = isCurrentItem(item),
+                                    isPlaying = isCurrentItem(item) && isPlaying,
+                                )
+                            }
+                            ShelfPresentationStyle.TONAL_CARDS -> {
+                                CompactDiscoveryCard(
+                                    item = item,
+                                    onClick = { onItemClick(item) },
+                                    onLongPress = onItemLongPress?.let { { it(item) } },
+                                    width = HOME_TONAL_CARD_WIDTH,
+                                    tonalContainer = true,
+                                    isCurrent = isCurrentItem(item),
+                                    isPlaying = isCurrentItem(item) && isPlaying,
+                                )
+                            }
+                            ShelfPresentationStyle.COMPACT_CARDS -> {
+                                CompactDiscoveryCard(
+                                    item = item,
+                                    onClick = { onItemClick(item) },
+                                    onLongPress = onItemLongPress?.let { { it(item) } },
+                                    width = HOME_COMPACT_CARD_WIDTH,
+                                    tonalContainer = false,
+                                    isCurrent = isCurrentItem(item),
+                                    isPlaying = isCurrentItem(item) && isPlaying,
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -1564,56 +1962,190 @@ internal fun Shelf(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun QuickPickTrackRow(
+private fun CompactDiscoveryCard(
+    item: ShelfItem,
+    onClick: () -> Unit,
+    onLongPress: (() -> Unit)?,
+    width: Dp,
+    aspectRatio: Float = 1f,
+    tonalContainer: Boolean,
+    isCurrent: Boolean,
+    isPlaying: Boolean,
+) {
+    val cardShape = RoundedCornerShape(12.dp)
+    val artShape = RoundedCornerShape(if (tonalContainer) 8.dp else 10.dp)
+    val titleColor = if (isCurrent) PlayingAccent else MaterialTheme.colorScheme.onSurface
+    val cardContent: @Composable () -> Unit = {
+        Column(modifier = if (tonalContainer) Modifier.padding(6.dp) else Modifier) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(aspectRatio)
+                    .clip(artShape)
+                    .then(
+                        if (item.videoId == null && !tonalContainer) Modifier.thumbnailBorder(artShape)
+                        else Modifier,
+                    )
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+            ) {
+                AsyncImage(
+                    model = item.thumbnailUrl.artworkAt(CARD_ART_PX),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                if (isCurrent && isPlaying) {
+                    SearchPlayingBars(Modifier.align(Alignment.Center))
+                } else if (isCurrent) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(6.dp)
+                            .size(22.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.PlayArrow,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(14.dp),
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+            ShelfItemTitle(
+                item = item,
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontSize = 13.sp,
+                    lineHeight = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                ),
+                color = titleColor,
+                maxLines = 1,
+            )
+            if (item.subtitle.isNotBlank()) {
+                Text(
+                    text = localizeCardSubtitle(item.subtitle),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+
+    if (tonalContainer) {
+        Surface(
+            shape = cardShape,
+            color = if (isCurrent) {
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerLow
+            },
+            border = BorderStroke(
+                width = if (isCurrent) 1.dp else 0.5.dp,
+                color = if (isCurrent) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                } else {
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+                },
+            ),
+            modifier = Modifier
+                .width(width)
+                .clip(cardShape)
+                .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+                .contextClick(onLongPress),
+        ) {
+            cardContent()
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .width(width)
+                .clip(artShape)
+                .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
+                .contextClick(onLongPress),
+        ) {
+            cardContent()
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun CompactArtistCard(
     item: ShelfItem,
     onClick: () -> Unit,
     onLongPress: (() -> Unit)?,
     isCurrent: Boolean,
     isPlaying: Boolean,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth()
+    val titleColor = if (isCurrent) PlayingAccent else MaterialTheme.colorScheme.onSurface
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .width(HOME_ARTIST_CIRCLE_SIZE)
+            .clip(RoundedCornerShape(12.dp))
             .longPressMenuClickable(onClick = onClick, onLongClick = onLongPress)
             .contextClick(onLongPress)
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(vertical = 2.dp),
     ) {
-        Box(Modifier.size(76.dp)) {
+        Box(
+            modifier = Modifier
+                .size(HOME_ARTIST_CIRCLE_SIZE)
+                .clip(CircleShape)
+                .then(
+                    if (isCurrent) {
+                        Modifier.border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                    } else {
+                        Modifier.thumbnailBorder(CircleShape)
+                    },
+                )
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+        ) {
             AsyncImage(
-                model = item.thumbnailUrl.artworkAt(ROW_ART_PX),
+                model = item.thumbnailUrl.artworkAt(CARD_ART_PX),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-                    .clip(RoundedCornerShape(9.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                modifier = Modifier.fillMaxSize(),
             )
             if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
         }
-        Spacer(Modifier.width(14.dp))
-        Column(Modifier.weight(1f)) {
-            ShelfItemTitle(
-                item = item,
-                style = MaterialTheme.typography.titleMedium,
-                color = if (isCurrent) PlayingAccent else MaterialTheme.colorScheme.onBackground,
-                maxLines = 1,
-            )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = item.title,
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+            ),
+            color = titleColor,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        if (item.subtitle.isNotBlank()) {
             Text(
                 text = localizeCardSubtitle(item.subtitle),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
-        if (onLongPress != null) RowMoreButton(onClick = onLongPress)
     }
 }
 
 /**
- * A card that isn't a thing yet — the dashed "New playlist" tile at the head
- * of the Library's playlist row, sized to sit in line with the covers beside
- * it rather than as a button bolted above them.
+ * Tile used at the head of Library's playlist row ("New playlist" / "Import Spotify").
  */
 @Composable
 internal fun NewShelfCard(
@@ -1622,7 +2154,6 @@ internal fun NewShelfCard(
     subtitle: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier.width(SHELF_CARD_WIDTH),
-    /** A full-colour mark drawn in place of [icon], for a card that stands for a brand. */
     logo: DrawableResource? = null,
 ) {
     Column(
@@ -1633,16 +2164,14 @@ internal fun NewShelfCard(
                 .fillMaxWidth()
                 .aspectRatio(1f)
                 .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             contentAlignment = Alignment.Center,
         ) {
             if (logo != null) {
-                // The mark is a disc with the bars cut out, so tinting it
-                // leaves the bars clear: white on dark, black on light.
                 Icon(
                     painter = painterResource(logo),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onBackground,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(44.dp),
                 )
             } else {
@@ -1654,11 +2183,11 @@ internal fun NewShelfCard(
                 )
             }
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(8.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -1672,11 +2201,6 @@ internal fun NewShelfCard(
     }
 }
 
-/**
- * A device-folder card: mesh gradient in the folder's colours with its glyph
- * on top. One composable for local nevanstudio, WebDAV and SMB rather than three
- * copies of the same box.
- */
 @Composable
 private fun ServiceCard(colors: List<Color>, trackKey: String, icon: ImageVector) {
     val palette = remember { MeshPalette(colors) }
@@ -1690,8 +2214,8 @@ private fun ServiceCard(colors: List<Color>, trackKey: String, icon: ImageVector
         MeshGradientBackground(
             palette = palette,
             trackKey = trackKey,
-            continuous = true,
-            blurRadius = 24.dp,
+            continuous = !LocalAdaptivePerformance.current.disableContinuousMotion,
+            blurRadius = if (LocalAdaptivePerformance.current.disableMeshGradientBlur) 0.dp else 24.dp,
         )
         Icon(
             imageVector = icon,
@@ -1702,20 +2226,11 @@ private fun ServiceCard(colors: List<Color>, trackKey: String, icon: ImageVector
     }
 }
 
-/** Material 3 Expressive shape palette for card randomized shapes. */
+/** Material 3 Expressive shape palette for Library card shapes. */
 internal val Material3RandomizedShapes: List<CornerBasedShape> = listOf(
+    RoundedCornerShape(14.dp),
     RoundedCornerShape(16.dp),
-    RoundedCornerShape(24.dp),
-    RoundedCornerShape(topStart = 28.dp, topEnd = 6.dp, bottomStart = 6.dp, bottomEnd = 28.dp),
-    RoundedCornerShape(topStart = 6.dp, topEnd = 28.dp, bottomStart = 28.dp, bottomEnd = 6.dp),
-    RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp, bottomStart = 8.dp, bottomEnd = 8.dp),
-    RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomStart = 28.dp, bottomEnd = 28.dp),
-    RoundedCornerShape(topStart = 28.dp, topEnd = 12.dp, bottomStart = 12.dp, bottomEnd = 12.dp),
-    RoundedCornerShape(topStart = 12.dp, topEnd = 28.dp, bottomStart = 12.dp, bottomEnd = 12.dp),
-    RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomStart = 12.dp, bottomEnd = 28.dp),
-    RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomStart = 28.dp, bottomEnd = 12.dp),
-    RoundedCornerShape(20.dp),
-    RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 24.dp, bottomEnd = 6.dp),
+    RoundedCornerShape(12.dp),
 )
 
 internal fun getMaterial3CardShape(seed: String): CornerBasedShape {
@@ -1730,15 +2245,12 @@ internal fun ShelfCard(
     onClick: () -> Unit,
     onLongPress: (() -> Unit)? = null,
     modifier: Modifier = Modifier.width(SHELF_CARD_WIDTH),
-    /** Set on a Library playlist card that's in [AppSettings.pinnedPlaylists][com.nevanstudio.nevtuneplus.data.settings.AppSettings.pinnedPlaylists]. */
     isPinned: Boolean = false,
     isCurrent: Boolean = false,
     isPlaying: Boolean = false,
     titleMaxLines: Int = 1,
     subtitleMaxLines: Int = 1,
-    shape: Shape = remember(item.videoId ?: item.browseId ?: item.title) {
-        getMaterial3CardShape(item.videoId ?: item.browseId ?: item.title)
-    },
+    shape: Shape = RoundedCornerShape(12.dp),
 ) {
     Column(
         modifier = modifier
@@ -1758,8 +2270,8 @@ internal fun ShelfCard(
                     MeshGradientBackground(
                         palette = palette,
                         trackKey = "local:downloads",
-                        continuous = true,
-                        blurRadius = 24.dp,
+                        continuous = !LocalAdaptivePerformance.current.disableContinuousMotion,
+                        blurRadius = if (LocalAdaptivePerformance.current.disableMeshGradientBlur) 0.dp else 24.dp,
                     )
                     Icon(
                         imageVector = NevTunePlusIcons.Download,
@@ -1799,19 +2311,19 @@ internal fun ShelfCard(
                             if (item.videoId == null) Modifier.thumbnailBorder(shape)
                             else Modifier,
                         )
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
                 ) {
                     AsyncImage(
                         model = item.thumbnailUrl.artworkAt(CARD_ART_PX),
                         contentDescription = null,
-                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize(),
                     )
                     if (isCurrent && isPlaying) SearchPlayingBars(Modifier.align(Alignment.Center))
                 }
             }
         }
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -1820,22 +2332,22 @@ internal fun ShelfCard(
                 Icon(
                     imageVector = NevTunePlusIcons.Pin,
                     contentDescription = stringResource(Res.string.pinned),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(14.dp),
                 )
                 Spacer(Modifier.width(4.dp))
             }
             ShelfItemTitle(
                 item = item,
-                style = MaterialTheme.typography.titleMedium,
-                color = if (isCurrent) PlayingAccent else MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                color = if (isCurrent) PlayingAccent else MaterialTheme.colorScheme.onSurface,
                 maxLines = titleMaxLines,
             )
         }
         val displaySubtitle = localizeCardSubtitle(item.subtitle)
         Text(
             text = displaySubtitle,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = subtitleMaxLines,
             overflow = TextOverflow.Ellipsis,
@@ -1846,14 +2358,14 @@ internal fun ShelfCard(
 @Composable
 private fun ShelfItemTitle(
     item: ShelfItem,
-    style: androidx.compose.ui.text.TextStyle,
+    style: TextStyle,
     color: Color,
     maxLines: Int,
 ) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
         if (item.isExplicit == true) {
             ExplicitBadge(color)
-            Spacer(Modifier.width(6.dp))
+            Spacer(Modifier.width(5.dp))
         }
         Text(
             text = item.title,

@@ -18,6 +18,7 @@ object AndroidAppUiHost : AppUiHost {
     override fun setWeeklyRecapSeenWeek(value: Long) = AppSettings.setWeeklyRecapSeenWeek(value)
     override val pinnedPlaylists = AppSettings.pinnedPlaylists
     override val librarySort = AppSettings.librarySort
+    override val adaptivePerformance = AppSettings.adaptivePerformance
 
     @Composable
     override fun downloadedIds(): Set<String> {

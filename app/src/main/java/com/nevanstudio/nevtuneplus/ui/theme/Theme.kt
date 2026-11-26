@@ -5,6 +5,7 @@ package com.nevanstudio.nevtuneplus.ui.theme
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -184,6 +185,7 @@ fun NevTunePlusTheme(
 
     CompositionLocalProvider(
         LocalExtendedColors provides extendedColors,
+        LocalContentColor provides colorScheme.onSurface,
         LocalDensity provides Density(
             density = baseDensity.density,
             fontScale = baseDensity.fontScale * adaptiveFontScale,

@@ -30,8 +30,8 @@ import com.nevanstudio.nevtuneplus.data.lyrics.LyricsSource
 import com.nevanstudio.nevtuneplus.data.settings.AppSettings
 import com.nevanstudio.nevtuneplus.data.stats.varyHomeFeed
 import com.nevanstudio.nevtuneplus.ui.navigation.AppNavigator
+import com.nevanstudio.nevtuneplus.ui.performance.AdaptivePerformanceEngine
 import com.nevanstudio.nevtuneplus.data.innertube.Innertube
-import com.nevanstudio.nevtuneplus.data.innertube.PlaybackTracker
 import com.nevanstudio.nevtuneplus.data.innertube.StreamResolver
 import com.nevanstudio.nevtuneplus.auth.CapturedSession
 import com.nevanstudio.nevtuneplus.auth.WebSessionMode
@@ -118,6 +118,14 @@ private data class LocalLibrarySyncTrigger(
     val favorites: List<Song>,
     val playlists: List<com.nevanstudio.nevtuneplus.data.spotify.LocalPlaylist>,
 )
+
+internal const val HOME_AUTO_REFRESH_INTERVAL_MS = 24L * 60L * 60L * 1000L
+
+internal fun shouldAutoRefreshHome(
+    nowMs: Long,
+    lastRefreshedAtMs: Long,
+    intervalMs: Long = HOME_AUTO_REFRESH_INTERVAL_MS,
+): Boolean = lastRefreshedAtMs > 0L && (nowMs - lastRefreshedAtMs) >= intervalMs
 
 @androidx.annotation.OptIn(markerClass = [androidx.media3.common.util.UnstableApi::class])
 @OptIn(FlowPreview::class)
@@ -1658,9 +1666,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Whether the library needs re-fetching. Set by every write above and
-     * acted on when the tab is next opened, for the same reason [homeStale]
-     * exists: rearranging a page under whoever is reading it is worse than
-     * showing it a moment out of date.
+     * acted on when the tab is next opened: rearranging a page under whoever
+     * is reading it is worse than showing it a moment out of date.
      */
     private var libraryStale = false
 
@@ -1714,10 +1721,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             loadLibrary()
             loadAccount()
             loadPlaylists()
-        }
-        viewModelScope.launch {
-            // drop(1): the current value is just the count so far, not a play.
-            PlaybackTracker.registeredPlays.drop(1).collect { homeStale = true }
         }
         viewModelScope.launch {
             BoundedContextRequests.snapshot.collect { snapshot ->
@@ -1807,21 +1810,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Whether a play has been registered since the home feed was last fetched.
+     * Epoch timestamp (ms) of the last successful Home load or refresh.
      *
-     * The feed leads with listening history, so it's out of date the moment a
-     * track starts — but re-fetching there would rearrange the page under
-     * whoever is reading it, and the tab is usually in the background anyway.
-     * It's re-fetched when the tab is next opened instead.
+     * Returning from Settings or other screens must not re-fetch or reshuffle
+     * the Home feed; automatic refreshes only run after 24 hours have passed
+     * or when the user triggers a manual refresh.
      */
-    private var homeStale = false
+    private var lastHomeRefreshAtMs = 0L
 
     /** Call when the home tab becomes visible. */
     fun onHomeShown() {
-        if (!homeStale) return
-        homeStale = false
-        // A first load already in flight will pick the new play up by itself.
-        if (_home.value is UiState.Success) refresh(Feed.HOME)
+        if (_home.value is UiState.Success &&
+            shouldAutoRefreshHome(System.currentTimeMillis(), lastHomeRefreshAtMs)
+        ) {
+            refresh(Feed.HOME)
+        }
     }
 
     private fun loadAccount() {
@@ -1913,8 +1916,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * without saturating the browse client or delaying the category list.
      */
     private fun loadMoodGenreArtwork(sections: List<MoodGenreSection>) {
+        val perfConfig = AdaptivePerformanceEngine.config.value
+        if (!perfConfig.enableBackgroundPreload) return
         viewModelScope.launch {
-            val limiter = Semaphore(4)
+            val limiter = Semaphore(perfConfig.preloadConcurrency.coerceAtLeast(1))
             coroutineScope {
                 sections.flatMap(MoodGenreSection::items).forEach { item ->
                     launch {
@@ -2103,6 +2108,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             )
             homeSeenTitles.clear()
             homeSeenTitles.addAll(unique.map { it.title.lowercase(Locale.ROOT) })
+            lastHomeRefreshAtMs = System.currentTimeMillis()
             _home.value = UiState.Success(unique)
             return
         }
@@ -2117,6 +2123,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val unique = deduplicateHomeTracks(mergeDuplicateHomeCredits(combined), homeSeenVideoIds)
             homeSeenTitles.clear()
             homeSeenTitles.addAll(unique.map { it.title.lowercase(Locale.ROOT) })
+            lastHomeRefreshAtMs = System.currentTimeMillis()
             _home.value = UiState.Success(unique)
             return
         }
@@ -2176,6 +2183,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             .withoutRepeatsOf(emptyList())
         val shelves = deduplicateHomeTracks(mergeDuplicateHomeCredits(varied), homeSeenVideoIds)
             .filter { homeSeenTitles.add(it.title.lowercase(Locale.ROOT)) }
+        lastHomeRefreshAtMs = System.currentTimeMillis()
         _home.value = UiState.Success(shelves)
         recent?.await()?.onSuccess { shelf ->
             if (shouldPublishHomeRefresh(

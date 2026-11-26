@@ -34,4 +34,32 @@ class FeedRefreshTest {
 
         assertEquals(emptySet<String>(), state.value)
     }
+
+    @Test
+    fun homeAutoRefreshIsBlockedWithin24HoursAndAllowedAfter24Hours() {
+        val t0 = 1_700_000_000_000L
+        assertEquals(false, shouldAutoRefreshHome(nowMs = t0, lastRefreshedAtMs = 0L))
+        assertEquals(false, shouldAutoRefreshHome(nowMs = t0 + 1_000L, lastRefreshedAtMs = t0))
+        assertEquals(
+            false,
+            shouldAutoRefreshHome(
+                nowMs = t0 + HOME_AUTO_REFRESH_INTERVAL_MS - 1L,
+                lastRefreshedAtMs = t0,
+            ),
+        )
+        assertEquals(
+            true,
+            shouldAutoRefreshHome(
+                nowMs = t0 + HOME_AUTO_REFRESH_INTERVAL_MS,
+                lastRefreshedAtMs = t0,
+            ),
+        )
+        assertEquals(
+            true,
+            shouldAutoRefreshHome(
+                nowMs = t0 + HOME_AUTO_REFRESH_INTERVAL_MS + 60_000L,
+                lastRefreshedAtMs = t0,
+            ),
+        )
+    }
 }

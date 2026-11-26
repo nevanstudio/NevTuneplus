@@ -1209,4 +1209,19 @@ Project: NevTune+
     <string name="auto_empty_albums_subtitle">ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง</string>
     <string name="hide_explicit_content">ซ่อนเนื้อหาที่โจ่งแจ้ง</string>
     <string name="hide_explicit_content_subtitle">นำเพลงและอัลบั้มที่แค็ตตาล็อกระบุว่าเป็นเนื้อหาโจ่งแจ้งออกจากหน้าค้นพบและคำแนะนำ รายการที่ไม่มีป้ายกำกับยังคงแสดงอยู่</string>
+    <string name="performance_profile">โปรไฟล์ประสิทธิภาพ</string>
+    <string name="performance_profile_auto">อัตโนมัติ</string>
+    <string name="performance_profile_lite">เบา</string>
+    <string name="performance_profile_balanced">สมดุล</string>
+    <string name="performance_profile_high_quality">คุณภาพสูง</string>
+    <string name="performance_profile_active_summary">ใช้งานอยู่: %1$s · %2$s</string>
+    <string name="performance_profile_downgraded_summary">ใช้งานอยู่: %1$s (ปรับตาม%2$s) · %3$s</string>
+    <string name="performance_profile_lite_description">ลดแอนิเมชัน ปิดเบลอแบบเรียลไทม์ และใช้หน่วยความจำน้อยลง</string>
+    <string name="performance_profile_balanced_description">เอฟเฟกต์สมดุลพร้อมระบบป้องกันหน่วยความจำและเฟรมเรตอัตโนมัติ</string>
+    <string name="performance_profile_high_description">เอฟเฟกต์เต็มรูปแบบ แคชปกอัลบั้มขนาดใหญ่ และอัตรารีเฟรชสูง</string>
+    <string name="performance_hardware_detected">ฮาร์ดแวร์ของอุปกรณ์</string>
+    <string name="performance_override_warning_title">ใช้โปรไฟล์ %1$s หรือไม่?</string>
+    <string name="performance_override_warning_message">อุปกรณ์นี้ (%1$s) เหมาะกับโหมด %2$s การเลือก %3$s อาจเพิ่มการใช้แบตเตอรี่ แรงกดดันหน่วยความจำ หรือเฟรมดรอป</string>
+    <string name="performance_override_apply">ใช้ %1$s</string>
+    <string name="performance_keep_recommended">ใช้ %1$s ต่อ</string>
 </resources>

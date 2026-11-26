@@ -1286,4 +1286,19 @@ Project: NevTune+
     <string name="auto_empty_albums_subtitle">Vérifiez votre connexion et réessayez</string>
     <string name="hide_explicit_content">Masquer le contenu explicite</string>
     <string name="hide_explicit_content_subtitle">Exclut de la découverte et des recommandations les morceaux et albums signalés comme explicites par le catalogue. Les éléments sans étiquette restent visibles.</string>
+    <string name="performance_profile">Profil de performances</string>
+    <string name="performance_profile_auto">Auto</string>
+    <string name="performance_profile_lite">Lite</string>
+    <string name="performance_profile_balanced">Équilibré</string>
+    <string name="performance_profile_high_quality">Haute qualité</string>
+    <string name="performance_profile_active_summary">Actif : %1$s · %2$s</string>
+    <string name="performance_profile_downgraded_summary">Actif : %1$s (adapté pour %2$s) · %3$s</string>
+    <string name="performance_profile_lite_description">Animations minimales, sans flou en temps réel et utilisation mémoire réduite</string>
+    <string name="performance_profile_balanced_description">Effets modérés avec protection automatique de la mémoire et des images</string>
+    <string name="performance_profile_high_description">Effets complets, cache de pochettes étendu et taux de rafraîchissement élevé</string>
+    <string name="performance_hardware_detected">Matériel détecté</string>
+    <string name="performance_override_warning_title">Utiliser le profil %1$s ?</string>
+    <string name="performance_override_warning_message">Cet appareil (%1$s) est adapté au mode %2$s. Choisir %3$s peut augmenter la consommation de batterie, la pression mémoire ou les saccades.</string>
+    <string name="performance_override_apply">Utiliser %1$s</string>
+    <string name="performance_keep_recommended">Garder %1$s</string>
 </resources>

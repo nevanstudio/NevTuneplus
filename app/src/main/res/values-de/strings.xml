@@ -1259,4 +1259,19 @@ Project: NevTune+
     <string name="auto_empty_albums_subtitle">Prüfe deine Verbindung und versuche es erneut</string>
     <string name="hide_explicit_content">Explizite Inhalte ausblenden</string>
     <string name="hide_explicit_content_subtitle">Schließt vom Katalog als explizit gekennzeichnete Songs und Alben aus Entdecken und Empfehlungen aus. Nicht gekennzeichnete Inhalte bleiben sichtbar.</string>
+    <string name="performance_profile">Leistungsprofil</string>
+    <string name="performance_profile_auto">Auto</string>
+    <string name="performance_profile_lite">Lite</string>
+    <string name="performance_profile_balanced">Ausgewogen</string>
+    <string name="performance_profile_high_quality">Hohe Qualität</string>
+    <string name="performance_profile_active_summary">Aktiv: %1$s · %2$s</string>
+    <string name="performance_profile_downgraded_summary">Aktiv: %1$s (angepasst wegen %2$s) · %3$s</string>
+    <string name="performance_profile_lite_description">Minimale Animationen, kein Echtzeit-Weichzeichner und geringerer Speicherbedarf</string>
+    <string name="performance_profile_balanced_description">Ausgewogene Effekte mit automatischem Speicher- und Bildratenschutz</string>
+    <string name="performance_profile_high_description">Volle Effekte, hochauflösender Cover-Cache und hohe Bildwiederholrate</string>
+    <string name="performance_hardware_detected">Gerätehardware</string>
+    <string name="performance_override_warning_title">Profil „%1$s“ verwenden?</string>
+    <string name="performance_override_warning_message">Dieses Gerät (%1$s) ist für den Modus %2$s geeignet. Die Wahl von %3$s kann zu höherem Akkuverbrauch, Speicherbelastung oder Rucklern führen.</string>
+    <string name="performance_override_apply">%1$s verwenden</string>
+    <string name="performance_keep_recommended">%1$s behalten</string>
 </resources>

@@ -362,6 +362,9 @@ import com.nevanstudio.nevtuneplus.data.canvas.keyColors
 import com.nevanstudio.nevtuneplus.ui.theme.SystemBarIcons
 import com.nevanstudio.nevtuneplus.ui.utils.guardSheetFromContentTouches
 import com.nevanstudio.nevtuneplus.ui.utils.rememberIosOverscrollFactory
+import com.nevanstudio.nevtuneplus.ui.performance.AdaptivePerformanceEngine
+import com.nevanstudio.nevtuneplus.ui.performance.LocalAdaptivePerformance
+import com.nevanstudio.nevtuneplus.ui.performance.RuntimePerformanceMonitor
 import com.nevanstudio.nevtuneplus.ui.performance.resolvePerformanceRefreshRate
 import dev.chrisbanes.haze.HazeState
 import com.nevanstudio.nevtuneplus.ui.player.PlayerPlatform
@@ -385,6 +388,29 @@ class MainActivity : AppCompatActivity() {
     private val firstDrawWarmupGate = StartupFirstDrawGate {
         InnerTubeXResolver.onFirstFrameDrawn()
     }
+    private var runtimePerfMonitor: RuntimePerformanceMonitor? = null
+
+    override fun onStart() {
+        super.onStart()
+        AdaptivePerformanceEngine.refreshSystemPressure(applicationContext)
+        if (runtimePerfMonitor == null) {
+            runtimePerfMonitor = RuntimePerformanceMonitor(applicationContext) {
+                val config = AppSettings.adaptivePerformance.value
+                val displayRate = window?.decorView?.display?.refreshRate ?: 60f
+                if (config.allowHighRefreshRate) {
+                    AppSettings.performanceRefreshRate.value.toFloat().coerceAtMost(displayRate.coerceAtLeast(60f))
+                } else {
+                    displayRate
+                }
+            }
+        }
+        runtimePerfMonitor?.start()
+    }
+
+    override fun onStop() {
+        runtimePerfMonitor?.stop()
+        super.onStop()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -398,13 +424,13 @@ class MainActivity : AppCompatActivity() {
         installFirstDrawWarmupGate()
         setContent {
             val theme by AppSettings.themeMode.collectAsStateWithLifecycle()
-            val highPerformance by AppSettings.highPerformanceMode.collectAsStateWithLifecycle()
+            val adaptivePerf by AppSettings.adaptivePerformance.collectAsStateWithLifecycle()
             val liquidGlassEnabled by AppSettings.liquidGlass.collectAsStateWithLifecycle()
             val iosOverscrollFactory = rememberIosOverscrollFactory()
             val performanceRefreshRate by AppSettings.performanceRefreshRate.collectAsStateWithLifecycle()
             val composeView = LocalView.current
-            LaunchedEffect(highPerformance, performanceRefreshRate, composeView) {
-                applyPerformanceMode(highPerformance, performanceRefreshRate, composeView)
+            LaunchedEffect(adaptivePerf.allowHighRefreshRate, performanceRefreshRate, composeView) {
+                applyPerformanceMode(adaptivePerf.allowHighRefreshRate, performanceRefreshRate, composeView)
             }
             val darkTheme = resolveDarkTheme(theme)
             BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -428,7 +454,8 @@ class MainActivity : AppCompatActivity() {
                 val appBackdrop = rememberLayerBackdrop(onDraw = paintBackdrop)
                 CompositionLocalProvider(
                     LocalOverscrollFactory provides iosOverscrollFactory,
-                    LocalLiquidGlassEnabled provides liquidGlassEnabled,
+                    LocalAdaptivePerformance provides adaptivePerf,
+                    LocalLiquidGlassEnabled provides (liquidGlassEnabled && !adaptivePerf.disableBlurAndGlass),
                     LocalAppBackdrop provides appBackdrop,
                 ) {
                     NevTunePlusApp(
@@ -532,9 +559,8 @@ private fun NevTunePlusApp(
     // solid (see [Modifier.liquidGlass]) and the whole-page layer recording
     // below goes with them, which is the part that costs a draw pass.
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
-    val adaptiveBlurReduction by AppSettings.adaptivePerformancePressure.collectAsStateWithLifecycle()
-    val highPerformanceMode by AppSettings.highPerformanceMode.collectAsStateWithLifecycle()
-    val glassSamplesBackdrop = glassActive && !reduceDynamicBlur && !(highPerformanceMode && adaptiveBlurReduction)
+    val adaptivePerf = LocalAdaptivePerformance.current
+    val glassSamplesBackdrop = glassActive && !reduceDynamicBlur && !adaptivePerf.disableBlurAndGlass
     // What folds [GlassNavBar] between its expanded and inline shapes. Held here
     // rather than inside the bar because the page's scroll is what drives it,
     // and the page is a sibling of the bar rather than a child.
@@ -2436,18 +2462,18 @@ private fun NevTunePlusApp(
     val timeAwareShelfSubtitle = stringResource(R.string.time_aware_shelf_subtitle)
     val timeAwareShelf by produceState<HomeShelf?>(
         initialValue = null,
-        selectedTab,
-        route,
-        detail,
         timeAwareShelfEnabled,
         homeState,
     ) {
-        value = null
-        if (!timeAwareShelfEnabled || selectedTab != TAB_HOME || route != null || detail != null) {
+        if (!timeAwareShelfEnabled) {
+            value = null
             return@produceState
         }
         val availableShelves = (homeState as? UiState.Success)?.data.orEmpty()
-        if (availableShelves.isEmpty()) return@produceState
+        if (availableShelves.isEmpty()) {
+            value = null
+            return@produceState
+        }
 
         while (true) {
             val now = java.time.LocalTime.now()
@@ -2459,7 +2485,7 @@ private fun NevTunePlusApp(
             val picks = sourceShelf?.items.orEmpty()
                 .filter { it.videoId != null || it.browseId != null }
                 .distinctBy { it.videoId ?: it.browseId ?: it.title }
-                .take(3)
+                .take(6)
             value = block?.takeIf { picks.isNotEmpty() }?.let { selectedBlock ->
                 HomeShelf(
                     title = timeAwareShelfTitles.getValue(selectedBlock),
@@ -2799,10 +2825,10 @@ private fun NevTunePlusApp(
         if (!navigator.pop() && !viewModel.closeMoodGenre()) selectedTab = TAB_HOME
     }
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         // A pushed page replaces the tab content but leaves the tab bar and
         // mini player in place.

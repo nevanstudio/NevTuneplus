@@ -47,6 +47,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -108,8 +110,15 @@ fun GlassNavBar(
     // lambda, which the tab bar sees as a changed argument and recomposes on.
     val pillShape = remember { RoundedCornerShape(percent = 50) }
     val contentColor = glassContentColor()
-    val selectedColor = contentColor
-    val unselectedColor = contentColor.copy(alpha = 0.65f)
+    val scheme = MaterialTheme.colorScheme
+    val isDarkSurface = scheme.surface.luminance() <= 0.5f
+    val selectedColor = if (isDarkSurface) {
+        if (scheme.primary.luminance() >= 0.25f) scheme.primary
+        else scheme.inversePrimary.takeIf { it.luminance() >= 0.25f } ?: contentColor
+    } else {
+        if (scheme.primary.luminance() <= 0.55f) scheme.primary else contentColor
+    }
+    val unselectedColor = lerp(contentColor.copy(alpha = 0.68f), scheme.onSurfaceVariant, 0.45f)
     val haptics = rememberHaptics()
 
     // The tab content lambdas below are captured once per contentKey and held
@@ -183,7 +192,7 @@ fun GlassNavBar(
         colors = FloatingTabBarDefaults.colors(
             backgroundColor = Color.Transparent,
             accessoryBackgroundColor = Color.Transparent,
-            indicatorColor = glassIndicatorColor(),
+            indicatorColor = scheme.primary.copy(alpha = if (isDarkSurface) 0.20f else 0.16f),
         ),
         // Flat, because the glass is not. Every surface here already draws its
         // own [Shadow.Default] as part of the backdrop pass, and the library's

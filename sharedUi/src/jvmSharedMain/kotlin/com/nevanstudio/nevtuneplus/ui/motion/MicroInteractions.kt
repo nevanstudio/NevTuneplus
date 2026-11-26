@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.nevanstudio.nevtuneplus.ui.performance.LocalAdaptivePerformance
 import com.nevanstudio.nevtuneplus.ui.player.PlayerSettings
 
 /**
@@ -30,7 +31,8 @@ fun Modifier.microPressScale(
     pressedScale: Float = MotionTokens.PRESS_SCALE,
 ): Modifier {
     val pressed by interactionSource.collectIsPressedAsState()
-    val reduceMotion by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
+    val reduceAnimationSetting by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
+    val reduceMotion = reduceAnimationSetting || LocalAdaptivePerformance.current.reduceAnimations
     val scale by animateFloatAsState(
         targetValue = if (pressed && enabled && !reduceMotion) pressedScale else 1f,
         animationSpec = when {
@@ -52,6 +54,7 @@ fun Modifier.microPressScale(
 /** The same theme-owned ripple across custom controls; omitted when motion is reduced. */
 @Composable
 fun microRipple(): Indication? {
-    val reduceMotion by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
+    val reduceAnimationSetting by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
+    val reduceMotion = reduceAnimationSetting || LocalAdaptivePerformance.current.reduceAnimations
     return if (reduceMotion) null else LocalIndication.current
 }

@@ -45,6 +45,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -302,14 +304,24 @@ fun FloatingBottomBar(
             // color instead and picks pure black or white, same as the tint
             // Echo's floating nav bar uses for its own liquid glass.
             val glassTint = glassContentColor()
-            val adaptiveTint = if (useGlass) glassTint else null
+            val scheme = MaterialTheme.colorScheme
+            val isDarkSurface = scheme.surface.luminance() <= 0.5f
+            val glassSelectedTint = if (isDarkSurface) {
+                if (scheme.primary.luminance() >= 0.25f) scheme.primary
+                else scheme.inversePrimary.takeIf { it.luminance() >= 0.25f } ?: glassTint
+            } else {
+                if (scheme.primary.luminance() <= 0.55f) scheme.primary else glassTint
+            }
+            val glassUnselectedTint = lerp(glassTint.copy(alpha = 0.68f), scheme.onSurfaceVariant, 0.45f)
+            val adaptiveSelected = if (useGlass) glassSelectedTint else null
+            val adaptiveUnselected = if (useGlass) glassUnselectedTint else null
             tabs.forEachIndexed { index, tab ->
                 BottomBarItem(
                     tab = tab,
                     selected = index == selectedIndex,
                     glassSpec = glassSpec,
-                    selectedTint = adaptiveTint,
-                    unselectedTint = adaptiveTint?.copy(alpha = 0.65f),
+                    selectedTint = adaptiveSelected,
+                    unselectedTint = adaptiveUnselected,
                     onClick = { onTabSelected(index) },
                     modifier = Modifier.weight(1f),
                 )

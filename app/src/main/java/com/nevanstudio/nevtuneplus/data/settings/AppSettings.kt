@@ -19,6 +19,10 @@ import com.nevanstudio.nevtuneplus.data.lyrics.LyricsSource
 import com.nevanstudio.nevtuneplus.data.sources.SourceKind
 import com.nevanstudio.nevtuneplus.playback.EqLayout
 import com.nevanstudio.nevtuneplus.playback.EqualizerPreset
+import com.nevanstudio.nevtuneplus.ui.performance.AdaptivePerformanceConfig
+import com.nevanstudio.nevtuneplus.ui.performance.AdaptivePerformanceEngine
+import com.nevanstudio.nevtuneplus.ui.performance.PerformanceProfileMode
+import com.nevanstudio.nevtuneplus.ui.performance.PerformanceTier
 import kotlinx.coroutines.flow.MutableStateFlow
 
 
@@ -236,8 +240,35 @@ object AppSettings {
     /** Runtime pressure is transient and never overwrites the listener preferences. */
     val adaptivePerformancePressure = MutableStateFlow(false)
 
+    /** Unified multi-tier adaptive configuration for UI, animations, image loading, and preloading. */
+    val adaptivePerformance = AdaptivePerformanceEngine.config
+
+    /** User-selected performance profile mode ([PerformanceProfileMode.AUTO] by default). */
+    val performanceProfileMode = MutableStateFlow(PerformanceProfileMode.AUTO)
+
+    @Volatile
+    private var appContext: Context? = null
+
+    @Volatile
+    private var userReduceAnimation = false
+
+    @Volatile
+    private var userReduceDynamicBlur = false
+
+    @Volatile
+    private var userProgressiveScrollEdgeBlur = true
+
+    @Volatile
+    private var userLiquidGlass = false
+
+    @Volatile
+    private var userLyricsBlur = true
+
+    @Volatile
+    private var userAnimatedCanvas = true
+
     val effectiveReduceDynamicBlur: Boolean
-        get() = reduceDynamicBlur.value || (highPerformanceMode.value && adaptivePerformancePressure.value)
+        get() = reduceDynamicBlur.value || adaptivePerformance.value.disableBlurAndGlass
 
     // `losslessAudio` used to live here, behind a "Prefer lossless" switch on
     // the Sources screen. It is gone: sources are asked for their best and each
@@ -405,7 +436,7 @@ object AppSettings {
     val onboardingComplete = MutableStateFlow(false)
 
     /** Requests a sustained high-refresh UI. Off keeps Android's automatic policy. */
-    val highPerformanceMode = MutableStateFlow(true)
+    val highPerformanceMode = MutableStateFlow(false)
 
     /** Preferred UI refresh rate while [highPerformanceMode] is enabled. */
     val performanceRefreshRate = MutableStateFlow(DEFAULT_PERFORMANCE_REFRESH_RATE)
@@ -845,8 +876,10 @@ object AppSettings {
      * one here was a measurable slice of cold start.
      */
     fun init(context: Context, authStore: AuthStore) {
+        appContext = context.applicationContext
         prefs = context.getSharedPreferences("audify_settings", Context.MODE_PRIVATE)
         this.authStore = authStore
+        AdaptivePerformanceEngine.onConfigChanged = ::syncFromAdaptiveConfig
         com.nevanstudio.nevtuneplus.data.spotify.LocalPlaylistStore.init(context)
         com.nevanstudio.nevtuneplus.data.playlist.SmartPlaylistStore.init(context)
         com.nevanstudio.nevtuneplus.data.stats.LocalLibraryStore.init(context)
@@ -940,9 +973,17 @@ object AppSettings {
         shuffleEnabled.value = prefs.getBoolean(KEY_SHUFFLE_ENABLED, false)
         repeatMode.value = prefs.getInt(KEY_REPEAT_MODE, Player.REPEAT_MODE_OFF)
         showNerdStats.value = prefs.getBoolean(KEY_NERD_STATS, false)
-        reduceAnimation.value = prefs.getBoolean(KEY_REDUCE_ANIMATION, false)
+        val storedProfile = prefs.getString(KEY_PERFORMANCE_PROFILE_MODE, null)
+        performanceProfileMode.value = runCatching {
+            PerformanceProfileMode.valueOf(storedProfile ?: PerformanceProfileMode.AUTO.name)
+        }.getOrDefault(PerformanceProfileMode.AUTO)
+        userReduceAnimation = prefs.getBoolean(KEY_REDUCE_ANIMATION, false)
+        userReduceDynamicBlur = prefs.getBoolean(KEY_REDUCE_BLUR, false)
+        userProgressiveScrollEdgeBlur = prefs.getBoolean(KEY_PROGRESSIVE_SCROLL_EDGE_BLUR, true)
+        userLiquidGlass = prefs.getBoolean(KEY_LIQUID_GLASS, false)
+        userLyricsBlur = prefs.getBoolean(KEY_LYRICS_BLUR, true)
+        userAnimatedCanvas = prefs.getBoolean(KEY_ANIMATED_CANVAS, true)
         onboardingComplete.value = prefs.getBoolean(KEY_ONBOARDING_COMPLETE, false)
-        highPerformanceMode.value = prefs.getBoolean(KEY_HIGH_PERFORMANCE_MODE, true)
         performanceRefreshRate.value = normalizePerformanceRefreshRate(
             prefs.getInt(KEY_PERFORMANCE_REFRESH_RATE, DEFAULT_PERFORMANCE_REFRESH_RATE),
         )
@@ -955,18 +996,13 @@ object AppSettings {
         dontRepeatSuggestions.value = prefs.getBoolean(KEY_DONT_REPEAT_SUGGESTIONS, false)
         preferMusicOnly.value = prefs.getBoolean(KEY_PREFER_MUSIC_ONLY, false)
         smartVersionAlignment.value = prefs.getBoolean(KEY_SMART_VERSION_ALIGNMENT, true)
-        reduceDynamicBlur.value = prefs.getBoolean(KEY_REDUCE_BLUR, true)
-        progressiveScrollEdgeBlur.value = prefs.getBoolean(KEY_PROGRESSIVE_SCROLL_EDGE_BLUR, true)
-        liquidGlass.value = prefs.getBoolean(KEY_LIQUID_GLASS, false)
-        lyricsBlur.value = prefs.getBoolean(KEY_LYRICS_BLUR, true)
         lyricsOffsetMs.value = prefs.getInt(KEY_LYRICS_OFFSET_MS, 0)
             .coerceIn(MIN_LYRICS_OFFSET_MS, MAX_LYRICS_OFFSET_MS)
         translationLanguage.value = prefs.getString(KEY_TRANSLATION_LANGUAGE, "").orEmpty()
-        if (highPerformanceMode.value) {
-            reduceAnimation.value = false
-            reduceDynamicBlur.value = false
-        }
-        animatedCanvas.value = prefs.getBoolean(KEY_ANIMATED_CANVAS, true)
+        val resolvedPerf = appContext?.let {
+            AdaptivePerformanceEngine.initialize(it, performanceProfileMode.value)
+        } ?: AdaptivePerformanceEngine.setProfileMode(performanceProfileMode.value)
+        syncFromAdaptiveConfig(resolvedPerf)
         canvasOverCellular.value = prefs.getBoolean(KEY_CANVAS_OVER_CELLULAR, false)
         spotifyCanvasAutoHide.value = prefs.getBoolean(KEY_SPOTIFY_CANVAS_AUTO_HIDE, true)
         prioritizeSpotifyCanvas.value = prefs.getBoolean(KEY_PRIORITIZE_SPOTIFY_CANVAS, false)
@@ -1133,11 +1169,49 @@ object AppSettings {
      * lets the settings page show which ceiling is currently in force.
      */
     private fun refreshAdaptivePerformance(context: Context) {
-        val activity = context.getSystemService(ActivityManager::class.java)
-        val power = context.getSystemService(PowerManager::class.java)
-        val lowRam = activity?.isLowRamDevice == true
-        val thermal = if (android.os.Build.VERSION.SDK_INT >= 29) power?.currentThermalStatus ?: 0 else 0
-        adaptivePerformancePressure.value = lowRam || power?.isPowerSaveMode == true || thermal >= 3
+        val config = AdaptivePerformanceEngine.refreshSystemPressure(context)
+        syncFromAdaptiveConfig(config)
+    }
+
+    fun syncFromAdaptiveConfig(config: AdaptivePerformanceConfig) {
+        val lite = config.tier == PerformanceTier.LOW_END
+        val explicitLite = config.mode == PerformanceProfileMode.LITE
+        reduceAnimation.value = config.reduceAnimations || userReduceAnimation
+        reduceDynamicBlur.value = config.disableBlurAndGlass || userReduceDynamicBlur
+        progressiveScrollEdgeBlur.value = if (config.disableProgressiveEdgeBlur || explicitLite) {
+            false
+        } else {
+            userProgressiveScrollEdgeBlur
+        }
+        liquidGlass.value = if (config.disableBlurAndGlass || explicitLite) {
+            false
+        } else {
+            userLiquidGlass
+        }
+        lyricsBlur.value = if (config.disableLyricsBlur || explicitLite) {
+            false
+        } else {
+            userLyricsBlur
+        }
+        animatedCanvas.value = if (config.disableAnimatedCanvas || explicitLite) {
+            false
+        } else {
+            userAnimatedCanvas
+        }
+        highPerformanceMode.value = config.allowHighRefreshRate
+        adaptivePerformancePressure.value = config.runtimeDowngraded || lite
+    }
+
+    fun setPerformanceProfileMode(mode: PerformanceProfileMode) {
+        performanceProfileMode.value = mode
+        if (this::prefs.isInitialized) {
+            prefs.edit {
+                putString(KEY_PERFORMANCE_PROFILE_MODE, mode.name)
+                putBoolean(KEY_HIGH_PERFORMANCE_MODE, mode == PerformanceProfileMode.HIGH_QUALITY)
+            }
+        }
+        val config = AdaptivePerformanceEngine.setProfileMode(mode)
+        syncFromAdaptiveConfig(config)
     }
 
     private fun watchConnection(context: Context) {
@@ -1387,12 +1461,9 @@ object AppSettings {
     }
 
     fun setReduceAnimation(value: Boolean) {
-        reduceAnimation.value = value
-        if (value) highPerformanceMode.value = false
-        prefs.edit {
-            putBoolean(KEY_REDUCE_ANIMATION, value)
-            if (value) putBoolean(KEY_HIGH_PERFORMANCE_MODE, false)
-        }
+        userReduceAnimation = value
+        prefs.edit { putBoolean(KEY_REDUCE_ANIMATION, value) }
+        syncFromAdaptiveConfig(AdaptivePerformanceEngine.config.value)
     }
 
     fun setOnboardingComplete() {
@@ -1451,37 +1522,30 @@ object AppSettings {
     }
 
     fun setReduceDynamicBlur(value: Boolean) {
-        reduceDynamicBlur.value = value
-        if (value) highPerformanceMode.value = false
-        prefs.edit {
-            putBoolean(KEY_REDUCE_BLUR, value)
-            if (value) putBoolean(KEY_HIGH_PERFORMANCE_MODE, false)
-        }
+        userReduceDynamicBlur = value
+        prefs.edit { putBoolean(KEY_REDUCE_BLUR, value) }
+        syncFromAdaptiveConfig(AdaptivePerformanceEngine.config.value)
     }
 
     fun setProgressiveScrollEdgeBlur(value: Boolean) {
-        progressiveScrollEdgeBlur.value = value
+        userProgressiveScrollEdgeBlur = value
         prefs.edit { putBoolean(KEY_PROGRESSIVE_SCROLL_EDGE_BLUR, value) }
+        syncFromAdaptiveConfig(AdaptivePerformanceEngine.config.value)
     }
 
     fun setLiquidGlass(value: Boolean) {
-        liquidGlass.value = value
+        userLiquidGlass = value
         prefs.edit { putBoolean(KEY_LIQUID_GLASS, value) }
+        syncFromAdaptiveConfig(AdaptivePerformanceEngine.config.value)
     }
 
     fun setHighPerformanceMode(value: Boolean) {
-        highPerformanceMode.value = value
-        if (value) {
-            reduceAnimation.value = false
-            reduceDynamicBlur.value = false
+        val nextMode = when {
+            value -> PerformanceProfileMode.HIGH_QUALITY
+            performanceProfileMode.value == PerformanceProfileMode.HIGH_QUALITY -> PerformanceProfileMode.AUTO
+            else -> performanceProfileMode.value
         }
-        prefs.edit {
-            putBoolean(KEY_HIGH_PERFORMANCE_MODE, value)
-            if (value) {
-                putBoolean(KEY_REDUCE_ANIMATION, false)
-                putBoolean(KEY_REDUCE_BLUR, false)
-            }
-        }
+        setPerformanceProfileMode(nextMode)
     }
 
     fun setPerformanceRefreshRate(value: Int) {
@@ -1491,8 +1555,9 @@ object AppSettings {
     }
 
     fun setLyricsBlur(value: Boolean) {
-        lyricsBlur.value = value
+        userLyricsBlur = value
         prefs.edit { putBoolean(KEY_LYRICS_BLUR, value) }
+        syncFromAdaptiveConfig(AdaptivePerformanceEngine.config.value)
     }
 
     fun setLyricsOffsetMs(value: Int) {
@@ -1612,8 +1677,9 @@ object AppSettings {
     }
 
     fun setAnimatedCanvas(value: Boolean) {
-        animatedCanvas.value = value
+        userAnimatedCanvas = value
         prefs.edit { putBoolean(KEY_ANIMATED_CANVAS, value) }
+        syncFromAdaptiveConfig(AdaptivePerformanceEngine.config.value)
     }
 
     fun setCanvasOverCellular(value: Boolean) {
@@ -2169,6 +2235,7 @@ object AppSettings {
         KEY_LAST_VERSION_CODE,
         KEY_ONBOARDING_COMPLETE,
         KEY_EXTRACTED_ALBUM_SEED_COLOR,
+        KEY_PERFORMANCE_PROFILE_MODE,
     )
 
     const val DEFAULT_CACHE_LIMIT_BYTES = 512L * 1024 * 1024
@@ -2235,6 +2302,7 @@ object AppSettings {
     private const val KEY_CACHE_LIMIT = "audio_cache_limit_bytes"
     private const val KEY_REDUCE_ANIMATION = "reduce_animation"
     private const val KEY_ONBOARDING_COMPLETE = "onboarding_complete"
+    private const val KEY_PERFORMANCE_PROFILE_MODE = "performance_profile_mode"
     private const val KEY_HIGH_PERFORMANCE_MODE = "high_performance_mode"
     private const val KEY_PERFORMANCE_REFRESH_RATE = "performance_refresh_rate"
     private const val KEY_STOP_ON_TASK_REMOVED = "stop_on_task_removed"

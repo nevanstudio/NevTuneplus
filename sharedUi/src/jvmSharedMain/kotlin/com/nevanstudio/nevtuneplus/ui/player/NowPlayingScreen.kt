@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.offset
 import androidx.compose.ui.unit.constrain
 import androidx.compose.ui.unit.Constraints
 import com.nevanstudio.nevtuneplus.playback.PlaybackPosition
+import com.nevanstudio.nevtuneplus.ui.performance.LocalAdaptivePerformance
 import com.nevanstudio.nevtuneplus.sharedui.resources.*
 
 import androidx.compose.ui.graphics.ImageBitmap
@@ -2367,7 +2368,13 @@ fun NowPlayingScreen(
                                 .width(38.dp)
                                 .height(5.dp)
                                 .graphicsLayer { alpha = spotifyChromeAlpha }
-                                .shadow(2.dp, RoundedCornerShape(3.dp), clip = false)
+                                .then(
+                                    if (LocalAdaptivePerformance.current.simplifyCardsAndShadows) {
+                                        Modifier
+                                    } else {
+                                        Modifier.shadow(2.dp, RoundedCornerShape(3.dp), clip = false)
+                                    },
+                                )
                                 .clip(RoundedCornerShape(3.dp))
                                 .background(LocalPlayerTint.current.copy(alpha = 0.70f)),
                         )

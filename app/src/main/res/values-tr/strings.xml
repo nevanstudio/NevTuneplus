@@ -1232,4 +1232,19 @@ Project: NevTune+
     <string name="auto_empty_albums_subtitle">Bağlantınızı kontrol edip tekrar deneyin</string>
     <string name="hide_explicit_content">Müstehcen içeriği gizle</string>
     <string name="hide_explicit_content_subtitle">Katalogda müstehcen olarak işaretlenen şarkıları ve albümleri keşif ve önerilerden çıkarır. Etiketi olmayan öğeler görünür kalır.</string>
+    <string name="performance_profile">Performans profili</string>
+    <string name="performance_profile_auto">Otomatik</string>
+    <string name="performance_profile_lite">Lite</string>
+    <string name="performance_profile_balanced">Dengeli</string>
+    <string name="performance_profile_high_quality">Yüksek Kalite</string>
+    <string name="performance_profile_active_summary">Etkin: %1$s · %2$s</string>
+    <string name="performance_profile_downgraded_summary">Etkin: %1$s (%2$s için ayarlandı) · %3$s</string>
+    <string name="performance_profile_lite_description">En az animasyon, gerçek zamanlı bulanıklık yok ve düşük bellek kullanımı</string>
+    <string name="performance_profile_balanced_description">Otomatik bellek ve kare hızı korumalı dengeli görseller</string>
+    <string name="performance_profile_high_description">Tam görsel efektler, daha geniş kapak önbelleği ve yüksek yenileme hızı</string>
+    <string name="performance_hardware_detected">Cihaz donanımı</string>
+    <string name="performance_override_warning_title">%1$s profili kullanılsın mı?</string>
+    <string name="performance_override_warning_message">Bu cihaz (%1$s) %2$s modu için uygundur. %3$s seçimi pil tüketimini, bellek baskısını veya kare düşüşlerini artırabilir.</string>
+    <string name="performance_override_apply">%1$s kullan</string>
+    <string name="performance_keep_recommended">%1$s kalsın</string>
 </resources>

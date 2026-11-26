@@ -19,6 +19,7 @@ import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import com.nevanstudio.nevtuneplus.ui.animation.sharedArtworkModifier
 import com.nevanstudio.nevtuneplus.ui.components.liquidGlassRim
 import com.nevanstudio.nevtuneplus.ui.components.longPressMenuClickable
+import com.nevanstudio.nevtuneplus.ui.performance.LocalAdaptivePerformance
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -909,10 +910,13 @@ private fun ReleaseHeader(
             .padding(top = topBarContentPadding(), bottom = 18.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        val perf = LocalAdaptivePerformance.current
         Box(
             Modifier
                 .size(sleeveSize)
-                .shadow(SLEEVE_SHADOW, SLEEVE_SHAPE)
+                .then(
+                    if (perf.simplifyCardsAndShadows) Modifier else Modifier.shadow(SLEEVE_SHADOW, SLEEVE_SHAPE),
+                )
                 .background(palette.elevated)
                 .thumbnailBorder(SLEEVE_SHAPE),
         ) {
@@ -1393,9 +1397,10 @@ private fun PageBackground(
     heroUrl: String? = null,
 ) {
     val reduceDynamicBlur by AppSettings.reduceDynamicBlur.collectAsStateWithLifecycle()
+    val perf = LocalAdaptivePerformance.current
     // Not under a canvas: a still blurred over the foot of a moving clip would
     // freeze the bottom of the video into the wrong picture.
-    val softenFoot = canvas == null && !reduceDynamicBlur &&
+    val softenFoot = canvas == null && !reduceDynamicBlur && !perf.disableBlurAndGlass &&
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     val art = heroUrl ?: page.thumbnailUrl.artworkAt(HEADER_ART_PX)
 

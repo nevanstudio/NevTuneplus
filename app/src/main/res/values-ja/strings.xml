@@ -1232,4 +1232,19 @@ Project: NevTune+
     <string name="auto_empty_albums_subtitle">接続を確認してもう一度お試しください</string>
     <string name="hide_explicit_content">露骨なコンテンツを非表示</string>
     <string name="hide_explicit_content_subtitle">カタログで露骨とマークされた曲やアルバムを探索とおすすめから除外します。ラベルのない項目は引き続き表示されます。</string>
+    <string name="performance_profile">パフォーマンスプロファイル</string>
+    <string name="performance_profile_auto">自動</string>
+    <string name="performance_profile_lite">ライト</string>
+    <string name="performance_profile_balanced">バランス</string>
+    <string name="performance_profile_high_quality">高画質</string>
+    <string name="performance_profile_active_summary">有効: %1$s · %2$s</string>
+    <string name="performance_profile_downgraded_summary">有効: %1$s（%2$sにより調整）· %3$s</string>
+    <string name="performance_profile_lite_description">アニメーション最小化、リアルタイムぼかし無効、低メモリ消費</string>
+    <string name="performance_profile_balanced_description">自動メモリ・フレーム保護付きのバランスの取れた表示</string>
+    <string name="performance_profile_high_description">フルエフェクト、大容量アートキャッシュ、高リフレッシュレート</string>
+    <string name="performance_hardware_detected">デバイスハードウェア</string>
+    <string name="performance_override_warning_title">%1$s プロファイルを使用しますか？</string>
+    <string name="performance_override_warning_message">このデバイス（%1$s）は %2$s モードに適しています。%3$s を選択するとバッテリー消費やメモリ負荷、フレーム低下が増える場合があります。</string>
+    <string name="performance_override_apply">%1$s を使用</string>
+    <string name="performance_keep_recommended">%1$s を維持</string>
 </resources>

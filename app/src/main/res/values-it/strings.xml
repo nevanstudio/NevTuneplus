@@ -1240,4 +1240,19 @@ Project: NevTune+
     <string name="auto_empty_albums_subtitle">Controlla la connessione e riprova</string>
     <string name="hide_explicit_content">Nascondi contenuti espliciti</string>
     <string name="hide_explicit_content_subtitle">Esclude da Esplora e dai consigli i brani e gli album contrassegnati come espliciti dal catalogo. Gli elementi senza etichetta restano visibili.</string>
+    <string name="performance_profile">Profilo prestazioni</string>
+    <string name="performance_profile_auto">Auto</string>
+    <string name="performance_profile_lite">Lite</string>
+    <string name="performance_profile_balanced">Bilanciato</string>
+    <string name="performance_profile_high_quality">Alta qualità</string>
+    <string name="performance_profile_active_summary">Attivo: %1$s · %2$s</string>
+    <string name="performance_profile_downgraded_summary">Attivo: %1$s (adattato per %2$s) · %3$s</string>
+    <string name="performance_profile_lite_description">Animazioni minime, nessuna sfocatura in tempo reale e minor uso di memoria</string>
+    <string name="performance_profile_balanced_description">Effetti bilanciati con protezione automatica di memoria e fluidità</string>
+    <string name="performance_profile_high_description">Effetti completi, cache copertine ampia e frequenza di aggiornamento elevata</string>
+    <string name="performance_hardware_detected">Hardware rilevato</string>
+    <string name="performance_override_warning_title">Usare il profilo %1$s?</string>
+    <string name="performance_override_warning_message">Questo dispositivo (%1$s) è adatto alla modalità %2$s. Scegliere %3$s può aumentare consumo della batteria, uso di memoria o cali di frame.</string>
+    <string name="performance_override_apply">Usa %1$s</string>
+    <string name="performance_keep_recommended">Mantieni %1$s</string>
 </resources>

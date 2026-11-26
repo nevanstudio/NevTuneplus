@@ -1259,4 +1259,19 @@ Project: NevTune+
     <string name="auto_empty_albums_subtitle">अपना कनेक्शन जाँचें और फिर कोशिश करें</string>
     <string name="hide_explicit_content">स्पष्ट सामग्री छिपाएँ</string>
     <string name="hide_explicit_content_subtitle">कैटलॉग द्वारा स्पष्ट के रूप में चिह्नित गानों और एल्बम को खोज और सुझावों से हटाएँ। बिना लेबल वाली सामग्री दिखाई देती रहेगी।</string>
+    <string name="performance_profile">प्रदर्शन प्रोफ़ाइल</string>
+    <string name="performance_profile_auto">ऑटो</string>
+    <string name="performance_profile_lite">लाइट</string>
+    <string name="performance_profile_balanced">संतुलित</string>
+    <string name="performance_profile_high_quality">उच्च गुणवत्ता</string>
+    <string name="performance_profile_active_summary">सक्रिय: %1$s · %2$s</string>
+    <string name="performance_profile_downgraded_summary">सक्रिय: %1$s (%2$s के कारण समायोजित) · %3$s</string>
+    <string name="performance_profile_lite_description">न्यूनतम एनीमेशन, रीयल-टाइम ब्लर बंद और कम मेमोरी उपयोग</string>
+    <string name="performance_profile_balanced_description">स्वचालित मेमोरी और फ्रेम सुरक्षा के साथ संतुलित प्रभाव</string>
+    <string name="performance_profile_high_description">पूर्ण विज़ुअल प्रभाव, बड़ा कवर कैश और उच्च रिफ्रेश रेट</string>
+    <string name="performance_hardware_detected">डिवाइस हार्डवेयर</string>
+    <string name="performance_override_warning_title">%1$s प्रोफ़ाइल का उपयोग करें?</string>
+    <string name="performance_override_warning_message">यह डिवाइस (%1$s) %2$s मोड के लिए उपयुक्त है। %3$s चुनने से बैटरी खपत, मेमोरी दबाव या फ्रेम ड्रॉप बढ़ सकते हैं।</string>
+    <string name="performance_override_apply">%1$s उपयोग करें</string>
+    <string name="performance_keep_recommended">%1$s रखें</string>
 </resources>

@@ -16,6 +16,7 @@ import com.nevanstudio.nevtuneplus.data.settings.LastPlayerScreen
 import com.nevanstudio.nevtuneplus.data.settings.SmartAnalysis
 import com.nevanstudio.nevtuneplus.data.settings.MixBlend
 import com.nevanstudio.nevtuneplus.data.settings.TransitionWindow
+import com.nevanstudio.nevtuneplus.ui.performance.AdaptivePerformanceConfig
 import dev.chrisbanes.haze.HazeState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -194,6 +195,8 @@ interface PlayerSettingsSource {
     val syncedLyrics: StateFlow<Boolean>
     val translationLanguage: StateFlow<String>
     val versionAlignmentInProgress: StateFlow<Boolean>
+    val adaptivePerformance: StateFlow<AdaptivePerformanceConfig>
+        get() = MutableStateFlow(AdaptivePerformanceConfig.BalancedDefault)
 
     fun setLastPlayerScreen(value: LastPlayerScreen)
     fun setLyricsOffsetMs(value: Int)

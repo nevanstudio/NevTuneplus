@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import com.nevanstudio.nevtuneplus.data.settings.LibrarySort
 import com.nevanstudio.nevtuneplus.data.settings.LibraryViewType
+import com.nevanstudio.nevtuneplus.ui.performance.AdaptivePerformanceConfig
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -34,6 +36,9 @@ interface AppUiHost {
 
     /** How a Library "Show all" grid is ordered. */
     val librarySort: StateFlow<LibrarySort>
+
+    val adaptivePerformance: StateFlow<AdaptivePerformanceConfig>
+        get() = MutableStateFlow(AdaptivePerformanceConfig.BalancedDefault)
 
     /** Video ids of the tracks already downloaded, for the mark on their rows. */
     @Composable

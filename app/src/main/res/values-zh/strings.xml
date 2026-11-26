@@ -1232,4 +1232,19 @@ Project: NevTune+
     <string name="auto_empty_albums_subtitle">请检查网络连接后重试</string>
     <string name="hide_explicit_content">隐藏露骨内容</string>
     <string name="hide_explicit_content_subtitle">将目录标记为露骨内容的歌曲和专辑从发现页和推荐中排除。未标记的内容仍会显示。</string>
+    <string name="performance_profile">性能模式</string>
+    <string name="performance_profile_auto">自动</string>
+    <string name="performance_profile_lite">轻量</string>
+    <string name="performance_profile_balanced">均衡</string>
+    <string name="performance_profile_high_quality">高品质</string>
+    <string name="performance_profile_active_summary">当前：%1$s · %2$s</string>
+    <string name="performance_profile_downgraded_summary">当前：%1$s（因%2$s已调整）· %3$s</string>
+    <string name="performance_profile_lite_description">精简动画、关闭实时模糊并降低封面内存占用</string>
+    <string name="performance_profile_balanced_description">适度动效，并自动提供内存与帧率保护</string>
+    <string name="performance_profile_high_description">完整视觉动效、更大封面缓存与高刷新率支持</string>
+    <string name="performance_hardware_detected">设备硬件</string>
+    <string name="performance_override_warning_title">要使用 %1$s 模式吗？</string>
+    <string name="performance_override_warning_message">当前设备（%1$s）更适合 %2$s 模式。强制使用 %3$s 可能会增加耗电、内存压力或掉帧。</string>
+    <string name="performance_override_apply">仍要使用 %1$s</string>
+    <string name="performance_keep_recommended">保持 %1$s</string>
 </resources>

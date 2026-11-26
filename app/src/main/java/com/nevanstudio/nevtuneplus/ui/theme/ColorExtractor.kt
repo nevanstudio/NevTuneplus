@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.util.LruCache
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.toArgb
 import androidx.palette.graphics.Palette
 import coil3.SingletonImageLoader
@@ -240,6 +241,15 @@ object ColorExtractor {
             onTertiary = dynamic.onTertiary,
             tertiaryContainer = dynamic.tertiaryContainer,
             onTertiaryContainer = dynamic.onTertiaryContainer,
+            surfaceVariant = lerp(base.surfaceVariant, dynamic.surfaceVariant, 0.28f),
+            onSurfaceVariant = lerp(base.onSurfaceVariant, dynamic.onSurfaceVariant, 0.35f),
+            outline = lerp(base.outline, dynamic.outline, 0.30f),
+            outlineVariant = lerp(base.outlineVariant, dynamic.outlineVariant, 0.30f),
+            surfaceContainerLowest = lerp(base.surfaceContainerLowest, dynamic.surfaceContainerLowest, 0.16f),
+            surfaceContainerLow = lerp(base.surfaceContainerLow, dynamic.surfaceContainerLow, 0.24f),
+            surfaceContainer = lerp(base.surfaceContainer, dynamic.surfaceContainer, 0.28f),
+            surfaceContainerHigh = lerp(base.surfaceContainerHigh, dynamic.surfaceContainerHigh, 0.32f),
+            surfaceContainerHighest = lerp(base.surfaceContainerHighest, dynamic.surfaceContainerHighest, 0.34f),
             surfaceTint = dynamic.primary,
             primaryFixed = dynamic.primaryFixed,
             primaryFixedDim = dynamic.primaryFixedDim,

@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import com.nevanstudio.nevtuneplus.ui.motion.MotionTokens
 import com.nevanstudio.nevtuneplus.ui.motion.microPressScale
+import com.nevanstudio.nevtuneplus.ui.performance.LocalAdaptivePerformance
 import com.nevanstudio.nevtuneplus.ui.player.PlayerSettings
 import com.nevanstudio.nevtuneplus.ui.player.MESH_CYCLE_MILLIS
 import com.nevanstudio.nevtuneplus.ui.player.MeshGradientBackground
@@ -715,23 +716,30 @@ val PlayingAccent: Color
 
 @Composable
 fun SearchPlayingBars(modifier: Modifier = Modifier) {
-    val heights = listOf(0.38f, 0.78f, 0.52f).mapIndexed { index, minimum ->
-        val transition = rememberInfiniteTransition(label = "search playing bar $index")
-        val height by transition.animateFloat(
-            initialValue = minimum,
-            targetValue = 1f - (index * 0.12f),
-            animationSpec = infiniteRepeatable(
-                animation = keyframes {
-                    durationMillis = 520 + index * 130
-                    minimum at 0
-                    1f at (260 + index * 50)
-                    minimum at durationMillis
-                },
-                repeatMode = RepeatMode.Reverse,
-            ),
-            label = "search bar height $index",
-        )
-        height
+    val reduceAnimation by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
+    val perf = LocalAdaptivePerformance.current
+    val staticMode = reduceAnimation || perf.reduceAnimations || perf.disableContinuousMotion
+    val heights = if (staticMode) {
+        listOf(0.45f, 0.88f, 0.62f)
+    } else {
+        listOf(0.38f, 0.78f, 0.52f).mapIndexed { index, minimum ->
+            val transition = rememberInfiniteTransition(label = "search playing bar $index")
+            val height by transition.animateFloat(
+                initialValue = minimum,
+                targetValue = 1f - (index * 0.12f),
+                animationSpec = infiniteRepeatable(
+                    animation = keyframes {
+                        durationMillis = 520 + index * 130
+                        minimum at 0
+                        1f at (260 + index * 50)
+                        minimum at durationMillis
+                    },
+                    repeatMode = RepeatMode.Reverse,
+                ),
+                label = "search bar height $index",
+            )
+            height
+        }
     }
     // The plate is a fixed square so only the bars move, never the box around them.
     Box(
