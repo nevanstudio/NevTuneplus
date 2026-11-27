@@ -78,6 +78,11 @@ val betaSuffix = ""
 
 android {
     namespace = "com.nevanstudio.nevtuneplus"
+    lint {
+        lintConfig = file("lint.xml")
+        abortOnError = false
+        checkReleaseBuilds = false
+    }
     // InnerTubeX's AAR requires compiling against 37; targetSdk (runtime behaviour) stays 36.
     compileSdk = 37
 

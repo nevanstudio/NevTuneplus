@@ -8,4 +8,9 @@
     <issue id="OldTargetApi">
         <ignore path="build.gradle.kts" />
     </issue>
+    <!--
+        Material color utilities (such as Hct, DynamicScheme) are part of
+        com.google.android.material:material but marked library-restricted.
+    -->
+    <issue id="RestrictedApi" severity="warning" />
 </lint>

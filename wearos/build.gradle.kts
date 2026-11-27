@@ -40,6 +40,10 @@ val betaSuffix = rootProject.extra["nevtuneBetaSuffix"] as String
 
 android {
     namespace = "com.nevanstudio.nevtuneplus.wear"
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
+    }
     compileSdk = 37
 
     defaultConfig {

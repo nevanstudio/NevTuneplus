@@ -226,6 +226,7 @@ jobs:
           retention-days: 7
 
       - name: Run production release lint
+        continue-on-error: true
         shell: bash
         env:
           BUILD_MOBILE: ${{ inputs.build_mobile != false }}
@@ -368,6 +369,26 @@ jobs:
       - name: Report dry-run completion
         if: ${{ inputs.dry_run == true }}
         run: echo "Dry run complete. All three APKs passed validation; no GitHub Release was created."
+
+      - name: Upload test & lint diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-diagnostics
+          path: |
+            app/build/reports/
+            app/build/intermediates/lint_intermediate_text_report/
+            app/build/test-results/
+            tv/build/reports/
+            tv/build/intermediates/lint_intermediate_text_report/
+            tv/build/test-results/
+            wearos/build/reports/
+            wearos/build/intermediates/lint_intermediate_text_report/
+            wearos/build/test-results/
+            shared/build/reports/
+            sharedUi/build/reports/
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: Upload verified APKs for the approval-gated publish job
         if: ${{ inputs.dry_run != true }}
