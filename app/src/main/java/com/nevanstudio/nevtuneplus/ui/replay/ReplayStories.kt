@@ -417,19 +417,12 @@ private fun StoryChrome(
                 color = Color.White,
                 modifier = Modifier.weight(1f),
             )
-            // The mark and the word together, the way the card carries it.
+            // Logo mark only — no wordmark text beside it.
             Icon(
                 painter = painterResource(R.drawable.ic_logo),
-                contentDescription = null,
+                contentDescription = "NevTune+",
                 tint = Color.White.copy(alpha = 0.9f),
                 modifier = Modifier.size(width = 56.dp, height = 45.dp),
-            )
-            Spacer(Modifier.width(7.dp))
-            Text(
-                text = "NevTune+",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.W700,
-                color = Color.White.copy(alpha = 0.9f),
             )
         }
     }
