@@ -6,18 +6,27 @@ import android.content.ClipData
 import android.content.Intent
 import android.text.format.DateFormat
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -36,23 +45,33 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Cloud
 import androidx.compose.material.icons.rounded.CloudDone
 import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Dns
+import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.automirrored.rounded.Login
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.Share
 import com.nevanstudio.nevtuneplus.ui.components.NevTunePlusAlertDialog as AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -74,6 +93,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
@@ -100,8 +120,10 @@ import com.nevanstudio.nevtuneplus.data.listentogether.PartyActivity
 import com.nevanstudio.nevtuneplus.data.listentogether.PartyMember
 import com.nevanstudio.nevtuneplus.data.listentogether.ServerConnectionState
 import com.nevanstudio.nevtuneplus.data.listentogether.ServerUrlError
+import com.nevanstudio.nevtuneplus.ui.theme.NevTuneColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 internal fun ServerUrlError.toMessageRes(): Int = when (this) {
     ServerUrlError.Whitespace -> R.string.listen_together_err_whitespace
@@ -492,46 +514,55 @@ fun ListenTogetherScreen(
         )
 
         if (!signedIn) {
-            SettingsGroup(footer = stringResource(R.string.listen_together_sign_in_footer)) {
-                SettingsRow(
-                    icon = Icons.AutoMirrored.Rounded.Login,
-                    title = stringResource(R.string.sign_in),
-                    subtitle = stringResource(R.string.not_signed_in),
-                    onClick = onSignIn,
-                )
-            }
+            SignInPromptCard(onSignIn = onSignIn)
+            Spacer(Modifier.height(12.dp))
         }
 
-        if (!state.inParty) {
-            PartyLanding(
-                avatarUrl = ListenTogether.myAvatarUrl(),
-                enabled = signedIn && ListenTogether.hasServer && !busy,
-                // The last attempt's message does not belong on the next one.
-                onCreate = {
-                    failure = null
-                    sheet = PartySheet.Create
-                },
-                onJoin = {
-                    failure = null
-                    sheet = PartySheet.JoinCode
-                },
-            )
-        } else {
-            InAParty(
-                state = state,
-                onCopy = { scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText(copyCodeMessage, state.code.orEmpty()))) } },
-                onShare = { sheet = PartySheet.Invite },
-                onShareLink = shareInvite,
-                onLeave = { scope.launch { ListenTogether.leaveParty() } },
-                onSetCapacity = ListenTogether::setMaxMembers,
-                onSetHostOnlyControl = ListenTogether::setHostOnlyControl,
-                onKick = ListenTogether::kick,
-            )
-            // Inside the party branch on purpose. A log of who skipped what is
-            // a thing to look back over while a party is running; on the page
-            // that offers to start one it is a list of somebody else's evening,
-            // under a button that has not been pressed yet.
-            PartyActivityList(activity)
+        AnimatedContent(
+            targetState = state.inParty,
+            transitionSpec = {
+                fadeIn(tween(200)) togetherWith fadeOut(tween(150))
+            },
+            label = "partyModeTransition",
+        ) { inParty ->
+            if (!inParty) {
+                PartyLanding(
+                    avatarUrl = ListenTogether.myAvatarUrl(),
+                    enabled = signedIn && ListenTogether.hasServer && !busy,
+                    // The last attempt's message does not belong on the next one.
+                    onCreate = {
+                        failure = null
+                        sheet = PartySheet.Create
+                    },
+                    onJoin = {
+                        failure = null
+                        sheet = PartySheet.JoinCode
+                    },
+                )
+            } else {
+                Column(Modifier.fillMaxWidth()) {
+                    InAParty(
+                        state = state,
+                        onCopy = {
+                            scope.launch {
+                                clipboard.setClipEntry(
+                                    ClipEntry(ClipData.newPlainText(copyCodeMessage, state.code.orEmpty())),
+                                )
+                            }
+                        },
+                        onShare = { sheet = PartySheet.Invite },
+                        onLeave = { scope.launch { ListenTogether.leaveParty() } },
+                        onSetCapacity = ListenTogether::setMaxMembers,
+                        onSetHostOnlyControl = ListenTogether::setHostOnlyControl,
+                        onKick = ListenTogether::kick,
+                    )
+                    // Inside the party branch on purpose. A log of who skipped what is
+                    // a thing to look back over while a party is running; on the page
+                    // that offers to start one it is a list of somebody else's evening,
+                    // under a button that has not been pressed yet.
+                    PartyActivityList(activity)
+                }
+            }
         }
 
         // Only when nothing is covering it. A sheet is a drawer over the bottom
@@ -540,57 +571,86 @@ fun ListenTogetherScreen(
         // it where it cannot be read.
         if (sheet == null) {
             (failure ?: state.error)?.let { message ->
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(start = GROUP_INSET + 4.dp, end = GROUP_INSET + 4.dp, top = 12.dp),
-                )
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.25f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                ) {
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    )
+                }
             }
         }
 
-        // Last, and empty by default. Nobody setting up a party needs to think
-        // about an address — there is one built in — so this is where somebody
-        // running their own server comes looking, rather than the first thing
-        // everybody else has to read past.
-        //
-        // A row and a dialog rather than a box sitting open on the page. An
-        // address is typed once and then never again, and a field left on
-        // screen has to explain itself continuously: what the Save beside it
-        // applies to, why it greys out, what becomes of a half-typed address
-        // when the page is scrolled away from. Behind a row there is nothing
-        // half-typed to explain — the same shape as the ListenBrainz token.
-        SettingsGroup(
-            header = stringResource(R.string.listen_together_custom_server),
-            footer = stringResource(R.string.listen_together_custom_server_footer),
-        ) {
-            SettingsRow(
-                icon = Icons.Rounded.Dns,
-                title = stringResource(R.string.listen_together_custom_server),
-                subtitleContent = {
+        PartySectionHeader(stringResource(R.string.listen_together_custom_server))
+        PartyCard {
+            val serverEnabled = !state.inParty && !busy
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = serverEnabled, onClick = onEditServer)
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                PartyIconBadge(
+                    icon = Icons.Rounded.Dns,
+                    tint = if (serverEnabled) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+                Spacer(Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.listen_together_custom_server),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (serverEnabled) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                    )
+                    Spacer(Modifier.height(2.dp))
                     Text(
                         text = customServer.ifBlank {
                             stringResource(R.string.listen_together_using_default)
                         },
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
                     if (customServer.isNotBlank()) {
-                        Spacer(Modifier.height(4.dp))
+                        Spacer(Modifier.height(6.dp))
                         ServerConnectionLine(connectionState)
                     }
-                },
-                // Locked while in a party: changing the address under a live
-                // membership would leave this device holding a token for a
-                // server it no longer talks to, and the party unable to say
-                // why it went quiet.
-                enabled = !state.inParty && !busy,
-                onClick = onEditServer,
-                trailing = if (busy) ({ Spinner() }) else null,
-            )
+                }
+                Spacer(Modifier.width(10.dp))
+                if (busy) {
+                    Spinner(modifier = Modifier.size(20.dp))
+                } else {
+                    Icon(
+                        imageVector = Icons.Rounded.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(
+                            alpha = if (serverEnabled) 0.65f else 0.35f,
+                        ),
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+            }
         }
+        Spacer(Modifier.height(6.dp))
+        PartyInfoBanner(stringResource(R.string.listen_together_custom_server_footer))
 
         Spacer(Modifier.height(32.dp))
     }
@@ -844,109 +904,340 @@ private fun CodeCell(
 }
 
 @Composable
+private fun SignInPromptCard(onSignIn: () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 2.dp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                PartyIconBadge(
+                    icon = Icons.AutoMirrored.Rounded.Login,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.not_signed_in),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = stringResource(R.string.listen_together_sign_in_footer),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 16.sp,
+                    )
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+            Button(
+                onClick = onSignIn,
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = stringResource(R.string.sign_in),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun InAParty(
     state: ListenTogether.State,
     onCopy: () -> Unit,
     onShare: () -> Unit,
-    onShareLink: () -> Unit,
     onLeave: () -> Unit,
     onSetCapacity: (Int) -> Unit,
     onSetHostOnlyControl: (Boolean) -> Unit,
     onKick: (String) -> Unit,
 ) {
-    SettingsGroup(
-        header = stringResource(R.string.listen_together_code),
-        footer = stringResource(R.string.listen_together_code_footer),
+    // Party Code Hero Card
+    PartySectionHeader(stringResource(R.string.listen_together_code))
+    Surface(
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 2.dp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 2.dp),
     ) {
-        Text(
-            text = state.code.orEmpty(),
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.onBackground,
-            textAlign = TextAlign.Center,
-            // Wide tracking because this is a string to be read out loud and
-            // typed by somebody else, not a word to be scanned.
-            letterSpacing = 8.sp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 18.dp, bottom = 14.dp),
-        )
-        RowDivider()
-        SettingsRow(
-            icon = Icons.Rounded.ContentCopy,
-            title = stringResource(R.string.copy_code),
-            onClick = onCopy,
-        )
-        RowDivider()
-        SettingsRow(
-            icon = Icons.Rounded.Share,
-            title = stringResource(R.string.share),
-            onClick = onShare,
-        )
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))
+                    .border(
+                        0.5.dp,
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                        RoundedCornerShape(18.dp),
+                    )
+                    .padding(vertical = 16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = state.code.orEmpty(),
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    // Wide tracking because this is a string to be read out loud and
+                    // typed by somebody else, not a word to be scanned.
+                    letterSpacing = 8.sp,
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Surface(
+                    onClick = onCopy,
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.65f),
+                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 12.dp, horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.ContentCopy,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.copy_code),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+                Surface(
+                    onClick = onShare,
+                    shape = RoundedCornerShape(14.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(vertical = 12.dp, horizontal = 12.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Share,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.share),
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+            }
+        }
     }
+    Spacer(Modifier.height(6.dp))
+    PartyInfoBanner(stringResource(R.string.listen_together_code_footer))
 
     NowPlayingInTheParty(state)
 
-    SettingsGroup(
-        header = stringResource(
+    PartySectionHeader(
+        stringResource(
             R.string.listen_together_listening,
             state.members.size,
             state.maxMembers,
         ),
-        footer = pluralStringResource(
-            R.plurals.listen_together_members_footer,
-            state.maxMembers,
-            state.maxMembers,
-        ),
-    ) {
+    )
+    PartyCard {
         if (state.you?.isHost == true) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = ROW_INSET, vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
                     Text(
-                        stringResource(R.string.listen_together_party_size),
-                        style = MaterialTheme.typography.bodyLarge,
+                        text = stringResource(R.string.listen_together_party_size),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
-                    Text(stringResource(R.string.listen_together_host_controls), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                TextButton(onClick = { onSetCapacity(state.maxMembers - 1) }, enabled = state.maxMembers > maxOf(2, state.members.size)) { Text("−", color = MaterialTheme.colorScheme.onSurface) }
-                Text("${state.maxMembers}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.width(28.dp), textAlign = TextAlign.Center)
-                TextButton(onClick = { onSetCapacity(state.maxMembers + 1) }, enabled = state.maxMembers < 10) { Text("+", color = MaterialTheme.colorScheme.onSurface) }
-            }
-            RowDivider()
-            SettingsRow(
-                icon = Icons.Rounded.Lock,
-                title = stringResource(R.string.listen_together_host_only),
-                subtitle = stringResource(R.string.listen_together_host_only_subtitle),
-                trailing = {
-                    Switch(
-                        checked = state.hostOnlyControl,
-                        onCheckedChange = onSetHostOnlyControl,
-                        colors = SwitchDefaults.colors(
-                            checkedTrackColor = MaterialTheme.colorScheme.primary,
-                            checkedBorderColor = MaterialTheme.colorScheme.primary,
-                        ),
+                    Text(
+                        text = stringResource(R.string.listen_together_host_controls),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                },
-                onClick = { onSetHostOnlyControl(!state.hostOnlyControl) },
-            )
-            RowDivider()
+                }
+                Spacer(Modifier.width(12.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    val canShrink = state.maxMembers > maxOf(2, state.members.size)
+                    val canGrow = state.maxMembers < 10
+                    Surface(
+                        onClick = { onSetCapacity(state.maxMembers - 1) },
+                        enabled = canShrink,
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = if (canShrink) 0.7f else 0.3f),
+                        modifier = Modifier.size(34.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Rounded.Remove,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (canShrink) 1f else 0.35f),
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
+                    PartyBadge(
+                        text = "${state.maxMembers}",
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Surface(
+                        onClick = { onSetCapacity(state.maxMembers + 1) },
+                        enabled = canGrow,
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = if (canGrow) 0.7f else 0.3f),
+                        modifier = Modifier.size(34.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Rounded.Add,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (canGrow) 1f else 0.35f),
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
+                }
+            }
+            PartyInnerDivider(Modifier.padding(horizontal = 16.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onSetHostOnlyControl(!state.hostOnlyControl) }
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                PartyIconBadge(
+                    icon = Icons.Rounded.Lock,
+                    tint = MaterialTheme.colorScheme.primary,
+                    size = 38.dp,
+                )
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.listen_together_host_only),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = stringResource(R.string.listen_together_host_only_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Spacer(Modifier.width(10.dp))
+                Switch(
+                    checked = state.hostOnlyControl,
+                    onCheckedChange = onSetHostOnlyControl,
+                    colors = SwitchDefaults.colors(
+                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        checkedBorderColor = MaterialTheme.colorScheme.primary,
+                    ),
+                )
+            }
+            PartyInnerDivider(Modifier.padding(horizontal = 16.dp))
         }
         state.members.forEachIndexed { index, member ->
-            if (index > 0) RowDivider()
-            MemberRow(member = member, isYou = member.memberId == state.you?.memberId, canKick = state.you?.isHost == true && !member.isHost, onKick = { onKick(member.memberId) })
+            if (index > 0) PartyInnerDivider(Modifier.padding(start = 70.dp, end = 16.dp))
+            MemberRow(
+                member = member,
+                isYou = member.memberId == state.you?.memberId,
+                canKick = state.you?.isHost == true && !member.isHost,
+                onKick = { onKick(member.memberId) },
+            )
         }
     }
+    Spacer(Modifier.height(6.dp))
+    PartyInfoBanner(
+        pluralStringResource(
+            R.plurals.listen_together_members_footer,
+            state.maxMembers,
+            state.maxMembers,
+        ),
+    )
 
-    SettingsGroup {
-        SettingsRow(
-            icon = Icons.AutoMirrored.Rounded.Logout,
-            title = stringResource(R.string.listen_together_leave),
-            subtitle = stringResource(R.string.listen_together_leave_subtitle),
-            onClick = onLeave,
-        )
+    Spacer(Modifier.height(14.dp))
+    Surface(
+        onClick = onLeave,
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.25f)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            PartyIconBadge(
+                icon = Icons.AutoMirrored.Rounded.Logout,
+                tint = MaterialTheme.colorScheme.error,
+                size = 38.dp,
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.listen_together_leave),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.error,
+                )
+                Text(
+                    text = stringResource(R.string.listen_together_leave_subtitle),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                )
+            }
+        }
     }
 }
 
@@ -971,34 +1262,102 @@ private fun NowPlayingInTheParty(state: ListenTogether.State) {
         }
     }
 
-    // Both read before the row is built: they are [stringResource] lookups, and
-    // a composable call belongs at a composable call site rather than buried
-    // inside the string building below it.
     val connection = connectionLine(state)
+    val syncColor = when {
+        state.connection != ListenTogether.Connection.LIVE -> MaterialTheme.colorScheme.error
+        !state.clockSynced -> NevTuneColors.warning
+        else -> NevTuneColors.success
+    }
     val nothingPlaying = stringResource(R.string.listen_together_nothing_playing)
 
-    SettingsGroup(header = stringResource(R.string.listen_together_now_playing)) {
-        SettingsRow(
-            icon = Icons.Rounded.MusicNote,
-            title = track?.title?.takeIf { it.isNotBlank() } ?: nothingPlaying,
-            subtitle = if (track == null) {
-                connection
-            } else {
-                buildString {
-                    if (track.artist.isNotBlank()) {
-                        append(track.artist)
-                        append(" · ")
+    PartySectionHeader(stringResource(R.string.listen_together_now_playing))
+    PartyCard {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                PartyIconBadge(
+                    icon = Icons.Rounded.MusicNote,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(Modifier.width(14.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = track?.title?.takeIf { it.isNotBlank() } ?: nothingPlaying,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (track != null && track.artist.isNotBlank()) {
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            text = track.artist,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
-                    append(elapsed(positionMs))
-                    track.durationMs?.let {
-                        append(" / ")
-                        append(elapsed(it))
+                    Spacer(Modifier.height(6.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(syncColor),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = connection,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = syncColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
                     }
-                    append("\n")
-                    append(connection)
                 }
-            },
-        )
+            }
+
+            if (track != null) {
+                val duration = track.durationMs
+                Spacer(Modifier.height(12.dp))
+                if (duration != null && duration > 0L) {
+                    val progress = (positionMs.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        color = MaterialTheme.colorScheme.primary,
+                        trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .clip(CircleShape),
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            text = elapsed(positionMs),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            text = elapsed(duration),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                } else {
+                    Text(
+                        text = elapsed(positionMs),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -1043,62 +1402,116 @@ private fun MemberRow(member: PartyMember, isYou: Boolean, canKick: Boolean = fa
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 52.dp)
-            .padding(horizontal = ROW_INSET, vertical = 10.dp),
+            .heightIn(min = 56.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
-                .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                .size(42.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface),
+                .background(
+                    if (member.isHost) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                    } else {
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.65f)
+                    },
+                )
+                .border(
+                    width = if (member.isHost) 1.5.dp else 0.5.dp,
+                    color = if (member.isHost) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                    } else {
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                    },
+                    shape = CircleShape,
+                ),
             contentAlignment = Alignment.Center,
         ) {
             if (member.avatarUrl != null) {
                 AsyncImage(
                     model = member.avatarUrl,
                     contentDescription = null,
-                    modifier = Modifier.size(32.dp).clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(42.dp).clip(CircleShape),
                 )
             } else {
                 Text(
                     text = member.displayName.take(1).uppercase(),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (member.isHost) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                 )
             }
         }
-        Spacer(Modifier.width(14.dp))
+        Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = member.displayName,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = if (isYou || member.isHost) FontWeight.SemiBold else FontWeight.Normal,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
                 )
                 if (isYou) {
-                    Spacer(Modifier.width(8.dp))
-                    Badge(stringResource(R.string.listen_together_you))
+                    Spacer(Modifier.width(6.dp))
+                    PartyBadge(
+                        text = stringResource(R.string.listen_together_you),
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                if (member.isHost) {
+                    Spacer(Modifier.width(6.dp))
+                    PartyBadge(
+                        text = stringResource(R.string.listen_together_host),
+                        color = NevTuneColors.success,
+                    )
                 }
             }
-            // "Away" rather than "offline": the slot is still theirs, and the
-            // server holds it through a grace period precisely so a tunnel or a
-            // locked screen does not read to everyone else as leaving.
             if (!member.connected) {
-                Text(
-                    text = stringResource(R.string.listen_together_away),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Spacer(Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(NevTuneColors.warning),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.listen_together_away),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = NevTuneColors.warning,
+                    )
+                }
             }
         }
-        if (member.isHost) {
+        if (canKick) {
             Spacer(Modifier.width(8.dp))
-            Badge(stringResource(R.string.listen_together_host))
-        } else if (canKick) {
-            TextButton(onClick = onKick) { Text(stringResource(R.string.listen_together_remove)) }
+            Surface(
+                onClick = onKick,
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+            ) {
+                Box(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(R.string.listen_together_remove),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
         }
     }
 }
@@ -1106,31 +1519,162 @@ private fun MemberRow(member: PartyMember, isYou: Boolean, canKick: Boolean = fa
 @Composable
 private fun PartyActivityList(entries: List<PartyActivity>) {
     if (entries.isEmpty()) return
-    SettingsGroup(
-        header = stringResource(R.string.listen_together_activity),
-        footer = stringResource(R.string.listen_together_activity_footer),
-    ) {
+    PartySectionHeader(stringResource(R.string.listen_together_activity))
+    PartyCard {
         val logScroll = rememberScrollState()
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(156.dp)
-                .background(MaterialTheme.colorScheme.surface)
+                .heightIn(max = 176.dp)
                 .verticalScroll(logScroll)
-                .padding(horizontal = ROW_INSET, vertical = 8.dp),
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             entries.forEach { entry ->
                 val timestamp = DateFormat.format("HH:mm:ss", entry.atMs)
-                Text(
-                    text = "[$timestamp] ${entry.by}: ${entry.detail.ifBlank { entry.action }}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.65f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            text = timestamp.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "${entry.by}: ${entry.detail.ifBlank { entry.action }}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
     }
+    Spacer(Modifier.height(6.dp))
+    PartyInfoBanner(stringResource(R.string.listen_together_activity_footer))
+}
+
+@Composable
+private fun PartyCard(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 1.dp,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 2.dp)
+            .animateContentSize(),
+    ) {
+        Column(modifier = Modifier.fillMaxWidth(), content = content)
+    }
+}
+
+@Composable
+private fun PartyIconBadge(
+    icon: ImageVector,
+    tint: Color,
+    size: Dp = 42.dp,
+) {
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(RoundedCornerShape(12.dp))
+            .background(tint.copy(alpha = 0.14f)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(size * 0.55f),
+        )
+    }
+}
+
+@Composable
+private fun PartyBadge(
+    text: String,
+    color: Color,
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(color.copy(alpha = 0.14f))
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = color,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun PartySectionHeader(title: String) {
+    Text(
+        text = title.uppercase(Locale.ROOT),
+        style = MaterialTheme.typography.labelSmall,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 1.1.sp,
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 8.dp),
+    )
+}
+
+@Composable
+private fun PartyInfoBanner(text: String) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Info,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = 17.sp,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PartyInnerDivider(modifier: Modifier = Modifier) {
+    HorizontalDivider(
+        modifier = modifier,
+        thickness = 0.5.dp,
+        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+    )
 }
 
 @Composable

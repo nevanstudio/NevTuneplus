@@ -38,6 +38,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -376,19 +377,22 @@ private fun TvMainShell(
         chrome.epoch++
         viewModel.closeDetail()
     }
-    // Leaving the last pushed page: put focus back on the card that opened it.
-    var hadDetail by remember { mutableStateOf(false) }
-    LaunchedEffect(activeDetail == null) {
-        if (activeDetail != null) {
-            hadDetail = true
+    // Leaving a pushed page: put focus back on the card or link that opened it.
+    var prevDetailStackSize by remember { mutableIntStateOf(detailStack.size) }
+    LaunchedEffect(detailStack.size) {
+        val newSize = detailStack.size
+        val oldSize = prevDetailStackSize
+        prevDetailStackSize = newSize
+        if (newSize > 0) {
             barHasFocus = false
-        } else if (hadDetail) {
-            hadDetail = false
+        }
+        if (oldSize > newSize) {
             delay(16)
             val back = pendingReturn
             pendingReturn = null
             if (back == null || !runCatching { back.requestFocus() }.getOrDefault(false)) {
-                runCatching { contentFocus.requestFocus() }
+                val targetFocus = if (newSize > 0) detailFocus else contentFocus
+                runCatching { targetFocus.requestFocus() }
             }
         }
     }

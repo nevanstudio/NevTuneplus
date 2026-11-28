@@ -2754,10 +2754,8 @@ private fun NevTunePlusApp(
                     ?: queueLabel
                 val sourceId = displayedSong.playbackSourceId
 
-                // A context link is navigation, not another page stacked over
-                // Now Playing. Clear the current route before restoring it.
+                // A context link is navigation to a source page.
                 dismissPlayer()
-                navigator.clear()
 
                 when (sourceType) {
                     PlaybackSourceType.BROWSE -> {
@@ -3085,6 +3083,7 @@ private fun NevTunePlusApp(
                                 onPlaySongs = { title, songs, index ->
                                     playFrom(songs, index, QueueSource(title, PlaybackSourceType.BROWSE))
                                 },
+                                listState = pageDetailListState,
                             )
                         } else if (pageRoute == AppRoute.Spotify) {
                             SpotifyLibraryScreen(
@@ -3100,6 +3099,7 @@ private fun NevTunePlusApp(
                                 onOpenLogin = { showSpotifyLogin = true },
                                 onOpenTokenSetup = { showSpotifyCanvasAuth = true },
                                 contentPadding = listPadding,
+                                listState = pageDetailListState,
                             )
                         } else if (pageRoute == AppRoute.Discord) {
                             DiscordScreen(
@@ -3213,6 +3213,7 @@ private fun NevTunePlusApp(
                                 onDownloadLatest = { showUpdateDialog = updateAvailable != null },
                                 onCategoryBackHandlerChanged = { settingsCategoryBackHandler = it },
                                 contentPadding = listPadding,
+                                settingsEntryId = (destination as? AppDestination.Route)?.entry?.id,
                             )
                         } else if (page != null) {
                             // Local Music, Downloads and the other device folders are
@@ -4588,7 +4589,7 @@ LibraryScreen(
         // One body for both presentations of the track menu: the sheet the ⋮
         // and the player open, and the popup a held row lifts into. Every
         // callback below is the same in either; only the frame differs.
-        val songMenuBody: @Composable (Song, SongActionsPresentation) -> Unit = { heldSong, presentation ->
+        val songMenuBody: @Composable (Song, SongActionsPresentation, ((() -> Unit)?) -> Unit) -> Unit = { heldSong, presentation, dismissMenu ->
             // Set by whoever opened it — see [menuFromPlayer]. It cannot be
             // read off the player's own visibility any more, because on a
             // tablet the player is visible whatever the menu was opened from.
@@ -4622,17 +4623,18 @@ LibraryScreen(
                     putExtra(Intent.EXTRA_TEXT, "https://music.youtube.com/watch?v=${song.videoId}")
                 }
                 context.startActivity(Intent.createChooser(sendIntent, song.title))
-                songActions = null
+                dismissMenu(null)
             }
             // Navigating has to take the player down with the sheet, or the
             // page it opens lands behind a still-covering player.
             // The track's cover stands in for an album's, but never for an
             // artist's picture — that page loads its own.
             val openPage: (String, String, String, BrowseType) -> Unit = { id, title, sub, type ->
-                songActions = null
-                dismissPlayer()
-                val art = song.thumbnailUrl.takeUnless { type == BrowseType.ARTIST }
-                viewModel.openDetail(id, title, sub, art, type)
+                dismissMenu {
+                    dismissPlayer()
+                    val art = song.thumbnailUrl.takeUnless { type == BrowseType.ARTIST }
+                    viewModel.openDetail(id, title, sub, art, type)
+                }
             }
             // Video vs audio, moved here from the player's own controls: it is
             // the same kind of choice as Revert to original / Upgrade
@@ -4660,7 +4662,7 @@ LibraryScreen(
                 controller?.currentMediaItem?.mediaId == song.videoId
             ) {
                 {
-                    songActions = null
+                    dismissMenu(null)
                     val c = controller
                     val original = convertedFromVideo
                     val originalAudio = convertedFromAudio
@@ -4752,9 +4754,9 @@ LibraryScreen(
                 presentation = presentation,
                 signedIn = signedIn,
                 likeStatus = likeStatuses[song.videoId] ?: LikeStatus.INDIFFERENT,
-                onPlayNext = { playNext(song); songActions = null },
-                onAddToQueue = { addToQueue(song); songActions = null },
-                onStartRadio = { startRadio(song); songActions = null },
+                onPlayNext = { playNext(song); dismissMenu(null) },
+                onAddToQueue = { addToQueue(song); dismissMenu(null) },
+                onStartRadio = { startRadio(song); dismissMenu(null) },
                 // Stays open: the row it replaces itself with is the
                 // progress, and closing the sheet would hide the only
                 // answer to "did that work?".
@@ -4775,8 +4777,7 @@ LibraryScreen(
                         com.nevanstudio.nevtuneplus.data.webdav.WebDavUploads.isUploadable(song)
                     ) {
                         {
-                            songActions = null
-                            uploadToWebDav(listOf(song))
+                            dismissMenu { uploadToWebDav(listOf(song)) }
                         }
                     } else {
                         null
@@ -4798,20 +4799,17 @@ LibraryScreen(
                     }
                 },
                 onAddToPlaylist = {
-                    songActions = null
                     viewModel.loadPlaylists()
-                    playlistTarget = song
+                    dismissMenu { playlistTarget = song }
                 },
                 onRemoveFromPlaylist = editable?.let {
                     {
-                        songActions = null
-                        viewModel.removeFromPlaylist(it.browseId, song)
+                        dismissMenu { viewModel.removeFromPlaylist(it.browseId, song) }
                     }
                 },
                 onRemoveFromCache = if (inCache) {
                     {
-                        songActions = null
-                        removeFromCache(listOf(song))
+                        dismissMenu { removeFromCache(listOf(song)) }
                     }
                 } else {
                     null
@@ -4855,7 +4853,7 @@ LibraryScreen(
                 ) {
                     {
                         controller?.revertToOriginal()
-                        songActions = null
+                        dismissMenu(null)
                     }
                 } else {
                     null
@@ -4880,8 +4878,8 @@ LibraryScreen(
                     controller?.currentMediaItem?.mediaId == song.videoId
                 ) {
                     {
-                        controller.upgradeQuality()
-                        songActions = null
+                        controller?.upgradeQuality()
+                        dismissMenu(null)
                     }
                 } else {
                     null
@@ -4896,7 +4894,7 @@ LibraryScreen(
                 onShare = share.takeIf { song.videoId.isNotBlank() },
                 onCopyLog = if (fromPlayer) {
                     {
-                        songActions = null
+                        dismissMenu(null)
                         scope.launch {
                             val text = TrackLog.forTrack(song, NerdStats.current.value)
                             clipboard.setText(AnnotatedString(text))
@@ -4920,8 +4918,7 @@ LibraryScreen(
                 },
                 onLyricsOffset = if (fromPlayer) {
                     {
-                        songActions = null
-                        showLyricsOffset = true
+                        dismissMenu { showLyricsOffset = true }
                     }
                 } else {
                     null
@@ -4929,14 +4926,31 @@ LibraryScreen(
             )
         }
         songActions?.takeIf { songMenuOrigin == null }?.let { song ->
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            var isDismissing by remember { mutableStateOf(false) }
+            val dismissSheet: ((() -> Unit)?) -> Unit = { after ->
+                if (!isDismissing) {
+                    isDismissing = true
+                    scope.launch {
+                        try {
+                            sheetState.hide()
+                        } finally {
+                            songActions = null
+                            after?.invoke()
+                        }
+                    }
+                }
+            }
             ModalBottomSheet(
                 onDismissRequest = { songActions = null },
+                sheetState = sheetState,
                 // The sheet paints itself in the track's own colours, corners
                 // and drag handle included — see SongActionsSheet.
                 containerColor = Color.Transparent,
                 dragHandle = null,
+                contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
             ) {
-                songMenuBody(song, SongActionsPresentation.Sheet)
+                songMenuBody(song, SongActionsPresentation.Sheet, dismissSheet)
             }
         }
         // Drawn over everything, tab bar and mini player included, and kept
@@ -4954,7 +4968,10 @@ LibraryScreen(
                 }
             },
         ) { song ->
-            songMenuBody(song, SongActionsPresentation.Menu)
+            songMenuBody(song, SongActionsPresentation.Menu) { after ->
+                songActions = null
+                after?.invoke()
+            }
         }
         // A closed menu forgets where it was held, so whatever opens it next
         // — the ⋮, the player — starts from the sheet.

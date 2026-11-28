@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import com.nevanstudio.nevtuneplus.ui.components.NevTunePlusAlertDialog as AlertDialog
@@ -61,6 +63,7 @@ import java.util.UUID
 fun SmartPlaylistsScreen(
     contentPadding: PaddingValues,
     onPlaySongs: (title: String, songs: List<Song>, startIndex: Int) -> Unit,
+    listState: LazyListState = rememberLazyListState(),
 ) {
     val context = LocalContext.current
     val definitions by SmartPlaylistStore.definitions.collectAsStateWithLifecycle()
@@ -141,6 +144,7 @@ fun SmartPlaylistsScreen(
             )
         } else {
             LazyColumn(
+                state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),

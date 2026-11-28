@@ -249,6 +249,7 @@ fun SettingsScreen(
     onCategoryBackHandlerChanged: ((() -> Unit)?) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
+    settingsEntryId: Long? = null,
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
@@ -369,8 +370,8 @@ fun SettingsScreen(
     // Filters the rows below — see [SettingsSearch]. Blank shows everything,
     // exactly as if the field weren't there.
     // Saveable so a search survives a trip into one of the pages it found.
-    var searchQuery by rememberSaveable { mutableStateOf("") }
-    var selectedCategory by rememberSaveable { mutableStateOf<String?>(null) }
+    var searchQuery by rememberSaveable(settingsEntryId) { mutableStateOf("") }
+    var selectedCategory by rememberSaveable(settingsEntryId) { mutableStateOf<String?>(null) }
     // A category is an in-screen subpage. Consume Back here before the app-level
     // navigator can pop Settings and return to the previously selected tab.
     BackHandler(enabled = selectedCategory != null) {

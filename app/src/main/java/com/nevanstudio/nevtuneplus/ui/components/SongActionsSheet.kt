@@ -5,16 +5,29 @@ package com.nevanstudio.nevtuneplus.ui.components
 import com.nevanstudio.nevtuneplus.R
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -56,6 +69,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -77,14 +91,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.nevanstudio.nevtuneplus.data.model.LikeStatus
 import com.nevanstudio.nevtuneplus.data.model.ROW_ART_PX
 import com.nevanstudio.nevtuneplus.data.model.Song
 import com.nevanstudio.nevtuneplus.data.model.artworkAt
+import com.nevanstudio.nevtuneplus.data.settings.AppSettings
 import com.nevanstudio.nevtuneplus.data.webdav.WebDavUploads
 import com.nevanstudio.nevtuneplus.download.DownloadState
 import com.nevanstudio.nevtuneplus.download.Downloads
@@ -204,7 +221,7 @@ fun SongActionsSheet(
     presentation: SongActionsPresentation = SongActionsPresentation.Sheet,
 ) {
     var showingSongInfo by remember(song.videoId) { mutableStateOf(false) }
-    var pickingSleepTimer by remember { mutableStateOf(false) }
+    var pickingSleepTimer by remember(song.videoId) { mutableStateOf(false) }
     val menu = presentation == SongActionsPresentation.Menu
     // The held-row menu has no pages to swap, so there Song Info opens as a dialog.
     if (menu && showingSongInfo) SongInfoDialog(song) { showingSongInfo = false }
@@ -404,21 +421,528 @@ fun SongActionsSheet(
         return
     }
 
+    val reduceAnimation by AppSettings.reduceAnimation.collectAsStateWithLifecycle()
+    val currentPage = when {
+        pickingSleepTimer -> SheetPage.SleepTimer
+        showingSongInfo -> SheetPage.SongInfo
+        else -> SheetPage.Actions
+    }
+
     TintedSheet(palette = palette, imageUrl = song.thumbnailUrl, modifier = modifier) {
-        if (pickingSleepTimer) {
-            SleepTimerPicker(palette = palette, onBack = { pickingSleepTimer = false })
-            return@TintedSheet
+        BackHandler(enabled = currentPage != SheetPage.Actions) {
+            pickingSleepTimer = false
+            showingSongInfo = false
         }
-        if (showingSongInfo) {
-            SongInfoPage(song = song, palette = palette, onBack = { showingSongInfo = false })
-            return@TintedSheet
+        AnimatedContent(
+            targetState = currentPage,
+            transitionSpec = {
+                if (reduceAnimation) {
+                    fadeIn(tween(120)) togetherWith fadeOut(tween(120))
+                } else {
+                    val forward = targetState != SheetPage.Actions
+                    val enterOffset: (Int) -> Int = { full -> if (forward) full / 4 else -full / 4 }
+                    val exitOffset: (Int) -> Int = { full -> if (forward) -full / 4 else full / 4 }
+                    (slideInHorizontally(tween(220), initialOffsetX = enterOffset) + fadeIn(tween(180)))
+                        .togetherWith(slideOutHorizontally(tween(180), targetOffsetX = exitOffset) + fadeOut(tween(140)))
+                }
+            },
+            label = "songActionsPage",
+        ) { page ->
+            when (page) {
+                SheetPage.SleepTimer -> SleepTimerPicker(
+                    palette = palette,
+                    onBack = { pickingSleepTimer = false },
+                )
+                SheetPage.SongInfo -> SongInfoPage(
+                    song = song,
+                    palette = palette,
+                    onBack = { showingSongInfo = false },
+                )
+                SheetPage.Actions -> Column(Modifier.fillMaxWidth()) {
+                    SheetTrackHeader(song, subtitleColor = palette.onBackgroundVariant)
+                    QuickActionsRow(
+                        song = song,
+                        palette = palette,
+                        isOffline = isOffline,
+                        onPlayNext = onPlayNext,
+                        onAddToQueue = onAddToQueue,
+                        onDownload = onDownload,
+                        onAddToPlaylist = onAddToPlaylist,
+                        onStartRadio = onStartRadio,
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    RedesignedSheetGroups(
+                        song = song,
+                        palette = palette,
+                        signedIn = signedIn,
+                        liked = liked,
+                        disliked = disliked,
+                        isOffline = isOffline,
+                        radioInQuickBar = song.videoId.isBlank(),
+                        onStartRadio = onStartRadio,
+                        onShare = onShare,
+                        onToggleLike = onToggleLike,
+                        onToggleDislike = onToggleDislike,
+                        onRemoveFromPlaylist = onRemoveFromPlaylist,
+                        onRollbackToOriginal = onRollbackToOriginal,
+                        onUpgradeQuality = onUpgradeQuality,
+                        upgradeQualityInProgress = upgradeQualityInProgress,
+                        onToggleAudioVersion = onToggleAudioVersion,
+                        isAudioVersion = isAudioVersion,
+                        resolvingLinks = resolvingLinks,
+                        onOpenAlbum = onOpenAlbum,
+                        onOpenArtist = onOpenArtist,
+                        onSongInfo = { showingSongInfo = true },
+                        showSleepTimer = showSleepTimer,
+                        onSleepTimer = { pickingSleepTimer = true },
+                        onLyricsOffset = onLyricsOffset,
+                        onRemoveFromCache = onRemoveFromCache,
+                        onUploadToWebDav = onUploadToWebDav,
+                        onCopyLog = onCopyLog,
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.navigationBarsPadding())
+                }
+            }
+        }
+    }
+}
+
+private enum class SheetPage { Actions, SleepTimer, SongInfo }
+
+@Composable
+private fun QuickActionsRow(
+    song: Song,
+    palette: ArtworkPalette,
+    isOffline: Boolean,
+    onPlayNext: () -> Unit,
+    onAddToQueue: () -> Unit,
+    onDownload: () -> Unit,
+    onAddToPlaylist: () -> Unit,
+    onStartRadio: () -> Unit,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val active by Downloads.active.collectAsStateWithLifecycle()
+    val saved by Downloads.saved.collectAsStateWithLifecycle()
+    val recorded = saved[song.videoId]
+    val file by produceState(recorded?.let(Uri::parse), song.videoId, recorded) {
+        value = Downloads.savedUri(context, song.videoId)
+    }
+
+    DisposableEffect(song.videoId) {
+        onDispose { Downloads.dismissFailure(song.videoId) }
+    }
+
+    val downloadState = active[song.videoId]
+    val showDownload = downloadState != null || file != null || !isOffline
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Max)
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        QuickActionTile(
+            icon = Icons.AutoMirrored.Rounded.PlaylistPlay,
+            label = stringResource(R.string.play_next),
+            palette = palette,
+            onClick = onPlayNext,
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+        )
+        QuickActionTile(
+            icon = Icons.AutoMirrored.Rounded.QueueMusic,
+            label = stringResource(R.string.add_to_queue),
+            palette = palette,
+            onClick = onAddToQueue,
+            modifier = Modifier.weight(1f).fillMaxHeight(),
+        )
+        if (showDownload) {
+            when (downloadState) {
+                is DownloadState.Queued -> QuickActionTile(
+                    icon = Icons.Rounded.Downloading,
+                    label = stringResource(R.string.queued),
+                    palette = palette,
+                    tint = palette.accent,
+                    onClick = { Downloads.cancel(song.videoId) },
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
+                is DownloadState.Running -> QuickActionTile(
+                    icon = Icons.Rounded.Downloading,
+                    label = if (downloadState.fraction > 0f) {
+                        "${(downloadState.fraction * 100).toInt()}%"
+                    } else {
+                        stringResource(R.string.cancel)
+                    },
+                    palette = palette,
+                    tint = palette.accent,
+                    progress = downloadState.fraction.takeIf { it > 0f },
+                    indeterminate = downloadState.fraction <= 0f,
+                    onClick = { Downloads.cancel(song.videoId) },
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
+                is DownloadState.Failed -> QuickActionTile(
+                    icon = Icons.Rounded.ErrorOutline,
+                    label = stringResource(R.string.retry),
+                    palette = palette,
+                    tint = MaterialTheme.colorScheme.error,
+                    onClick = onDownload,
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
+                null -> if (file != null) {
+                    QuickActionTile(
+                        icon = Icons.Rounded.DownloadDone,
+                        label = stringResource(R.string.saved_to_downloads),
+                        palette = palette,
+                        tint = palette.accent,
+                        onClick = { scope.launch { Downloads.delete(context, song.videoId) } },
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                    )
+                } else {
+                    QuickActionTile(
+                        icon = Icons.Rounded.Download,
+                        label = stringResource(R.string.download),
+                        palette = palette,
+                        onClick = onDownload,
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                    )
+                }
+            }
+        }
+        if (song.videoId.isNotBlank()) {
+            QuickActionTile(
+                icon = Icons.AutoMirrored.Rounded.PlaylistAdd,
+                label = stringResource(R.string.add_to_playlist),
+                palette = palette,
+                onClick = onAddToPlaylist,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            )
+        } else {
+            QuickActionTile(
+                icon = Icons.Rounded.Radio,
+                label = stringResource(R.string.start_radio),
+                palette = palette,
+                onClick = onStartRadio,
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuickActionTile(
+    icon: ImageVector,
+    label: String,
+    palette: ArtworkPalette,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    tint: Color? = null,
+    progress: Float? = null,
+    indeterminate: Boolean = false,
+) {
+    val foreground = tint ?: MaterialTheme.colorScheme.onBackground
+    Surface(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = 76.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = palette.onBackground.copy(alpha = 0.08f),
+        border = BorderStroke(0.5.dp, palette.onBackground.copy(alpha = 0.08f)),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 6.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            if (indeterminate) {
+                CircularProgressIndicator(
+                    color = foreground,
+                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(22.dp),
+                )
+            } else if (progress != null) {
+                CircularProgressIndicator(
+                    progress = { progress },
+                    color = foreground,
+                    trackColor = foreground.copy(alpha = 0.2f),
+                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(22.dp),
+                )
+            } else {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = foreground,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium.copy(lineHeight = 14.sp),
+                color = foreground,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun RedesignedSheetGroups(
+    song: Song,
+    palette: ArtworkPalette,
+    signedIn: Boolean,
+    liked: Boolean,
+    disliked: Boolean,
+    isOffline: Boolean,
+    radioInQuickBar: Boolean,
+    onStartRadio: () -> Unit,
+    onShare: (() -> Unit)?,
+    onToggleLike: () -> Unit,
+    onToggleDislike: () -> Unit,
+    onRemoveFromPlaylist: (() -> Unit)?,
+    onRollbackToOriginal: (() -> Unit)?,
+    onUpgradeQuality: (() -> Unit)?,
+    upgradeQualityInProgress: Boolean,
+    onToggleAudioVersion: (() -> Unit)?,
+    isAudioVersion: Boolean,
+    resolvingLinks: Boolean,
+    onOpenAlbum: (String) -> Unit,
+    onOpenArtist: (String) -> Unit,
+    onSongInfo: () -> Unit,
+    showSleepTimer: Boolean,
+    onSleepTimer: () -> Unit,
+    onLyricsOffset: (() -> Unit)?,
+    onRemoveFromCache: (() -> Unit)?,
+    onUploadToWebDav: (() -> Unit)?,
+    onCopyLog: (() -> Unit)?,
+) {
+    val showShare = !isOffline && onShare != null
+    val showAccount = signedIn && !isOffline
+    val hasPrimaryGroup = !radioInQuickBar || showShare || showAccount
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        if (hasPrimaryGroup) {
+            ActionGroupCard(palette) {
+                var needsDivider = false
+                @Composable
+                fun nextDivider() {
+                    if (needsDivider) GroupInnerDivider(palette)
+                    needsDivider = true
+                }
+                if (!radioInQuickBar) {
+                    nextDivider()
+                    ActionRow(
+                        icon = Icons.Rounded.Radio,
+                        label = stringResource(R.string.start_radio),
+                        accent = palette.accent,
+                        onClick = onStartRadio,
+                    )
+                }
+                if (showShare) {
+                    nextDivider()
+                    ActionRow(
+                        icon = Icons.Rounded.Share,
+                        label = stringResource(R.string.share),
+                        accent = palette.accent,
+                        onClick = onShare,
+                    )
+                }
+                if (showAccount) {
+                    nextDivider()
+                    ActionRow(
+                        icon = if (liked) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                        label = if (liked) stringResource(R.string.remove_from_liked) else stringResource(R.string.like),
+                        tint = if (liked) palette.accent else null,
+                        accent = palette.accent,
+                        onClick = onToggleLike,
+                    )
+                    GroupInnerDivider(palette)
+                    ActionRow(
+                        icon = if (disliked) Icons.Rounded.ThumbDown else Icons.Rounded.ThumbDownOffAlt,
+                        label = if (disliked) stringResource(R.string.undo_dislike) else stringResource(R.string.dislike),
+                        tint = if (disliked) palette.accent else null,
+                        accent = palette.accent,
+                        onClick = onToggleDislike,
+                    )
+                    onRemoveFromPlaylist?.let {
+                        GroupInnerDivider(palette)
+                        ActionRow(
+                            icon = Icons.Rounded.PlaylistRemove,
+                            label = stringResource(R.string.remove_from_playlist),
+                            accent = palette.accent,
+                            onClick = it,
+                        )
+                    }
+                }
+            }
         }
 
-        SheetTrackHeader(song, subtitleColor = palette.onBackgroundVariant)
-        HorizontalDivider(thickness = 0.5.dp, color = palette.divider)
-        rows()
-        Spacer(Modifier.height(24.dp))
+        if (onRollbackToOriginal != null || onUpgradeQuality != null || onToggleAudioVersion != null) {
+            ActionGroupCard(palette) {
+                var needsDivider = false
+                (onRollbackToOriginal ?: onUpgradeQuality)?.let {
+                    needsDivider = true
+                    ActionRow(
+                        icon = if (onRollbackToOriginal != null) {
+                            Icons.AutoMirrored.Rounded.Undo
+                        } else {
+                            Icons.Rounded.HighQuality
+                        },
+                        label = stringResource(
+                            if (onRollbackToOriginal != null) {
+                                R.string.revert_to_original
+                            } else {
+                                R.string.upgrade_quality
+                            },
+                        ),
+                        accent = palette.accent,
+                        enabled = onRollbackToOriginal != null || !upgradeQualityInProgress,
+                        onClick = it,
+                    )
+                }
+                onToggleAudioVersion?.let {
+                    if (needsDivider) GroupInnerDivider(palette)
+                    ActionRow(
+                        icon = if (isAudioVersion) Icons.Rounded.Videocam else NevTunePlusIcons.MusicNote,
+                        label = stringResource(
+                            if (isAudioVersion) R.string.convert_to_video else R.string.convert_to_audio,
+                        ),
+                        accent = palette.accent,
+                        onClick = it,
+                    )
+                }
+            }
+        }
+
+        ActionGroupCard(palette) {
+            var needsDivider = false
+            when (val id = song.albumId) {
+                null -> if (resolvingLinks) {
+                    needsDivider = true
+                    LoadingActionRow(Icons.Rounded.Album, stringResource(R.string.open_album), palette)
+                }
+                else -> {
+                    needsDivider = true
+                    ActionRow(
+                        Icons.Rounded.Album,
+                        stringResource(R.string.open_album),
+                        accent = palette.accent,
+                    ) { onOpenAlbum(id) }
+                }
+            }
+            when (val id = song.artistId) {
+                null -> if (resolvingLinks) {
+                    if (needsDivider) GroupInnerDivider(palette)
+                    needsDivider = true
+                    LoadingActionRow(Icons.Rounded.Person, stringResource(R.string.open_artist), palette)
+                }
+                else -> {
+                    if (needsDivider) GroupInnerDivider(palette)
+                    needsDivider = true
+                    ActionRow(
+                        Icons.Rounded.Person,
+                        stringResource(R.string.open_artist),
+                        accent = palette.accent,
+                    ) { onOpenArtist(id) }
+                }
+            }
+            if (needsDivider) GroupInnerDivider(palette)
+            ActionRow(
+                icon = Icons.Rounded.Info,
+                label = stringResource(R.string.song_info),
+                accent = palette.accent,
+                onClick = onSongInfo,
+            )
+        }
+
+        val showWebDav = onUploadToWebDav != null && isOffline && WebDavUploads.isUploadable(song)
+        val hasToolsGroup = showSleepTimer || onLyricsOffset != null ||
+            onRemoveFromCache != null || showWebDav || onCopyLog != null
+        if (hasToolsGroup) {
+            ActionGroupCard(palette) {
+                var needsDivider = false
+                @Composable
+                fun nextDivider() {
+                    if (needsDivider) GroupInnerDivider(palette)
+                    needsDivider = true
+                }
+                if (showSleepTimer) {
+                    nextDivider()
+                    ActionRow(
+                        icon = Icons.Rounded.Bedtime,
+                        label = stringResource(R.string.sleep_timer),
+                        value = sleepTimerStatus(),
+                        accent = palette.accent,
+                        onClick = onSleepTimer,
+                    )
+                }
+                onLyricsOffset?.let {
+                    nextDivider()
+                    ActionRow(
+                        icon = Icons.Rounded.Tune,
+                        label = stringResource(R.string.lyrics_offset),
+                        accent = palette.accent,
+                        onClick = it,
+                    )
+                }
+                onRemoveFromCache?.let {
+                    nextDivider()
+                    ActionRow(
+                        icon = Icons.Rounded.DeleteSweep,
+                        label = stringResource(R.string.remove_from_cache),
+                        accent = palette.accent,
+                        onClick = it,
+                    )
+                }
+                if (showWebDav) {
+                    nextDivider()
+                    WebDavUploadRow(song, palette, isOffline, onUploadToWebDav)
+                }
+                onCopyLog?.let {
+                    nextDivider()
+                    ActionRow(
+                        icon = Icons.Rounded.BugReport,
+                        label = stringResource(R.string.copy_log),
+                        accent = palette.accent,
+                        onClick = it,
+                    )
+                }
+            }
+        }
     }
+}
+
+@Composable
+private fun ActionGroupCard(
+    palette: ArtworkPalette,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(palette.onBackground.copy(alpha = 0.06f)),
+        content = content,
+    )
+}
+
+@Composable
+private fun GroupInnerDivider(palette: ArtworkPalette) {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = 62.dp, end = 22.dp),
+        thickness = 0.5.dp,
+        color = palette.divider,
+    )
 }
 
 /** How [SongActionsSheet] is being presented. */
@@ -750,6 +1274,7 @@ private fun SleepTimerPicker(palette: ArtworkPalette, onBack: () -> Unit) {
             }
         }
         Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.navigationBarsPadding())
     }
 }
 
