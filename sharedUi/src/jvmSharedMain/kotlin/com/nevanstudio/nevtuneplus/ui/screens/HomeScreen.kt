@@ -1196,13 +1196,6 @@ private fun HomeTitle(
             .padding(start = PAGE_GUTTER, end = 12.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_logo),
-            contentDescription = "NevTune+",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.width(34.dp).height(23.dp),
-        )
-        Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
             Text(
                 text = greeting,
@@ -1227,6 +1220,12 @@ private fun HomeTitle(
         ) {
             HomeHeaderAction(Icons.Rounded.Search, "Search", onSearchClick)
             HomeHeaderAction(Icons.Rounded.Bluetooth, "Bluetooth audio output", onBluetoothClick)
+            Icon(
+                painter = painterResource(Res.drawable.ic_logo),
+                contentDescription = "NevTune+",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.width(48.dp).height(32.dp),
+            )
             Surface(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
