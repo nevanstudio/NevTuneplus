@@ -5,6 +5,7 @@ package com.nevanstudio.nevtuneplus.ui.replay
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -26,6 +27,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -417,12 +420,15 @@ private fun StoryChrome(
                 color = Color.White,
                 modifier = Modifier.weight(1f),
             )
-            // Logo mark only — no wordmark text beside it.
-            Icon(
-                painter = painterResource(R.drawable.ic_logo),
+            // Full horizontal watermark PNG (play-button icon + "NevTune+" wordmark),
+            // matching the bitmap-drawn poster and lyrics card for consistency.
+            Image(
+                painter = painterResource(R.drawable.cards_watermark),
                 contentDescription = "NevTune+",
-                tint = Color.White.copy(alpha = 0.9f),
-                modifier = Modifier.size(width = 56.dp, height = 45.dp),
+                alpha = 0.9f,
+                modifier = Modifier
+                    .height(28.dp)
+                    .wrapContentWidth(),
             )
         }
     }

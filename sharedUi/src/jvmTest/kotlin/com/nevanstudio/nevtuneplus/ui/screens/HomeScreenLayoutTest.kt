@@ -5,6 +5,12 @@ package com.nevanstudio.nevtuneplus.ui.screens
 import com.nevanstudio.nevtuneplus.data.model.HomeShelf
 import com.nevanstudio.nevtuneplus.data.model.ShelfItem
 import com.nevanstudio.nevtuneplus.data.model.ShelfLayout
+import com.nevanstudio.nevtuneplus.data.spotify.SPOTIFY_ALBUM_PREFIX
+import com.nevanstudio.nevtuneplus.data.spotify.SPOTIFY_PAGE_PREFIX
+import com.nevanstudio.nevtuneplus.data.spotify.SpotifyAlbum
+import com.nevanstudio.nevtuneplus.data.spotify.SpotifyHomeFeed
+import com.nevanstudio.nevtuneplus.data.spotify.SpotifyPlaylist
+import com.nevanstudio.nevtuneplus.data.spotify.SpotifyTrack
 import com.nevanstudio.nevtuneplus.ui.components.SHELF_CARD_WIDTH
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -122,5 +128,29 @@ class HomeScreenLayoutTest {
         assertEquals(ShelfPresentationStyle.VIDEO_CARDS, shelfPresentationStyle(videos))
         assertEquals(ShelfPresentationStyle.TONAL_CARDS, shelfPresentationStyle(madeForYou))
         assertEquals(ShelfPresentationStyle.COMPACT_CARDS, shelfPresentationStyle(albums))
+    }
+
+    @Test
+    fun spotifyAlbumsAndPlaylistsParticipateInHomeFiltersAndQuickAccess() {
+        val spotifyAlbum = ShelfItem("Midnight", "Artist", null, null, "${SPOTIFY_ALBUM_PREFIX}a1")
+        val spotifyPlaylist = ShelfItem("Road Trip", "Me", null, null, "${SPOTIFY_PAGE_PREFIX}p1")
+        assertTrue(spotifyAlbum.isAlbumItem())
+        assertTrue(spotifyAlbum.matchesHomeFilter(HomeContentFilter.ALBUMS))
+        assertTrue(spotifyPlaylist.isPlaylistItem())
+        assertTrue(spotifyPlaylist.matchesHomeFilter(HomeContentFilter.PLAYLISTS))
+
+        val feed = SpotifyHomeFeed(
+            playlists = listOf(SpotifyPlaylist("p1", "Road Trip", "Me", null)),
+            likedSongs = listOf(SpotifyTrack("t1", "Song 1", "Artist", "Alb", 180000, null)),
+            savedAlbums = listOf(SpotifyAlbum("a1", "Midnight", "Artist", null, "2024")),
+        )
+        val filters = availableHomeFilters(emptyList(), null, spotifyHomeFeed = feed)
+        assertEquals(
+            listOf(HomeContentFilter.ALL, HomeContentFilter.SONGS, HomeContentFilter.PLAYLISTS, HomeContentFilter.ALBUMS),
+            filters,
+        )
+        val shortcuts = selectQuickAccessShortcuts(emptyList(), null, maxItems = 6, spotifyHomeFeed = feed)
+        assertEquals(2, shortcuts.size)
+        assertEquals(setOf("${SPOTIFY_PAGE_PREFIX}p1", "${SPOTIFY_ALBUM_PREFIX}a1"), shortcuts.mapNotNull { it.item.browseId }.toSet())
     }
 }

@@ -19,10 +19,17 @@ import com.nevanstudio.nevtuneplus.data.LikeState
 import com.nevanstudio.nevtuneplus.data.YtMusicRepository
 import com.nevanstudio.nevtuneplus.data.model.SPOTIFY_MISSING_PREFIX
 import com.nevanstudio.nevtuneplus.data.model.SPOTIFY_PENDING_PREFIX
+import com.nevanstudio.nevtuneplus.data.model.filterPersonalizedHomeShelves
+import com.nevanstudio.nevtuneplus.data.spotify.SPOTIFY_ALBUM_PREFIX
+import com.nevanstudio.nevtuneplus.data.spotify.SPOTIFY_HOME_CACHE_TTL_MS
 import com.nevanstudio.nevtuneplus.data.spotify.SPOTIFY_PAGE_PREFIX
+import com.nevanstudio.nevtuneplus.data.spotify.SpotifyAuthException
+import com.nevanstudio.nevtuneplus.data.spotify.SpotifyHomeCache
+import com.nevanstudio.nevtuneplus.data.spotify.SpotifyHomeFeed
 import com.nevanstudio.nevtuneplus.data.spotify.SpotifyImporter
 import com.nevanstudio.nevtuneplus.data.spotify.SpotifyLibrary
 import com.nevanstudio.nevtuneplus.data.spotify.SpotifyTrack
+import com.nevanstudio.nevtuneplus.data.stats.LocalLibraryStore
 import com.nevanstudio.nevtuneplus.data.lyrics.EmbeddedLyrics
 import com.nevanstudio.nevtuneplus.data.lyrics.LyricLine
 import com.nevanstudio.nevtuneplus.data.lyrics.LyricsRepository
@@ -190,6 +197,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val homeRecentlyPlayedLoading: StateFlow<Boolean> = _homeRecentlyPlayedLoading.asStateFlow()
     private val homeLoadGeneration = AtomicLong(0L)
     private val homePagingGeneration = AtomicLong(0L)
+
+    private val _spotifyHome = MutableStateFlow<SpotifyHomeFeed?>(null)
+    val spotifyHome: StateFlow<SpotifyHomeFeed?> = _spotifyHome.asStateFlow()
+    private val _resolvingSpotifyTrackId = MutableStateFlow<String?>(null)
+    val resolvingSpotifyTrackId: StateFlow<String?> = _resolvingSpotifyTrackId.asStateFlow()
+    private val resolvedSpotifyTracks = ConcurrentHashMap<String, Song>()
+    private val spotifyHomeGeneration = AtomicLong(0L)
+    private var spotifyHomeJob: Job? = null
+    private var spotifyHomeLastFetchedAtMs = 0L
 
     private val _explore = MutableStateFlow<UiState<List<MoodGenreSection>>>(UiState.Loading)
     val explore: StateFlow<UiState<List<MoodGenreSection>>> = _explore.asStateFlow()
@@ -1713,6 +1729,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
         loadHome()
         loadExplore()
+        viewModelScope.launch {
+            AppSettings.spotifySpdcToken.collectLatest { token ->
+                onSpotifyTokenChanged(token)
+            }
+        }
         if (_signedIn.value) {
             viewModelScope.launch {
                 Innertube.ensureSessionScope()
@@ -1824,6 +1845,104 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             shouldAutoRefreshHome(System.currentTimeMillis(), lastHomeRefreshAtMs)
         ) {
             refresh(Feed.HOME)
+        } else if (AppSettings.spotifySpdcToken.value.isNotBlank() &&
+            !SpotifyHomeCache.isFresh(spotifyHomeLastFetchedAtMs) &&
+            spotifyHomeJob?.isActive != true
+        ) {
+            refreshSpotifyHome(force = false)
+        }
+    }
+
+    private suspend fun onSpotifyTokenChanged(token: String) {
+        val generation = spotifyHomeGeneration.incrementAndGet()
+        spotifyHomeJob?.cancel()
+        resolvedSpotifyTracks.clear()
+        if (token.isBlank()) {
+            _spotifyHome.value = null
+            spotifyHomeLastFetchedAtMs = 0L
+            SpotifyHomeCache.clear(getApplication())
+            return
+        }
+        val cached = SpotifyHomeCache.read(getApplication(), token)
+        if (generation != spotifyHomeGeneration.get()) return
+        if (cached != null) {
+            _spotifyHome.value = cached.feed
+            spotifyHomeLastFetchedAtMs = cached.fetchedAtMs
+            if (!SpotifyHomeCache.isFresh(cached.fetchedAtMs)) {
+                refreshSpotifyHome(force = false)
+            }
+        } else {
+            _spotifyHome.value = null
+            spotifyHomeLastFetchedAtMs = 0L
+            refreshSpotifyHome(force = true)
+        }
+    }
+
+    private fun refreshSpotifyHome(force: Boolean) {
+        val token = AppSettings.spotifySpdcToken.value
+        if (token.isBlank()) {
+            _spotifyHome.value = null
+            return
+        }
+        if (!force && SpotifyHomeCache.isFresh(spotifyHomeLastFetchedAtMs) && _spotifyHome.value != null) {
+            return
+        }
+        val generation = spotifyHomeGeneration.get()
+        spotifyHomeJob?.cancel()
+        spotifyHomeJob = viewModelScope.launch {
+            fetchSpotifyHome(token, generation)
+        }
+    }
+
+    private suspend fun fetchSpotifyHome(token: String, generation: Long) {
+        val result = runCatching { SpotifyLibrary.homeFeed() }
+        if (generation != spotifyHomeGeneration.get() || AppSettings.spotifySpdcToken.value != token) return
+        result.onSuccess { feed ->
+            val now = System.currentTimeMillis()
+            spotifyHomeLastFetchedAtMs = now
+            if (feed.isEmpty) {
+                _spotifyHome.value = null
+                SpotifyHomeCache.clear(getApplication())
+            } else {
+                _spotifyHome.value = feed
+                SpotifyHomeCache.write(getApplication(), token, feed, now)
+            }
+        }.onFailure { failure ->
+            if (failure is CancellationException) throw failure
+            when (failure) {
+                is SpotifyAuthException -> {
+                    android.util.Log.w("MainViewModel", "Spotify session unavailable/expired: ${failure.message}")
+                    if (_spotifyHome.value == null) {
+                        SpotifyHomeCache.clear(getApplication())
+                    }
+                }
+                else -> {
+                    android.util.Log.w("MainViewModel", "Spotify home refresh failed: ${failure.message}", failure)
+                }
+            }
+        }
+    }
+
+    fun resolveSpotifyTrack(track: SpotifyTrack, onResolved: (Song?) -> Unit) {
+        resolvedSpotifyTracks[track.id]?.let { cached ->
+            onResolved(cached)
+            return
+        }
+        viewModelScope.launch {
+            _resolvingSpotifyTrackId.value = track.id
+            try {
+                val matched = runCatching { SpotifyImporter.matchTrack(track) }
+                    .getOrNull()
+                    ?.let { song -> song.copy(thumbnailUrl = song.thumbnailUrl ?: track.imageUrl) }
+                if (matched != null) {
+                    resolvedSpotifyTracks[track.id] = matched
+                }
+                onResolved(matched)
+            } finally {
+                if (_resolvingSpotifyTrackId.value == track.id) {
+                    _resolvingSpotifyTrackId.value = null
+                }
+            }
         }
     }
 
@@ -1882,7 +2001,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             runFeedRefresh(_refreshing, feed) {
                 when (feed) {
-                    Feed.HOME -> refreshHome(identity)
+                    Feed.HOME -> coroutineScope {
+                        val homeJob = launch { refreshHome(identity) }
+                        val spotifyToken = AppSettings.spotifySpdcToken.value
+                        if (spotifyToken.isNotBlank()) {
+                            launch { fetchSpotifyHome(spotifyToken, spotifyHomeGeneration.get()) }
+                        }
+                        homeJob.join()
+                    }
                     Feed.EXPLORE -> fetchExplore()
                     Feed.LIBRARY -> fetchLibrary(identity)
                 }
@@ -1982,10 +2108,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         homeSeenContinuationTokens.clear()
         _homeLoadingMore.value = false
         _homeRecentlyPlayedLoading.value = _signedIn.value
-        // The core feed plus one browse per supplement. Recently played is left
-        // out: it has its own skeleton at the head of the page rather than the
-        // one at the tail.
-        _homePendingShelves.value = 1 + YtMusicRepository.HOME_SUPPLEMENT_BROWSE_IDS.size
+        _homePendingShelves.value = 1
         viewModelScope.launch {
             launch {
                 try {
@@ -1993,33 +2116,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     val feed = result.getOrNull()
                     if (feed != null) {
                         if (!isCurrentHomeLoad(identity, generation)) return@launch
-                        homeContinuation = initialHomeContinuation(
-                            feed.continuation,
-                            YtMusicRepository.HOME_FALLBACK_TOKEN_PREFIX,
-                        )
-                        if (feed.shelves.isNotEmpty()) {
-                            publishHomeShelves(feed.shelves, prioritize = true)
+                        homeContinuation = feed.continuation
+                        val personalized = filterPersonalizedHomeShelves(feed.shelves)
+                        if (personalized.isNotEmpty()) {
+                            publishHomeShelves(personalized, prioritize = true)
                         } else {
-                            // An empty first page can still have a valid server continuation.
-                            // Publish an empty success so the tail observer can request it.
                             _home.value = UiState.Success(emptyList())
                         }
                     } else {
-                        val fallback = YtMusicRepository.homeFallback(
-                            "${YtMusicRepository.HOME_FALLBACK_TOKEN_PREFIX}0",
-                        )
-                        fallback.onSuccess { fallbackFeed ->
-                            if (isCurrentHomeLoad(identity, generation)) {
-                                homeContinuation = fallbackFeed.continuation
-                                if (fallbackFeed.shelves.isNotEmpty()) {
-                                    publishHomeShelves(fallbackFeed.shelves, prioritize = true)
-                                } else {
-                                    _home.value = UiState.Success(emptyList())
-                                }
-                            }
-                        }.onFailure { failure ->
-                            if (isCurrentHomeLoad(identity, generation) && _home.value !is UiState.Success) {
-                                _home.value = UiState.Error(failure.friendly())
+                        val failure = result.exceptionOrNull()
+                        if (isCurrentHomeLoad(identity, generation) && _home.value !is UiState.Success) {
+                            val localRecents = localRecentsShelf()
+                            if (localRecents != null) {
+                                publishHomeShelves(listOf(localRecents), prepend = true)
+                            } else {
+                                _home.value = UiState.Error(failure?.friendly() ?: text(R.string.failed))
                             }
                         }
                     }
@@ -2033,26 +2144,43 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         .onSuccess { shelf ->
                             if (isCurrentHomeLoad(identity, generation)) {
                                 _homeRecentlyPlayedLoading.value = false
-                                shelf?.let { publishHomeShelves(listOf(it), prepend = true) }
+                                val recents = shelf ?: localRecentsShelf()
+                                recents?.let { publishHomeShelves(listOf(it), prepend = true) }
                             }
                         }
                         .onFailure {
-                            if (isCurrentHomeLoad(identity, generation)) _homeRecentlyPlayedLoading.value = false
+                            if (isCurrentHomeLoad(identity, generation)) {
+                                _homeRecentlyPlayedLoading.value = false
+                                localRecentsShelf()?.let { publishHomeShelves(listOf(it), prepend = true) }
+                            }
                         }
                 }
-            }
-            YtMusicRepository.HOME_SUPPLEMENT_BROWSE_IDS.forEach { browseId ->
-                launch {
-                    try {
-                        YtMusicRepository.homeSupplement(browseId).onSuccess { shelves ->
-                            if (isCurrentHomeLoad(identity, generation)) publishHomeShelves(shelves)
-                        }
-                    } finally {
-                        homeShelfRequestSettled(identity, generation)
+            } else {
+                localRecentsShelf()?.let {
+                    if (isCurrentHomeLoad(identity, generation)) {
+                        publishHomeShelves(listOf(it), prepend = true)
                     }
                 }
             }
         }
+    }
+
+    private fun localRecentsShelf(): HomeShelf? {
+        val localSongs = filterExplicitSongs(LocalLibraryStore.history.value).take(20)
+        if (localSongs.isEmpty()) return null
+        return HomeShelf(
+            title = "Recents",
+            items = localSongs.map { song ->
+                ShelfItem(
+                    title = song.title,
+                    subtitle = song.artist,
+                    thumbnailUrl = song.thumbnailUrl,
+                    videoId = song.videoId,
+                    browseId = null,
+                    isExplicit = song.isExplicit,
+                )
+            },
+        )
     }
 
     /**
@@ -2078,7 +2206,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         prepend: Boolean = false,
         prioritize: Boolean = false,
     ) {
-        val visibleShelves = filterExplicitHomeShelves(shelves)
+        val visibleShelves = filterPersonalizedHomeShelves(filterExplicitHomeShelves(shelves))
         val variedShelves = diversifyHomeShelves(varyHomeFeed(visibleShelves, homeSessionSeed)).map { shelf ->
             diversifyHomeShelf(shelf, homeSessionSeed xor shelf.title.hashCode().toLong())
         }
@@ -2150,15 +2278,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         homePreviousSessionVideoIds.clear()
         homePreviousSessionVideoIds.addAll(previousSessionVideoIds)
         val recent = if (_signedIn.value) async { YtMusicRepository.homeRecentlyPlayed() } else null
-        val primary = YtMusicRepository.home().getOrNull()
-        val useFallback = primary == null || (primary.shelves.isEmpty() && primary.continuation == null)
-        val feed = if (useFallback) {
-            YtMusicRepository.homeFallback("${YtMusicRepository.HOME_FALLBACK_TOKEN_PREFIX}0")
-                .getOrElse { failure ->
-                    android.util.Log.w("MainViewModel", "Home refresh fallback failed: ${failure.message}", failure)
-                    return@coroutineScope
-                }
-        } else primary
+        val feed = YtMusicRepository.home().getOrElse { failure ->
+            android.util.Log.w("MainViewModel", "Home refresh failed: ${failure.message}", failure)
+            recent?.cancel()
+            return@coroutineScope
+        }
         if (!shouldPublishHomeRefresh(
                 identityMatches = identity == listenerKey(),
                 requestGeneration = loadGeneration,
@@ -2169,15 +2293,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             return@coroutineScope
         }
         homeSessionSeed = refreshSeed
-        homeContinuation = if (useFallback) {
-            feed.continuation
-        } else {
-            initialHomeContinuation(feed.continuation, YtMusicRepository.HOME_FALLBACK_TOKEN_PREFIX)
-        }
+        homeContinuation = feed.continuation
         homeSeenTitles.clear()
         homeSeenVideoIds.clear()
         homeSeenContinuationTokens.clear()
-        val varied = diversifyHomeShelves(varyHomeFeed(filterExplicitHomeShelves(feed.shelves), refreshSeed)).map { shelf ->
+        val personalizedFeed = filterPersonalizedHomeShelves(filterExplicitHomeShelves(feed.shelves))
+        val varied = diversifyHomeShelves(varyHomeFeed(personalizedFeed, refreshSeed)).map { shelf ->
             diversifyHomeShelf(shelf, refreshSeed xor shelf.title.hashCode().toLong())
         }.let { prioritizeFreshHomeTracks(it, previousSessionVideoIds) }
             .withoutRepeatsOf(emptyList())
@@ -2185,15 +2306,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             .filter { homeSeenTitles.add(it.title.lowercase(Locale.ROOT)) }
         lastHomeRefreshAtMs = System.currentTimeMillis()
         _home.value = UiState.Success(shelves)
-        recent?.await()?.onSuccess { shelf ->
-            if (shouldPublishHomeRefresh(
-                    identityMatches = identity == listenerKey(),
-                    requestGeneration = loadGeneration,
-                    currentGeneration = homeLoadGeneration.get(),
-                )
-            ) {
-                shelf?.let { publishHomeShelves(listOf(it), prepend = true) }
-            }
+        val recentShelf = recent?.await()?.getOrNull() ?: localRecentsShelf()
+        if (shouldPublishHomeRefresh(
+                identityMatches = identity == listenerKey(),
+                requestGeneration = loadGeneration,
+                currentGeneration = homeLoadGeneration.get(),
+            )
+        ) {
+            recentShelf?.let { publishHomeShelves(listOf(it), prepend = true) }
         }
     }
 
@@ -2214,39 +2334,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 var emptyPages = 0
                 while (nextToken != null && emptyPages < HOME_MAX_EMPTY_CONTINUATION_PAGES) {
                     if (identity != listenerKey() || pagingGeneration != homePagingGeneration.get()) break
-                    if (!homeSeenContinuationTokens.add(nextToken)) {
-                        homeContinuation = if (nextToken.startsWith(YtMusicRepository.HOME_FALLBACK_TOKEN_PREFIX)) {
-                            null
-                        } else {
-                            "${YtMusicRepository.HOME_FALLBACK_TOKEN_PREFIX}0"
-                        }
-                        nextToken = homeContinuation
-                        if (nextToken != null) {
-                            emptyPages++
-                            continue
-                        } else break
+                    if (nextToken.startsWith(YtMusicRepository.HOME_FALLBACK_TOKEN_PREFIX) ||
+                        !homeSeenContinuationTokens.add(nextToken)
+                    ) {
+                        homeContinuation = null
+                        break
                     }
                     val pageToken = nextToken
-                    val isFallback = pageToken.startsWith(YtMusicRepository.HOME_FALLBACK_TOKEN_PREFIX)
-                    val result = if (isFallback) YtMusicRepository.homeFallback(pageToken)
-                    else YtMusicRepository.moreHome(pageToken)
+                    val result = YtMusicRepository.moreHome(pageToken)
                     val feed = result.getOrNull()
                     if (feed == null) {
                         if (identity == listenerKey() && pagingGeneration == homePagingGeneration.get()) {
-                            homeContinuation = if (isFallback) null
-                            else "${YtMusicRepository.HOME_FALLBACK_TOKEN_PREFIX}0"
-                            nextToken = homeContinuation
+                            homeContinuation = null
                         }
-                        if (nextToken != null) {
-                            emptyPages++
-                            continue
-                        } else break
+                        break
                     }
                     if (identity != listenerKey() || pagingGeneration != homePagingGeneration.get()) break
 
                     val existing = (_home.value as? UiState.Success)?.data.orEmpty()
+                    val personalizedFeed = filterPersonalizedHomeShelves(filterExplicitHomeShelves(feed.shelves))
                     val varied = diversifyHomeShelves(varyHomeFeed(
-                        feed.shelves,
+                        personalizedFeed,
                         homeSessionSeed xor pageToken.hashCode().toLong(),
                     )).map { shelf ->
                         diversifyHomeShelf(shelf, homeSessionSeed xor pageToken.hashCode().toLong() xor shelf.title.hashCode().toLong())
@@ -2260,7 +2368,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         .filter { homeSeenTitles.add(it.title.lowercase(Locale.ROOT)) }
                     val followingToken = feed.continuation?.takeIf {
                         it != pageToken && it !in homeSeenContinuationTokens
-                    } ?: if (!isFallback) "${YtMusicRepository.HOME_FALLBACK_TOKEN_PREFIX}0" else null
+                    }
                     homeContinuation = followingToken
                     if (added.isNotEmpty() || enrichedExisting != existing) {
                         _home.value = UiState.Success(enrichedExisting + added)
@@ -2279,13 +2387,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     emptyPages == HOME_MAX_EMPTY_CONTINUATION_PAGES &&
                     nextToken != null && (_home.value as? UiState.Success)?.data.orEmpty().isNotEmpty()
                 ) {
-                    // Three consecutive pages with no unseen shelves indicate
-                    // that this continuation chain is looping or exhausted.
-                    // Stop here so the tail observer cannot issue requests forever.
-                    homeContinuation = continueHomeAfterEmptyPages(
-                        nextToken,
-                        YtMusicRepository.HOME_FALLBACK_TOKEN_PREFIX,
-                    )
+                    homeContinuation = null
                 }
             } finally {
                 if (identity == listenerKey() && pagingGeneration == homePagingGeneration.get()) {
@@ -3056,6 +3158,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     ?.let { BrowseType.ALBUM }
                     ?: BrowseType.PLAYLIST
             browseId.startsWith(LocalGroups.PREFIX) -> LocalGroups.typeOf(browseId) ?: fallback
+            browseId.startsWith(SPOTIFY_PAGE_PREFIX) -> BrowseType.PLAYLIST
+            browseId.startsWith(SPOTIFY_ALBUM_PREFIX) -> BrowseType.ALBUM
             browseId.startsWith("UC") -> BrowseType.ARTIST
             browseId.startsWith("MPREb") || browseId.startsWith("VLOLAK") || browseId.startsWith("OLAK") -> BrowseType.ALBUM
             browseId.startsWith("VL") || browseId.startsWith("PL") -> BrowseType.PLAYLIST
@@ -3119,8 +3223,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 it.browseId == browseId && it.songs is UiState.Loading
             } == true
         ) return
-        if (browseId.startsWith(SPOTIFY_PAGE_PREFIX)) {
-            openSpotifyPage(browseId, title, subtitle, thumbnailUrl)
+        if (browseId.startsWith(SPOTIFY_PAGE_PREFIX) || browseId.startsWith(SPOTIFY_ALBUM_PREFIX)) {
+            openSpotifyCollectionPage(
+                browseId = browseId,
+                title = title,
+                subtitle = subtitle,
+                thumbnailUrl = thumbnailUrl,
+                isAlbum = browseId.startsWith(SPOTIFY_ALBUM_PREFIX),
+            )
             return
         }
         val resolved = browseTypeOf(browseId, type)
@@ -3282,41 +3392,60 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * A Spotify playlist opened as an ordinary playlist page.
+     * A Spotify playlist or saved album opened as a native detail page.
      *
      * Spotify's rows go up as soon as they are read, each marked as still
      * waiting on its YouTube Music version (see [isMatchPending]); the matches
      * then arrive in order and swap the rows in place, so the page is usable
      * before the last song has been found.
      */
-    private fun openSpotifyPage(browseId: String, title: String, subtitle: String, thumbnailUrl: String?) {
+    private fun openSpotifyCollectionPage(
+        browseId: String,
+        title: String,
+        subtitle: String,
+        thumbnailUrl: String?,
+        isAlbum: Boolean,
+    ) {
         _detailStack.value += DetailPage(
             browseId = browseId,
             title = title,
             subtitle = subtitle,
             thumbnailUrl = thumbnailUrl,
             songs = UiState.Loading,
-            type = BrowseType.PLAYLIST,
+            type = if (isAlbum) BrowseType.ALBUM else BrowseType.PLAYLIST,
         )
         viewModelScope.launch {
-            val playlistId = browseId.removePrefix(SPOTIFY_PAGE_PREFIX)
+            val collectionId = browseId.removePrefix(if (isAlbum) SPOTIFY_ALBUM_PREFIX else SPOTIFY_PAGE_PREFIX)
             fun open() = _detailStack.value.any { it.browseId == browseId }
             fun setSongs(songs: UiState<List<Song>>) {
                 _detailStack.value = _detailStack.value.map {
                     if (it.browseId == browseId) it.copy(songs = songs) else it
                 }
             }
-            // The list only had a thumbnail; the full-size cover replaces it
-            // once this page has asked for it.
-            launch {
-                val cover = runCatching { SpotifyLibrary.cover(playlistId) }.getOrNull() ?: return@launch
-                _detailStack.value = _detailStack.value.map {
-                    if (it.browseId == browseId) it.copy(thumbnailUrl = cover) else it
+            if (!isAlbum) {
+                launch {
+                    val cover = runCatching { SpotifyLibrary.cover(collectionId) }.getOrNull() ?: return@launch
+                    _detailStack.value = _detailStack.value.map {
+                        if (it.browseId == browseId) it.copy(thumbnailUrl = cover) else it
+                    }
                 }
             }
             val tracks = runCatching {
-                SpotifyLibrary.tracks(playlistId) { soFar ->
-                    setSongs(UiState.Success(soFar.map { it.asPendingSong() }))
+                if (isAlbum) {
+                    val (cover, albumTracks) = SpotifyLibrary.albumDetail(collectionId)
+                    if (!cover.isNullOrBlank()) {
+                        _detailStack.value = _detailStack.value.map {
+                            if (it.browseId == browseId) it.copy(thumbnailUrl = cover) else it
+                        }
+                    }
+                    if (albumTracks.isNotEmpty()) {
+                        setSongs(UiState.Success(albumTracks.map { it.asPendingSong() }))
+                    }
+                    albumTracks
+                } else {
+                    SpotifyLibrary.tracks(collectionId) { soFar ->
+                        setSongs(UiState.Success(soFar.map { it.asPendingSong() }))
+                    }
                 }
             }.getOrElse {
                 setSongs(UiState.Error(it.message ?: text(R.string.failed)))
@@ -3332,7 +3461,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     launch {
                         gate.withPermit {
                             if (!open()) return@withPermit
-                            val match = runCatching { SpotifyImporter.matchTrack(track) }.getOrNull()
+                            val match = resolvedSpotifyTracks[track.id]
+                                ?: runCatching { SpotifyImporter.matchTrack(track) }.getOrNull()?.also {
+                                    resolvedSpotifyTracks[track.id] = it
+                                }
                             val found = match?.copy(thumbnailUrl = match.thumbnailUrl ?: track.imageUrl)
                                 ?: track.asPendingSong().let {
                                     it.copy(videoId = SPOTIFY_MISSING_PREFIX + track.id)
@@ -3648,14 +3780,42 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         onResult: (Result<List<Song>>) -> Unit,
     ) {
         viewModelScope.launch {
-            val result = when (val local = localPageState(browseId)) {
-                is UiState.Success -> Result.success(local.data)
-                is UiState.Error -> Result.failure(IllegalStateException(local.message))
-                UiState.Loading -> Result.failure(IllegalStateException(text(R.string.no_tracks_here)))
-                null -> YtMusicRepository.allSongs(browseId)
+            val result = when {
+                browseId.startsWith(SPOTIFY_PAGE_PREFIX) || browseId.startsWith(SPOTIFY_ALBUM_PREFIX) ->
+                    collectSpotifySongs(browseId)
+                else -> when (val local = localPageState(browseId)) {
+                    is UiState.Success -> Result.success(local.data)
+                    is UiState.Error -> Result.failure(IllegalStateException(local.message))
+                    UiState.Loading -> Result.failure(IllegalStateException(text(R.string.no_tracks_here)))
+                    null -> YtMusicRepository.allSongs(browseId)
+                }
             }
             onResult(result.map { it.withArtwork(artworkFallback) })
         }
+    }
+
+    private suspend fun collectSpotifySongs(browseId: String): Result<List<Song>> = runCatching {
+        val tracks = if (browseId.startsWith(SPOTIFY_ALBUM_PREFIX)) {
+            SpotifyLibrary.albumDetail(browseId.removePrefix(SPOTIFY_ALBUM_PREFIX)).second
+        } else {
+            SpotifyLibrary.tracks(browseId.removePrefix(SPOTIFY_PAGE_PREFIX))
+        }
+        if (tracks.isEmpty()) throw IllegalStateException(text(R.string.spotify_empty_tracks))
+        val gate = Semaphore(SPOTIFY_MATCH_PARALLELISM)
+        val matched = coroutineScope {
+            tracks.map { track ->
+                async {
+                    gate.withPermit {
+                        resolvedSpotifyTracks[track.id]
+                            ?: runCatching { SpotifyImporter.matchTrack(track) }.getOrNull()?.also {
+                                resolvedSpotifyTracks[track.id] = it
+                            }
+                    }
+                }
+            }.mapNotNull { it.await() }
+        }
+        if (matched.isEmpty()) throw IllegalStateException(text(R.string.no_tracks_here))
+        matched
     }
 
     /** Pops one page; returns false when there was nothing to pop. */

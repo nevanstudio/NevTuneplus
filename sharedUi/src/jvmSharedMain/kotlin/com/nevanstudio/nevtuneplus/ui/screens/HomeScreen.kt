@@ -4,22 +4,13 @@ package com.nevanstudio.nevtuneplus.ui.screens
 
 import androidx.compose.animation.animateColorAsState
 import com.nevanstudio.nevtuneplus.ui.performance.LocalAdaptivePerformance
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -78,16 +69,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
@@ -108,8 +91,11 @@ import com.nevanstudio.nevtuneplus.data.model.ShelfLayout
 import com.nevanstudio.nevtuneplus.data.model.Song
 import com.nevanstudio.nevtuneplus.data.model.UiState
 import com.nevanstudio.nevtuneplus.data.model.artworkAt
+import com.nevanstudio.nevtuneplus.data.model.filterPersonalizedHomeShelves
 import com.nevanstudio.nevtuneplus.data.model.stableShelfComposeKeys
 import com.nevanstudio.nevtuneplus.data.settings.LibraryViewType
+import com.nevanstudio.nevtuneplus.data.spotify.SpotifyHomeFeed
+import com.nevanstudio.nevtuneplus.data.spotify.SpotifyTrack
 import com.nevanstudio.nevtuneplus.sharedui.resources.*
 import com.nevanstudio.nevtuneplus.ui.AppUi
 import com.nevanstudio.nevtuneplus.ui.components.ExplicitBadge
@@ -155,8 +141,8 @@ internal val HOME_COMPACT_CARD_WIDTH = 122.dp
 internal val HOME_TONAL_CARD_WIDTH = 124.dp
 internal val HOME_ARTIST_CIRCLE_SIZE = 104.dp
 internal val HOME_VIDEO_CARD_WIDTH = 164.dp
-private val HOME_SECTION_SPACING = 18.dp
-private val HOME_CARD_SPACING = 10.dp
+internal val HOME_SECTION_SPACING = 18.dp
+internal val HOME_CARD_SPACING = 10.dp
 private val HOME_SHORTCUT_HEIGHT = 50.dp
 private val HOME_SHORTCUT_SPACING = 8.dp
 private val HOME_TRACK_ART_SIZE = 46.dp
@@ -228,7 +214,8 @@ internal fun ShelfItem.isAlbumItem(): Boolean {
     if (videoId != null || browseId == null) return false
     val id = browseId.orEmpty()
     val sub = subtitle.trim().lowercase(Locale.ROOT)
-    return id.startsWith("MPREb") ||
+    return id.startsWith(com.nevanstudio.nevtuneplus.data.spotify.SPOTIFY_ALBUM_PREFIX) ||
+        id.startsWith("MPREb") ||
         id.startsWith("OLAK") ||
         sub.contains("album") ||
         sub.contains("single") ||
@@ -250,14 +237,22 @@ internal fun ShelfItem.matchesHomeFilter(filter: HomeContentFilter): Boolean = w
 internal fun availableHomeFilters(
     shelves: List<HomeShelf>,
     timeAwareShelf: HomeShelf?,
+    spotifyHomeFeed: SpotifyHomeFeed? = null,
 ): List<HomeContentFilter> {
     val allItems = shelves.flatMap { it.items } + timeAwareShelf?.items.orEmpty()
-    if (allItems.isEmpty()) return listOf(HomeContentFilter.ALL)
+    val hasSpotifySongs = spotifyHomeFeed != null &&
+        (spotifyHomeFeed.likedSongs.isNotEmpty() || spotifyHomeFeed.recentlyPlayed.isNotEmpty() || spotifyHomeFeed.topTracks.isNotEmpty())
+    val hasSpotifyPlaylists = spotifyHomeFeed != null &&
+        (spotifyHomeFeed.playlists.isNotEmpty() || spotifyHomeFeed.personalizedMixes.isNotEmpty())
+    val hasSpotifyAlbums = spotifyHomeFeed != null && spotifyHomeFeed.savedAlbums.isNotEmpty()
+    if (allItems.isEmpty() && !hasSpotifySongs && !hasSpotifyPlaylists && !hasSpotifyAlbums) {
+        return listOf(HomeContentFilter.ALL)
+    }
     return buildList {
         add(HomeContentFilter.ALL)
-        if (allItems.any { it.matchesHomeFilter(HomeContentFilter.SONGS) }) add(HomeContentFilter.SONGS)
-        if (allItems.any { it.matchesHomeFilter(HomeContentFilter.PLAYLISTS) }) add(HomeContentFilter.PLAYLISTS)
-        if (allItems.any { it.matchesHomeFilter(HomeContentFilter.ALBUMS) }) add(HomeContentFilter.ALBUMS)
+        if (hasSpotifySongs || allItems.any { it.matchesHomeFilter(HomeContentFilter.SONGS) }) add(HomeContentFilter.SONGS)
+        if (hasSpotifyPlaylists || allItems.any { it.matchesHomeFilter(HomeContentFilter.PLAYLISTS) }) add(HomeContentFilter.PLAYLISTS)
+        if (hasSpotifyAlbums || allItems.any { it.matchesHomeFilter(HomeContentFilter.ALBUMS) }) add(HomeContentFilter.ALBUMS)
         if (allItems.any { it.matchesHomeFilter(HomeContentFilter.ARTISTS) }) add(HomeContentFilter.ARTISTS)
     }
 }
@@ -281,10 +276,22 @@ internal fun selectQuickAccessShortcuts(
     shelves: List<HomeShelf>,
     timeAwareShelf: HomeShelf?,
     maxItems: Int = 6,
+    spotifyHomeFeed: SpotifyHomeFeed? = null,
 ): List<QuickAccessShortcut> {
     if (maxItems <= 0) return emptyList()
     val recents = shelves.firstOrNull { isHistoryShelfTitle(it.title) }
-    val collections = shelves
+    val spotifyCollections = buildList {
+        spotifyHomeFeed?.playlists.orEmpty().take(3).forEach { playlist ->
+            add(QuickAccessShortcut(playlist.toHomeShelfItem("Playlist"), "From Your Spotify"))
+        }
+        spotifyHomeFeed?.personalizedMixes.orEmpty().take(2).forEach { mix ->
+            add(QuickAccessShortcut(mix.toHomeShelfItem("Playlist"), "Made for You on Spotify"))
+        }
+        spotifyHomeFeed?.savedAlbums.orEmpty().take(2).forEach { album ->
+            add(QuickAccessShortcut(album.toHomeShelfItem(), "From Your Spotify"))
+        }
+    }
+    val collections = spotifyCollections + shelves
         .filterNot { isHistoryShelfTitle(it.title) }
         .flatMap { shelf -> shelf.items.filter { it.browseId != null }.map { QuickAccessShortcut(it, shelf.title) } }
     val timePicks = timeAwareShelf?.items.orEmpty().map { QuickAccessShortcut(it, timeAwareShelf?.title.orEmpty()) }
@@ -301,7 +308,7 @@ internal fun selectQuickAccessShortcuts(
         if (seenKeys.add(key)) picked += shortcut
     }
 
-    // Interleave recent items and discovery collections for a balanced 2x3 quick-access grid.
+    // Interleave recent items and personalized collections for a balanced 2x3 quick-access grid.
     val recentTake = recentShortcuts.take(3)
     val collectionTake = (collections + timePicks).take(4)
     val maxPair = maxOf(recentTake.size, collectionTake.size)
@@ -382,6 +389,11 @@ fun HomeScreen(
     greetingMorning: String = "Good morning",
     greetingAfternoon: String = "Good afternoon",
     greetingEvening: String = "Good evening",
+    spotifyHomeFeed: SpotifyHomeFeed? = null,
+    resolvingSpotifyTrackId: String? = null,
+    onSpotifyTrackClick: ((SpotifyTrack, String) -> Unit)? = null,
+    onSpotifyTrackLongPress: ((SpotifyTrack) -> Unit)? = null,
+    onOpenSpotifyLibrary: (() -> Unit)? = null,
 ) {
     val recentsViewType by AppUi.host.homeRecentsViewType.collectAsStateWithLifecycle()
     var showAudioOutput by remember { mutableStateOf(false) }
@@ -389,9 +401,13 @@ fun HomeScreen(
     val openAudioOutput = rememberOutputPicker { showAudioOutput = true }
     var activeFilter by rememberSaveable { mutableStateOf(HomeContentFilter.ALL) }
 
-    val loadedShelves = (state as? UiState.Success)?.data.orEmpty()
-    val availableFilters = remember(loadedShelves, timeAwareShelf) {
-        availableHomeFilters(loadedShelves, timeAwareShelf)
+    val rawLoadedShelves = (state as? UiState.Success)?.data.orEmpty()
+    val loadedShelves = remember(rawLoadedShelves) {
+        filterPersonalizedHomeShelves(rawLoadedShelves)
+    }
+    val hasSpotifyContent = spotifyHomeFeed != null && !spotifyHomeFeed.isEmpty
+    val availableFilters = remember(loadedShelves, timeAwareShelf, spotifyHomeFeed) {
+        availableHomeFilters(loadedShelves, timeAwareShelf, spotifyHomeFeed)
     }
     LaunchedEffect(availableFilters) {
         if (activeFilter !in availableFilters) {
@@ -399,9 +415,9 @@ fun HomeScreen(
         }
     }
 
-    val quickAccessShortcuts = remember(loadedShelves, timeAwareShelf, activeFilter) {
+    val quickAccessShortcuts = remember(loadedShelves, timeAwareShelf, spotifyHomeFeed, activeFilter) {
         if (activeFilter != HomeContentFilter.ALL) emptyList()
-        else selectQuickAccessShortcuts(loadedShelves, timeAwareShelf, maxItems = 6)
+        else selectQuickAccessShortcuts(loadedShelves, timeAwareShelf, maxItems = 6, spotifyHomeFeed = spotifyHomeFeed)
     }
 
     val featuredItemIds = remember(timeAwareShelf) {
@@ -448,7 +464,7 @@ fun HomeScreen(
                     )
                 }
             }
-            if (state is UiState.Success && availableFilters.size > 1) {
+            if ((state is UiState.Success || hasSpotifyContent) && availableFilters.size > 1) {
                 item(key = "home-filter-chips") {
                     HomeFilterChipRow(
                         filters = availableFilters,
@@ -462,7 +478,7 @@ fun HomeScreen(
                     SignInBanner(onSignIn = onSignIn, modifier = Modifier.padding(bottom = 8.dp))
                 }
             }
-            if (state is UiState.Success && quickAccessShortcuts.isNotEmpty()) {
+            if ((state is UiState.Success || hasSpotifyContent) && quickAccessShortcuts.isNotEmpty()) {
                 item(key = "home-quick-access-grid") {
                     QuickAccessGrid(
                         shortcuts = quickAccessShortcuts,
@@ -495,6 +511,20 @@ fun HomeScreen(
             }
             when (state) {
                 is UiState.Loading -> {
+                    if (hasSpotifyContent) {
+                        spotifyHomeSections(
+                            feed = spotifyHomeFeed,
+                            activeFilter = activeFilter,
+                            currentSong = currentSong,
+                            isPlaying = isPlaying,
+                            resolvingTrackId = resolvingSpotifyTrackId,
+                            onItemClick = onItemClick,
+                            onItemLongPress = onItemLongPress,
+                            onSpotifyTrackClick = onSpotifyTrackClick,
+                            onSpotifyTrackLongPress = onSpotifyTrackLongPress,
+                            onOpenSpotifyLibrary = onOpenSpotifyLibrary,
+                        )
+                    }
                     if (recentlyPlayedLoading) {
                         recentlyPlayedSkeleton(listLayout = recentsViewType == LibraryViewType.LIST)
                         feedSkeleton(firstIsHero = false)
@@ -502,31 +532,79 @@ fun HomeScreen(
                         feedSkeleton(firstIsHero = false)
                     }
                 }
-                is UiState.Error -> item(key = "home:error") {
-                    MessageState(state.message, actionLabel = stringResource(Res.string.retry), onAction = onRetry)
+                is UiState.Error -> {
+                    if (hasSpotifyContent) {
+                        spotifyHomeSections(
+                            feed = spotifyHomeFeed,
+                            activeFilter = activeFilter,
+                            currentSong = currentSong,
+                            isPlaying = isPlaying,
+                            resolvingTrackId = resolvingSpotifyTrackId,
+                            onItemClick = onItemClick,
+                            onItemLongPress = onItemLongPress,
+                            onSpotifyTrackClick = onSpotifyTrackClick,
+                            onSpotifyTrackLongPress = onSpotifyTrackLongPress,
+                            onOpenSpotifyLibrary = onOpenSpotifyLibrary,
+                        )
+                    }
+                    item(key = "home:error") {
+                        MessageState(state.message, actionLabel = stringResource(Res.string.retry), onAction = onRetry)
+                    }
                 }
                 is UiState.Success -> {
                     if (recentlyPlayedLoading) {
                         recentlyPlayedSkeleton(listLayout = recentsViewType == LibraryViewType.LIST)
                     }
                     val deduplicated = if (featuredItemIds.isEmpty()) {
-                        state.data
+                        loadedShelves
                     } else {
-                        state.data.mapNotNull { shelf ->
+                        loadedShelves.mapNotNull { shelf ->
                             if (isHistoryShelfTitle(shelf.title)) return@mapNotNull shelf
                             val remaining = shelf.items.filterNot { (it.videoId ?: it.browseId) in featuredItemIds }
                             remaining.takeIf { it.isNotEmpty() }?.let { shelf.copy(items = it) }
                         }
                     }
                     val displayShelves = filterHomeShelves(deduplicated, activeFilter)
+                    val (historyShelves, personalizedShelves) = displayShelves.partition { isHistoryShelfTitle(it.title) }
                     itemsIndexedShelves(
-                        shelves = displayShelves,
+                        shelves = historyShelves,
                         onItemClick = onItemClick,
                         onItemLongPress = onItemLongPress,
                         onPlayAllQuickPicks = onPlayAllQuickPicks,
                         currentSong = currentSong,
                         isPlaying = isPlaying,
-                        onMoodClick = onMoodClick.takeIf { activeFilter == HomeContentFilter.ALL },
+                        onListenTogetherClick = null,
+                        recentsViewType = recentsViewType,
+                        onRecentsViewTypeToggle = {
+                            AppUi.host.setHomeRecentsViewType(
+                                if (recentsViewType == LibraryViewType.LIST) {
+                                    LibraryViewType.GRID
+                                } else {
+                                    LibraryViewType.LIST
+                                },
+                            )
+                        },
+                        keyPrefix = "history",
+                    )
+                    spotifyHomeSections(
+                        feed = spotifyHomeFeed,
+                        activeFilter = activeFilter,
+                        currentSong = currentSong,
+                        isPlaying = isPlaying,
+                        resolvingTrackId = resolvingSpotifyTrackId,
+                        onItemClick = onItemClick,
+                        onItemLongPress = onItemLongPress,
+                        onSpotifyTrackClick = onSpotifyTrackClick,
+                        onSpotifyTrackLongPress = onSpotifyTrackLongPress,
+                        onOpenSpotifyLibrary = onOpenSpotifyLibrary,
+                    )
+                    itemsIndexedShelves(
+                        shelves = personalizedShelves,
+                        onItemClick = onItemClick,
+                        onItemLongPress = onItemLongPress,
+                        onPlayAllQuickPicks = onPlayAllQuickPicks,
+                        currentSong = currentSong,
+                        isPlaying = isPlaying,
                         onListenTogetherClick = onListenTogetherClick.takeIf { activeFilter == HomeContentFilter.ALL },
                         recentsViewType = recentsViewType,
                         onRecentsViewTypeToggle = {
@@ -907,14 +985,14 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
     onPlayAllQuickPicks: ((HomeShelf) -> Unit)?,
     currentSong: Song?,
     isPlaying: Boolean,
-    onMoodClick: ((String) -> Unit)?,
     onListenTogetherClick: (() -> Unit)?,
     recentsViewType: LibraryViewType,
     onRecentsViewTypeToggle: () -> Unit,
+    keyPrefix: String = "shelf",
 ) {
-    var moodAndSocialInserted = false
+    var socialInserted = false
     shelves.forEachIndexed { index, shelf ->
-        item(key = "${shelf.title}:$index") {
+        item(key = "$keyPrefix:${shelf.title}:$index") {
             val openItem: (ShelfItem) -> Unit = { item -> onItemClick(item, shelf.title) }
             if (isHistoryShelfTitle(shelf.title)) {
                 RecentShelf(
@@ -937,11 +1015,8 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
                 )
             }
         }
-        if (shelf.title.equals("Quick picks", ignoreCase = true) && !moodAndSocialInserted) {
-            moodAndSocialInserted = true
-            if (onMoodClick != null) {
-                item(key = "home-find-your-mood") { FindYourMood(onMoodClick) }
-            }
+        if (shelf.title.equals("Quick picks", ignoreCase = true) && !socialInserted) {
+            socialInserted = true
             if (onListenTogetherClick != null) {
                 item(key = "home-listen-together") {
                     ListenTogetherShelf(shelf.items.take(2).map { it.thumbnailUrl }, onListenTogetherClick)
@@ -949,13 +1024,8 @@ private fun androidx.compose.foundation.lazy.LazyListScope.itemsIndexedShelves(
             }
         }
     }
-    if (!moodAndSocialInserted) {
-        if (onMoodClick != null) {
-            item(key = "home-find-your-mood") { FindYourMood(onMoodClick) }
-        }
-        if (onListenTogetherClick != null) {
-            item(key = "home-listen-together") { ListenTogetherShelf(emptyList(), onListenTogetherClick) }
-        }
+    if (!socialInserted && onListenTogetherClick != null) {
+        item(key = "home-listen-together") { ListenTogetherShelf(emptyList(), onListenTogetherClick) }
     }
 }
 
@@ -1275,218 +1345,6 @@ private fun HomeHeaderAction(icon: ImageVector, description: String, onClick: ((
                 tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(19.dp),
             )
-        }
-    }
-}
-
-private data class HomeMoodCard(val title: String, val colors: List<Color>)
-
-private val HOME_MOOD_CARDS = listOf(
-    HomeMoodCard("Energy", listOf(Color(0xFFFF7043), Color(0xFFE53970))),
-    HomeMoodCard("Relax", listOf(Color(0xFF45B7A0), Color(0xFF2674A8))),
-    HomeMoodCard("Feeling Blue", listOf(Color(0xFF4385D1), Color(0xFF5146A8))),
-    HomeMoodCard("Feel Good", listOf(Color(0xFFFFB52E), Color(0xFFFF6F61))),
-    HomeMoodCard("Focus", listOf(Color(0xFF6976D8), Color(0xFF39468E))),
-    HomeMoodCard("Heartbreak", listOf(Color(0xFFB85A83), Color(0xFF563D79))),
-    HomeMoodCard("Love", listOf(Color(0xFFFF668C), Color(0xFFB83272))),
-)
-
-@Composable
-private fun FindYourMood(onMoodClick: ((String) -> Unit)?) {
-    val moodPairs = remember { HOME_MOOD_CARDS.chunked(2) }
-    Column(Modifier.fillMaxWidth().padding(bottom = HOME_SECTION_SPACING)) {
-        SectionHeader("Find Your Mood", emphasized = false)
-        ShelfRow(
-            contentPadding = PaddingValues(horizontal = PAGE_GUTTER),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(moodPairs, key = { pair -> pair.joinToString("|") { it.title } }) { pair ->
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    pair.forEach { mood ->
-                        CompactMoodTile(
-                            mood = mood,
-                            onClick = { onMoodClick?.invoke(mood.title) },
-                            enabled = onMoodClick != null,
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CompactMoodTile(
-    mood: HomeMoodCard,
-    onClick: () -> Unit,
-    enabled: Boolean,
-) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val reduceAnimationSetting by PlayerSettings.reduceAnimation.collectAsStateWithLifecycle()
-    val perf = LocalAdaptivePerformance.current
-    val reduceAnimation = reduceAnimationSetting || perf.reduceAnimations
-    val motion by animateFloatAsState(
-        targetValue = if (pressed && !reduceAnimation) 1f else 0f,
-        animationSpec = tween(durationMillis = if (reduceAnimation) 0 else 180, easing = FastOutSlowInEasing),
-        label = "${mood.title}-line-art-press",
-    )
-    val ambient = if (reduceAnimation || perf.disableContinuousMotion) {
-        0f
-    } else {
-        rememberInfiniteTransition(label = "${mood.title}-ambient").animateFloat(
-            initialValue = 0f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(durationMillis = 2600, easing = FastOutSlowInEasing),
-                repeatMode = RepeatMode.Reverse,
-            ),
-            label = "${mood.title}-breath",
-        ).value
-    }
-    val tileShape = RoundedCornerShape(12.dp)
-    Surface(
-        shape = tileShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
-        modifier = Modifier
-            .width(156.dp)
-            .height(50.dp)
-            .clip(tileShape)
-            .clickable(
-                enabled = enabled,
-                role = Role.Button,
-                interactionSource = interaction,
-                onClick = onClick,
-            ),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 7.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Brush.linearGradient(mood.colors)),
-            ) {
-                MoodLineArt(
-                    mood = mood.title,
-                    progress = motion,
-                    phase = ambient,
-                    modifier = Modifier.fillMaxSize().graphicsLayer {
-                        val scale = 1f + motion * 0.05f + ambient * 0.015f
-                        scaleX = scale
-                        scaleY = scale
-                    },
-                )
-            }
-            Text(
-                text = mood.title,
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f),
-            )
-        }
-    }
-}
-
-/** Crisp, mood-specific geometry; the linework responds to the card's press state. */
-@Composable
-private fun MoodLineArt(mood: String, progress: Float, phase: Float, modifier: Modifier = Modifier) {
-    Canvas(modifier) {
-        val w = size.width
-        val h = size.height
-        val unit = minOf(w, h)
-        val cx = w * 0.56f
-        val cy = h * 0.44f
-        val base = Color.White.copy(alpha = 0.80f + progress * 0.16f + phase * 0.04f)
-        val faint = Color.White.copy(alpha = 0.34f + progress * 0.16f + phase * 0.08f)
-        val stroke = (unit * 0.032f).coerceAtLeast(1.4f)
-        val lineStyle = Stroke(width = stroke, cap = StrokeCap.Round)
-        withTransform({
-            rotate(degrees = progress * 5f + phase * 0.8f, pivot = Offset(cx, cy))
-            scale(scaleX = 1f + progress * 0.04f + phase * 0.012f, scaleY = 1f + progress * 0.04f + phase * 0.012f, pivot = Offset(cx, cy))
-        }) {
-            when (mood) {
-                "Energy" -> {
-                    val bolt = Path().apply {
-                        moveTo(w * .60f, h * .14f)
-                        lineTo(w * .34f, h * .53f)
-                        lineTo(w * .52f, h * .53f)
-                        lineTo(w * .42f, h * .86f)
-                        lineTo(w * .72f, h * .42f)
-                        lineTo(w * .55f, h * .42f)
-                        close()
-                    }
-                    drawPath(bolt, faint.copy(alpha = .24f + phase * .12f))
-                    drawPath(bolt, base, style = Stroke(stroke * 1.3f, join = StrokeJoin.Round))
-                }
-                "Relax" -> {
-                    repeat(3) { i ->
-                        val width = unit * (.48f + i * .10f)
-                        val height = unit * (.15f + i * .02f)
-                        drawOval(
-                            color = if (i == 1) base else faint,
-                            topLeft = Offset(cx - width / 2f, cy - height / 2f + (i - 1) * unit * .14f),
-                            size = androidx.compose.ui.geometry.Size(width, height),
-                            style = lineStyle,
-                        )
-                    }
-                }
-                "Feeling Blue" -> {
-                    val spiral = Path().apply {
-                        val radius = unit * .30f
-                        moveTo(cx + radius, cy)
-                        cubicTo(cx + radius, cy - radius, cx - radius, cy - radius, cx - radius, cy)
-                        cubicTo(cx - radius, cy + radius, cx + radius, cy + radius, cx + radius * .56f, cy)
-                        cubicTo(cx + radius * .56f, cy - radius * .56f, cx - radius * .42f, cy - radius * .42f, cx - radius * .42f, cy)
-                    }
-                    drawPath(spiral, base, style = lineStyle)
-                }
-                "Feel Good" -> {
-                    val sparkle = Path().apply {
-                        moveTo(cx, cy - unit * .34f)
-                        cubicTo(cx + unit * .08f, cy - unit * .08f, cx + unit * .08f, cy - unit * .08f, cx + unit * .34f, cy)
-                        cubicTo(cx + unit * .08f, cy + unit * .08f, cx + unit * .08f, cy + unit * .08f, cx, cy + unit * .34f)
-                        cubicTo(cx - unit * .08f, cy + unit * .08f, cx - unit * .08f, cy + unit * .08f, cx - unit * .34f, cy)
-                        cubicTo(cx - unit * .08f, cy - unit * .08f, cx - unit * .08f, cy - unit * .08f, cx, cy - unit * .34f)
-                        close()
-                    }
-                    drawPath(sparkle, faint.copy(alpha = .24f + phase * .10f))
-                    drawPath(sparkle, base, style = Stroke(stroke * 1.2f, join = StrokeJoin.Round))
-                }
-                "Heartbreak" -> {
-                    val heart = Path().apply {
-                        moveTo(w * .58f, h * .78f)
-                        cubicTo(w * .08f, h * .44f, w * .30f, h * .14f, w * .50f, h * .34f)
-                        cubicTo(w * .70f, h * .14f, w * .92f, h * .44f, w * .58f, h * .78f)
-                    }
-                    drawPath(heart, base, style = lineStyle)
-                    drawLine(faint, Offset(w * .52f, h * .32f), Offset(w * .44f, h * .54f), stroke, StrokeCap.Round)
-                }
-                "Love" -> {
-                    val heart = Path().apply {
-                        moveTo(cx, h * .78f)
-                        cubicTo(w * .10f, h * .40f, w * .34f, h * .14f, cx, h * .34f)
-                        cubicTo(w * .84f, h * .14f, w * .90f, h * .40f, cx, h * .78f)
-                    }
-                    drawPath(heart, base, style = lineStyle)
-                    drawCircle(faint, unit * (.36f + phase * .012f), Offset(cx, cy), style = lineStyle)
-                }
-                "Focus" -> {
-                    repeat(3) { i ->
-                        drawCircle(if (i == 0) base else faint, radius = unit * (.10f + i * .11f), center = Offset(cx, cy), style = lineStyle)
-                    }
-                }
-                else -> {
-                    drawCircle(base, unit * .22f, Offset(cx, cy), style = lineStyle)
-                    drawCircle(faint, unit * .36f, Offset(cx, cy), style = lineStyle)
-                }
-            }
         }
     }
 }
@@ -1957,7 +1815,7 @@ internal fun Shelf(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun CompactDiscoveryCard(
+internal fun CompactDiscoveryCard(
     item: ShelfItem,
     onClick: () -> Unit,
     onLongPress: (() -> Unit)?,

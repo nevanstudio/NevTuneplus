@@ -235,5 +235,15 @@ Project: NevTune+
     <string name="member_since">Member since</string>
     <string name="import_spotify">Import Spotify</string>
     <string name="import_spotify_subtitle">From a playlist link</string>
+    <string name="from_your_spotify">From Your Spotify</string>
+    <string name="spotify_see_all">See all</string>
+    <string name="spotify_playlists_label">Playlists</string>
+    <string name="spotify_liked_songs">Liked Songs</string>
+    <string name="spotify_saved_albums">Saved Albums</string>
+    <string name="spotify_made_for_you">Made for You on Spotify</string>
+    <string name="spotify_made_for_you_subtitle">Daily Mixes, Discover Weekly &amp; Release Radar</string>
+    <string name="spotify_recently_played">Recently played on Spotify</string>
+    <string name="spotify_top_tracks">Your top tracks on Spotify</string>
+    <string name="spotify_playlist_owner_format">Spotify · %1$s</string>
     <string name="sign_in_with_google">Sign in with Google</string>
 </resources>

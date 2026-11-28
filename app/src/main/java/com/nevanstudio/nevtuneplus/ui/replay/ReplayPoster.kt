@@ -6,6 +6,7 @@ import androidx.core.graphics.createBitmap
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.Color
@@ -407,15 +408,9 @@ private fun drawHeader(
         "Replay · $label"
     }
     canvas.drawText(title, MARGIN, 132f, type.heading(46f, 0xFFFFFFFF.toInt()))
-    val brand = type.heading(46f, 0xE6FFFFFF.toInt()).apply {
-        textAlign = Paint.Align.RIGHT
-    }
-    canvas.drawText("NevTune+", POSTER_W - MARGIN, 132f, brand)
-    // The mark, to the left of the word, exactly as the story header and the
-    // card carry it. Without it the one artefact of this app that ends up in
-    // somebody else's chat was the only place the logo didn't appear.
-    val wordWidth = brand.measureText("NevTune+")
-    drawLogo(canvas, context, POSTER_W - MARGIN - wordWidth - LOGO_GAP, 132f)
+    // Single horizontal watermark PNG (play-button icon + "NevTune+" wordmark),
+    // right-aligned at the same baseline the left-side Replay title occupies.
+    drawWatermark(canvas, context, POSTER_W - MARGIN, 132f)
 
     val credit = listOfNotNull(
         holder.ifBlank { context.getString(R.string.default_replay_holder) },
@@ -696,23 +691,41 @@ private fun drawRuns(
 }
 
 /**
- * The Audify mark, baseline-aligned with the word beside it.
+ * The NevTune+ horizontal wordmark watermark, baseline-aligned to [baseline].
  *
- * The same vector the app draws everywhere, tinted and given bounds rather than
- * rasterised to a PNG first — a vector drawable renders into an ordinary canvas
- * on every version this app supports, so there is nothing to be gained by
- * keeping a second copy of the logo around at a fixed size.
+ * Replaces the old mark-only [ic_logo] + separate "NevTune+" text pair with a
+ * single PNG that bundles the play-button icon and the wordmark together,
+ * keeping both cards (Replay poster and Lyrics share) visually consistent
+ * without maintaining two separate branding elements.
+ *
+ * The PNG is loaded via [BitmapFactory] rather than as a vector because the
+ * asset is a raster export of the full horizontal lockup; software-canvas
+ * rendering is identical across every API level this app supports, so there
+ * is no need for a hardware path here.
  */
-internal fun drawLogo(canvas: Canvas, context: Context, right: Float, baseline: Float) {
-    val logo = runCatching {
-        ResourcesCompat.getDrawable(context.resources, R.drawable.ic_logo, null)
+internal fun drawWatermark(canvas: Canvas, context: Context, right: Float, baseline: Float) {
+    val bmp = runCatching {
+        BitmapFactory.decodeResource(context.resources, R.drawable.cards_watermark)
     }.getOrNull() ?: return
-    val left = right - LOGO_W
-    val top = baseline - LOGO_H
-    logo.setTint(0xE6FFFFFF.toInt())
-    logo.setBounds(left.toInt(), top.toInt(), (left + LOGO_W).toInt(), (top + LOGO_H).toInt())
-    logo.draw(canvas)
+    // Scale to target height while preserving the asset's native aspect ratio.
+    val h = WATERMARK_H
+    val w = h * (bmp.width.toFloat() / bmp.height.toFloat())
+    val left = right - w
+    val top = baseline - h * 0.8f
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG).apply {
+        alpha = 0xE6 // ~90 % opacity, matching the old tint alpha
+    }
+    canvas.drawBitmap(bmp, null, RectF(left, top, left + w, top + h), paint)
 }
+
+/**
+ * @deprecated Use [drawWatermark] instead. Kept only as a forwarding shim so
+ * any call sites outside this file that have not yet been updated continue to
+ * compile. Will be removed in the next cleanup pass.
+ */
+@Deprecated("Replace with drawWatermark", ReplaceWith("drawWatermark(canvas, context, right, baseline)"))
+internal fun drawLogo(canvas: Canvas, context: Context, right: Float, baseline: Float) =
+    drawWatermark(canvas, context, right, baseline)
 
 /** Trims [text] to [width], with an ellipsis, the way a single-line row would. */
 internal fun ellipsised(text: String, paint: Paint, width: Float): String {
@@ -771,10 +784,14 @@ private const val POSTER_H = 1920
 
 private const val MARGIN = 72f
 
-/** The mark's drawn size. Content bbox 753×599, so true ratio ≈ 1.24. */
-private const val LOGO_W = 120f
-private const val LOGO_H = 97f
-private const val LOGO_GAP = 20f
+/**
+ * Target height for the horizontal watermark PNG on the poster and lyrics card.
+ *
+ * The cropped asset is 1162×300 px (ratio ≈ 3.87 : 1); at 72 px tall the full
+ * lockup renders at ≈279 px wide on the 1080 px canvas, matching Spotify's
+ * share-card watermark prominence.
+ */
+private const val WATERMARK_H = 72f
 
 /** The width type and artwork are laid out in. */
 private const val CONTENT_W = POSTER_W - MARGIN * 2

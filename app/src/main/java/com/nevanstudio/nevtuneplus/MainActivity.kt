@@ -809,6 +809,9 @@ private fun NevTunePlusApp(
     val homeState by viewModel.home.collectAsStateWithLifecycle()
     val homeRecentlyPlayedLoading by viewModel.homeRecentlyPlayedLoading.collectAsStateWithLifecycle()
     val homeLoadingMore by viewModel.homeLoadingMore.collectAsStateWithLifecycle()
+    val spotifyHomeFeed by viewModel.spotifyHome.collectAsStateWithLifecycle()
+    val resolvingSpotifyTrackId by viewModel.resolvingSpotifyTrackId.collectAsStateWithLifecycle()
+    val spotifyTrackUnmatchedMessage = stringResource(R.string.spotify_track_unmatched)
 
     // The top bar's icon is the quiet, always-there nudge; this is the
     // once-per-launch popup version of the same news. `updateDialogShown`
@@ -3490,33 +3493,6 @@ HomeScreen(
                                         showAccountSelector = true
                                     } else navigator.push(AppRoute.Settings)
                                 },
-                                onMoodClick = { mood ->
-                                    val categories = (exploreState as? UiState.Success)?.data.orEmpty()
-                                        .flatMap { it.items }
-                                    val terms = when (mood) {
-                                        "Energy" -> listOf("energy", "energ", "upbeat")
-                                        "Relax" -> listOf("relax", "chill", "calm")
-                                        "Feeling Blue" -> listOf("feeling blue", "sad", "melancholy", "blue")
-                                        "Feel Good" -> listOf("feel good", "happy", "good mood", "feel-good")
-                                        "Focus" -> listOf("focus", "concentration", "study")
-                                        "Heartbreak" -> listOf("heartbreak", "breakup", "broken heart")
-                                        "Love" -> listOf("love", "romance", "romantic")
-                                        else -> listOf(mood.lowercase())
-                                    }
-                                    val category = categories.firstOrNull { item ->
-                                        terms.any { term -> item.title.contains(term, ignoreCase = true) }
-                                    }
-                                    navigator.clear()
-                                    if (category != null) {
-                                        selectedTab = TAB_EXPLORE
-                                        viewModel.openMoodGenre(category)
-                                    } else {
-                                        viewModel.closeMoodGenre()
-                                        viewModel.onQueryChange("")
-                                        selectedTab = TAB_SEARCH
-                                        viewModel.searchFor("$mood nevanstudio")
-                                    }
-                                },
                                 onListenTogetherClick = { navigator.push(AppRoute.ListenTogether) },
                                 onPlayAllQuickPicks = { shelf ->
                                     val songs = shelf.items.mapNotNull(shelfSong).map { song ->
@@ -3527,6 +3503,30 @@ HomeScreen(
                                     }
                                     if (songs.isNotEmpty()) play(songs, 0)
                                 },
+                                spotifyHomeFeed = spotifyHomeFeed,
+                                resolvingSpotifyTrackId = resolvingSpotifyTrackId,
+                                onSpotifyTrackClick = { track, sourceTitle ->
+                                    viewModel.resolveSpotifyTrack(track) { matched ->
+                                        if (matched != null) {
+                                            playRadio(
+                                                matched,
+                                                QueueSource(sourceTitle, PlaybackSourceType.HOME),
+                                            )
+                                        } else {
+                                            showQueueNotice(spotifyTrackUnmatchedMessage)
+                                        }
+                                    }
+                                },
+                                onSpotifyTrackLongPress = { track ->
+                                    viewModel.resolveSpotifyTrack(track) { matched ->
+                                        if (matched != null) {
+                                            openSongMenu(matched)
+                                        } else {
+                                            showQueueNotice(spotifyTrackUnmatchedMessage)
+                                        }
+                                    }
+                                },
+                                onOpenSpotifyLibrary = { navigator.push(AppRoute.Spotify) },
                             )
                     }
                             TAB_EXPLORE -> selectedMoodGenre?.let { category ->
