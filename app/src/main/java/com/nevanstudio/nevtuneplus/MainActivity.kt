@@ -3485,7 +3485,10 @@ HomeScreen(
                                     showHomeCastDialog = true
                                 },
                                 onProfileClick = {
-                                    navigator.push(AppRoute.Profile)
+                                    if (signedIn) {
+                                        viewModel.loadChannels()
+                                        showAccountSelector = true
+                                    } else navigator.push(AppRoute.Settings)
                                 },
                                 onMoodClick = { mood ->
                                     val categories = (exploreState as? UiState.Success)?.data.orEmpty()

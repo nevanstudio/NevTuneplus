@@ -1199,7 +1199,7 @@ private fun HomeTitle(
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
             Text(
                 text = greeting,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -1207,7 +1207,7 @@ private fun HomeTitle(
             if (!userName.isNullOrBlank()) {
                 Text(
                     text = userName,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -1220,12 +1220,6 @@ private fun HomeTitle(
         ) {
             HomeHeaderAction(Icons.Rounded.Search, "Search", onSearchClick)
             HomeHeaderAction(Icons.Rounded.Bluetooth, "Bluetooth audio output", onBluetoothClick)
-            Icon(
-                painter = painterResource(Res.drawable.ic_logo),
-                contentDescription = "NevTune+",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.width(48.dp).height(32.dp),
-            )
             Surface(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
